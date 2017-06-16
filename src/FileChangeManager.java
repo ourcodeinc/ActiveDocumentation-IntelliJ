@@ -2,43 +2,43 @@
 import com.google.gson.JsonObject;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
+import com.intellij.openapi.project.ProjectManager;
 import com.intellij.util.messages.MessageBusConnection;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.newvfs.BulkFileListener;
 import com.intellij.openapi.vfs.newvfs.events.*;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.ScrollType;
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
+
+import core.model.SRCMLHandler;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.List;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.PrintWriter;
+
 
 public class FileChangeManager implements ProjectComponent {
 
     private final MessageBusConnection connection;
     private ChatServer s;
-    private String command;
 
-    private static JsonObject initialClassTable = new JsonObject();
-
-    public FileChangeManager(ChatServer server, String path) {
+    public FileChangeManager(ChatServer server) {
         connection = ApplicationManager.getApplication().getMessageBus().connect();
         s = server;
-        command = "srcml --verbose " + path
-                + "/src -o /Users/saharmehrpour/Documents/Workspace/testProject/source_xml.xml";
-
-        System.out.println(command);
 
     }
 
     public void initComponent() {
         // What is the difference of opening the socket here vs. when toolWindow is created?
         s.start();
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "INITIAL_PROJECT_CLASS_TABLE", initialClassTable}).toString());
-
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER",
-                MessageProcessor.sendRulesInitially()}).toString());
 
         System.out.println("ChatServer started on port: " + s.getPort());
 
@@ -47,6 +47,7 @@ public class FileChangeManager implements ProjectComponent {
             public void after(@NotNull List<? extends VFileEvent> events) {
 
                 // TODO handle events
+                // update rules in ChatServer
 
                 for (VFileEvent event : events) {
                     if (event instanceof VFileCreateEvent) {
@@ -58,37 +59,9 @@ public class FileChangeManager implements ProjectComponent {
                     } else if (event instanceof VFilePropertyChangeEvent) {
                         System.out.println("PROP_CHANGE");
                     }
-
-                    //runShellCommand(command);
-                }
-
-            }
-
-            private void runShellCommand(String command) {
-                try {
-                    Process p = Runtime.getRuntime().exec(command);
-
-                    BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                    BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-
-                    String line;
-                    System.out.println("Output: ");
-                    while ((line = stdInput.readLine())!= null) {
-                        System.out.println(line);
-                    }
-
-                    System.out.println("Errors: ");
-                    while ((line = stdError.readLine())!= null) {
-                        System.out.println(line);
-                    }
-
-                } catch (IOException e) {
-                    System.out.println("Exception: ");
-                    e.printStackTrace();
                 }
             }
         });
-
     }
 
     public void disposeComponent() {
@@ -122,6 +95,46 @@ public class FileChangeManager implements ProjectComponent {
         System.out.println("(project Closed)");
     }
 
+
+    public void processReceivedMessages(JsonObject messageAsJson) {
+
+        String command = messageAsJson.get("command").getAsString();
+
+        // TODO  switch case for command
+        switch (command) {
+            case "xmlResult":
+                String projectPath = ProjectManager.getInstance().getOpenProjects()[0].getBasePath();
+                try {
+                    PrintWriter writer = new PrintWriter(projectPath + "/tempResultXmlFile.xml", "UTF-8");
+                    writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>");
+                    writer.println(messageAsJson.get("data").getAsJsonObject().get("xml").getAsString());
+                    writer.close();
+                } catch (IOException e) {
+                    System.out.println("error in writing the result xml");
+                    return;
+                }
+
+                //System.out.println(SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml"));
+
+                EventQueue.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        String[] filePath = messageAsJson.get("data").getAsJsonObject().get("fileName").getAsString().split("/");
+                        String fileToFocusOn = filePath[filePath.length - 1];
+                        int indexToFocusOn = SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml");
+                        Project currentProject = ProjectManager.getInstance().getOpenProjects()[0];
+                        VirtualFile theVFile = FilenameIndex.getVirtualFilesByName(currentProject, fileToFocusOn, GlobalSearchScope.projectScope(currentProject)).iterator().next();
+                        FileEditorManager.getInstance(currentProject).openFile(theVFile, true);
+                        Editor theEditor = FileEditorManager.getInstance(currentProject).getSelectedTextEditor();
+                        theEditor.getCaretModel().moveToOffset(indexToFocusOn);
+                        theEditor.getScrollingModel().scrollToCaret(ScrollType.RELATIVE);
+                    }
+                });
+
+
+        }
+
+    }
 
 
 }

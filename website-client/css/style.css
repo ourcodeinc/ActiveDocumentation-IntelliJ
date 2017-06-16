@@ -1,0 +1,32 @@
+
+.green-blue {
+    background-color: #41b6c4 !important;
+}
+
+.dark-blue {
+    background-color: #225ea8;
+}
+
+.btn:hover {
+    background-color: #1d91c0;
+}
+
+td, th {
+    min-width: 45%;
+}
+
+th {
+    padding-top: 40px;
+}
+
+td {
+    border-top: 2px solid #d0d0d0;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+.link {
+    cursor: pointer;
+}

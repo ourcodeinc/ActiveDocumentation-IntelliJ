@@ -1,19 +1,10 @@
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.ScrollType;
-import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectManager;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.search.FilenameIndex;
-import com.intellij.psi.search.GlobalSearchScope;
 import org.java_websocket.*;
 import org.java_websocket.framing.Framedata;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
-import java.awt.*;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
@@ -29,55 +20,58 @@ import java.util.List;
 public class ChatServer extends WebSocketServer {
 
 	private List<String> backedUpMessages = new LinkedList<>();
+	private String xmlPath;
+	private String rules;
+
+	private FileChangeManager manager; // to process received messages
 
 	/**
 	 * only used in GrepServerToolWindowFactory.run()
 	 * @param port = 8887
-	 * @param initialMessage from  generateProjectHierarchyAsJSON()
+	 * @param xmlP = path of the srcML xml
+	 * @param rule = rules
 	 * @throws UnknownHostException
 	 */
-	public ChatServer(int port, String initialMessage) throws UnknownHostException {
+	ChatServer(int port, String xmlP, String rule) throws UnknownHostException {
 		super(new InetSocketAddress(port));
-		backedUpMessages.add(initialMessage);
+		rules = rule;
+		xmlPath = xmlP;
+	}
+
+	public void setManager(FileChangeManager fcm) {
+		manager = fcm;
 	}
 
 	@Override
 	public void onOpen(WebSocket conn, ClientHandshake handshake) {
 		// this.sendToAll( "new connection: " + handshake.getResourceDescriptor() );
 		System.out.println("(onOpen) " + conn.getRemoteSocketAddress().getAddress().getHostAddress() + " entered the room!");
+
+		this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "ENTER", (conn + " has entered the room!")}).toString());
+		this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML", xmlPath}).toString());
+		this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", rules}).toString());
+		this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
+
 		sendBackedUpMessages();
 	}
 
 	@Override
 	public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-		this.sendToAll(conn + " has left the room!");
+		//this.sendToAll(conn + " has left the room!");
+		this.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "LEFT", (conn + " has left the room!")}).toString());
 		System.out.println("(onClose) " + conn + " has left the room!");
 	}
 
 	@Override
 	public void onMessage(WebSocket conn, String message) {
-		this.sendToAll(message);
-		System.out.println("(onMessage) " + conn + ": " + message);
+		//this.sendToAll(message);
 
 		JsonParser parser = new JsonParser();
 		final JsonObject messageAsJson = parser.parse(message).getAsJsonObject();
-		final JsonObject theDataFromTheMessage = messageAsJson.get("data").getAsJsonObject();
+		System.out.println("(onMessage) " + messageAsJson);
 
-		// Only one command is handled
+		manager.processReceivedMessages(messageAsJson);
 
-		if (messageAsJson.get("command").getAsString().equals("JUMP_TO_CLASS_WITH_LINE_NUM")) {
-			EventQueue.invokeLater(() -> {
-				String fileToFocusOn = theDataFromTheMessage.get("fileName").getAsString();
-				int indexToFocusOn = theDataFromTheMessage.get("lineNumber").getAsInt(); // the character index
-				Project currentProject = ProjectManager.getInstance().getOpenProjects()[0];
-				VirtualFile theVFile = FilenameIndex.getVirtualFilesByName(currentProject, fileToFocusOn,
-						GlobalSearchScope.projectScope(currentProject)).iterator().next();
-				FileEditorManager.getInstance(currentProject).openFile(theVFile, true);
-				Editor theEditor = FileEditorManager.getInstance(currentProject).getSelectedTextEditor();
-				theEditor.getCaretModel().moveToOffset(indexToFocusOn);
-				theEditor.getScrollingModel().scrollToCaret(ScrollType.RELATIVE);
-			});
-		}
 	}
 
 	@Override
@@ -90,9 +84,6 @@ public class ChatServer extends WebSocketServer {
 	public void onError(WebSocket conn, Exception ex) {
 		System.out.println("(onError) ");
 		ex.printStackTrace();
-//		if( conn != null ) {
-//			// some errors like port binding failed may not be assignable to a specific web-socket
-//		}
 	}
 
 	/**
@@ -110,7 +101,7 @@ public class ChatServer extends WebSocketServer {
 		}
 	}
 
-	public void sendBackedUpMessages() {
+	private void sendBackedUpMessages() {
 
 		Collection<WebSocket> con = connections();
 		if (con.size() == 0) {
@@ -141,5 +132,10 @@ public class ChatServer extends WebSocketServer {
 			}
 			backedUpMessages.remove(0);
 		}
+	}
+
+
+	private void sendInitialMessages(WebSocket con, String message) {
+		con.send(message);
 	}
 }

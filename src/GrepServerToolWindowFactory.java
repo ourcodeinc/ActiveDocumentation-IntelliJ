@@ -9,10 +9,11 @@ import org.java_websocket.WebSocketImpl;
 import org.jetbrains.annotations.NotNull;
 import com.intellij.ui.content.*;
 
-
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
+import core.model.SRCMLHandler;
 
 
 public class GrepServerToolWindowFactory implements ToolWindowFactory {
@@ -43,16 +44,14 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
 
         System.out.println("(createToolWindowContent)");
 
-        MessageProcessor.getIgnoredFilesList(project.getBaseDir());
-
         // start the connection when the project is loaded and indexing is done
         try {
             WebSocketImpl.DEBUG = false;
             int port = 8887; // 843 flash policy port
 
             // generateProjectHierarchyAsJSON() populates initialClassTable as well
-            s = new ChatServer(port, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML_PATH",
-                    project.getBasePath()+ "/source_xml.xml"}).toString());
+            s = new ChatServer(port, SRCMLHandler.createXMLFile(project.getBasePath()),
+                    MessageProcessor.getIntitialRules().toString());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -60,7 +59,8 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
         }
 
         // This will allow file changes to be sent to the web client
-        FileChangeManager fcm = new FileChangeManager(s, project.getBasePath());
+        FileChangeManager fcm = new FileChangeManager(s);
+        s.setManager(fcm);
         fcm.initComponent();
 
     }
