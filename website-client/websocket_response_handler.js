@@ -4,14 +4,9 @@ let rules;
 let ruleTable = [];
 
 
-document.observe("dom:loaded", function() {
+function connectionManager() {
 
-    if (!window.WebSocket) {
-        alert("FATAL: WebSocket not natively supported. This demo will not work!");
-    }
-
-    $("uriForm").observe("submit", function (e) {
-        e.stop();
+    d3.select("#connect").on("click", () => {
         ws = new WebSocket("ws://localhost:8887");
         ws.onopen = function () {
             clearRuleTable();
@@ -19,7 +14,7 @@ document.observe("dom:loaded", function() {
         ws.onmessage = function (e) {
 
             let message = JSON.parse(e.data);
-            //console.log(message);
+            console.log(message);
 
             let messageInfo = message.data;
 
@@ -30,6 +25,7 @@ document.observe("dom:loaded", function() {
                     break;
 
                 case "VERIFY_RULES":
+                    clearRuleTable();
                     for (let i = 0; i < ruleTable.length; i++) {
                         runXPathQuery(xml, ruleTable[i]);
                     }
@@ -64,22 +60,7 @@ document.observe("dom:loaded", function() {
         $("connect").disable();
     });
 
-    // $("sendForm").observe("submit", function (e) {
-    //     e.stop();
-    //     if (ws) {
-    //         let textField = $("textField");
-    //         //ws.send(textField.value);
-    //
-    //         runXPathQuery(xml, textField.value);
-    //
-    //         //log("[WebSocket#send]      Send:    '" + textField.value + "'\n");
-    //         //textField.value = "";
-    //         //textField.focus();
-    //     }
-    // });
-
-    $("disconnect").observe("click", function (e) {
-        e.stop();
+    d3.select("#disconnect").on("click", () => {
         if (ws) {
             ws.close();
             ws = null;
@@ -87,4 +68,22 @@ document.observe("dom:loaded", function() {
             $("connect").enable();
         }
     });
-});
+}
+
+
+/**
+ * send the message to the server
+ * @param command without quotation
+ * @param data with quotation
+ */
+function sendToServer(command, data) {
+
+    if (ws) {
+        let message = "{\"source\":\"WEB\",\"destination\":\"IDEA\",\"command\":\"" + command + "\",\"data\":"
+            + data + "}";
+
+        console.log(message);
+
+        ws.send(message.toString());
+    }
+}

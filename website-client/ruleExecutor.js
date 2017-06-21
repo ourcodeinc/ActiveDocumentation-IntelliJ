@@ -7,80 +7,67 @@ function runXPathQuery(xmlString, ruleTableI) {
 
     let parser = new DOMParser();
     let xml = parser.parseFromString(xmlString, "text/xml");
-    let queryResult = [];
-    let linkData = "";
-    let xmlResult = cloneXML(xml);
-
-    let query = ruleTableI.xPathQuery;
-    let xPathQueryResult = ruleTableI.expectedXPathQueryResult;
+    let initialResult = [];
+    let conditionedResult = [];
 
     function nsResolver(prefix) {
         let ns = {'src': 'http://www.srcML.org/srcML/src'};
         return ns[prefix] || null;
     }
 
-    if (xml.evaluate) {
-        let nodes = xml.evaluate(query, xml, nsResolver, XPathResult.ANY_TYPE, null);
-        switch (nodes.resultType) {
-            case XPathResult.NUMBER_TYPE:
-                queryResult.push(nodes.numberValue.toString());
-                break;
-
-            case XPathResult.STRING_TYPE:
-                queryResult.push(nodes.stringValue);
-                break;
-
-            case XPathResult.BOOLEAN_TYPE:
-                queryResult.push(nodes.booleanValue.toString());
-                break;
-
-            case XPathResult.UNORDERED_NODE_ITERATOR_TYPE:
-            case XPathResult.ORDERED_NODE_ITERATOR_TYPE:
-                let result = nodes.iterateNext();
-                while (result) {
-                    queryResult.push(new XMLSerializer().serializeToString(result));
-                    result = nodes.iterateNext();
-                }
-
-                linkData = getXmlData(xmlResult, query);
-
-                break;
-
-            case XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE:
-            case XPathResult.ORDERED_NODE_SNAPSHOT_TYPE:
-                for (let i = 0; i < nodes.snapshotLength; i++)
-                    console.log(nodes.snapshotItem(i));
-                break;
-
-            default:
-                console.log("Any Unordered Node Type, Any Type");
-                console.log(nodes);
-                break;
-        }
-
-        if (arraysEqual(queryResult.sort(), xPathQueryResult)) {
-            console.log("Expected result!");
-            console.log(queryResult);
-        }
-        else {
-            console.log("Not matching ...");
-            console.log("queryResult", queryResult);
-            console.log("xPathQueryResult", xPathQueryResult);
-        }
-
-
-        let data = {
-            'header': ruleTableI.header, 'description': ruleTableI.description,
-            'query': ruleTableI.xPathQuery, 'expectedResult': ruleTableI.expectedXPathQueryResult,
-            'result': queryResult, 'linkData': linkData
-        };
-
-        displayRulesAndResult(data);
-
+    // checks validity of the XML
+    if (!xml.evaluate) {
+        console.log('error in xml.evaluate');
+        return;
     }
-    else {
-        console.log('error in xml.evaluate')
+
+
+    // first compare the 'count' of groups
+    let count1Node = xml.evaluate(ruleTableI.countInitialGroup, xml, nsResolver, XPathResult.ANY_TYPE, null);
+    let count1 = count1Node.numberValue;
+
+    let count2Node = xml.evaluate(ruleTableI.countConditionedGroup, xml, nsResolver, XPathResult.ANY_TYPE, null);
+    let count2 = count2Node.numberValue;
+
+    if (count1 !== count2)
+        console.log("Not matching!");
+
+
+    // find the links
+    let initialGroupNodes = xml.evaluate(ruleTableI.initialGroup, xml, nsResolver, XPathResult.ANY_TYPE, null);
+    let result1 = initialGroupNodes.iterateNext();
+    let index = 0;
+    while (result1) {
+        initialResult.push({
+            "result": new XMLSerializer().serializeToString(result1),
+            "xml": getXmlData(xml, ruleTableI.initialGroup, index)
+        });
+        result1 = initialGroupNodes.iterateNext();
+        index += 1;
     }
+
+    let conditionedGroupNodes = xml.evaluate(ruleTableI.conditionedGroup, xml, nsResolver, XPathResult.ANY_TYPE, null);
+    let result2 = conditionedGroupNodes.iterateNext();
+    index = 0;
+    while (result2) {
+        conditionedResult.push({
+            "result": new XMLSerializer().serializeToString(result2),
+            "xml": getXmlData(xml, ruleTableI.conditionedGroup, index)
+        });
+        result2 = conditionedGroupNodes.iterateNext();
+        index += 1;
+    }
+
+
+    let data = {
+        'ruleDescription': ruleTableI.ruleDescription, 'detail': ruleTableI.detail,
+        'initialGroup': ruleTableI.initialGroup, 'initialResult': initialResult,
+        'conditionedGroup': ruleTableI.conditionedGroup, 'conditionedResult': conditionedResult
+    };
+
+    console.log(data);
+
+    displayRulesAndResult(data);
 
 }
 
@@ -93,41 +80,67 @@ function displayRulesAndResult(data) {
     d3.select("#RT")
         .append('tr')
         .append('th')
-        .html(data.header);
+        .html(data.ruleDescription);
+
+    d3.select("#RT")
+        .append('tr')
+        .append('td')
+        .html(data.detail);
 
     d3.select("#RT")
         .append('tr')
         .selectAll('td')
-        .data([data.description, data.expectedResult])
+        .data([data.initialGroup, data.initialResult])
         .enter()
         .append('td')
-        .html((d) => d);
+        .each(function (d, i) {
+            if (i === 0)
+                d3.select(this)
+                    .append("p")
+                    .text(d);
+            else
+                d3.select(this)
+                    .selectAll(".link")
+                    .data(d)
+                    .enter()
+                    .append("p")
+                    .text("Jump to line!")
+                    .on("click", (g) => {
+                        sendToServer("xmlResult", g.xml)
+                    })
+                    .classed("link", true);
+        });
 
     d3.select("#RT")
         .append('tr')
         .selectAll('td')
-        .data([data.result, data.linkData])
+        .data([data.conditionedGroup, data.conditionedResult])
         .enter()
         .append('td')
-        .html((d, i) => {
-            if (i === 0) return d;
-            return "<p> Jump to line </p>"
-        })
-        .on("click", (d, i) => {
-            if (i === 0) return;
-            if (ws) {
-                ws.send(d);
-            }
-        })
-        .classed("link", (d, i) => i === 1);
-
+        .each(function (d, i) {
+            if (i === 0)
+                d3.select(this)
+                    .append("p")
+                    .text(d);
+            else
+                d3.select(this)
+                    .selectAll(".link")
+                    .data(d)
+                    .enter()
+                    .append("p")
+                    .text("Jump to line!")
+                    .on("click", (g) => {
+                        sendToServer("xmlResult", g.xml)
+                    })
+                    .classed("link", true);
+        });
 }
 
 
 /**
  * clear the table in the browser
  */
-function clearRuleTable() {
+ function clearRuleTable() {
     d3.select("#RT").selectAll('tr').remove();
 }
 
@@ -178,10 +191,16 @@ function cloneXML(xml) {
 /**
  * remove the following nodes.The resulting xml is sent to the server to be processed by srcML
  * and find the line number.
- * @param xml
+ * @param mainXml
  * @param query
+ * @param index
  */
-function getXmlData(xml, query) {
+function getXmlData(mainXml, query, index) {
+
+    // passing the nodes and working with that changes the main XML
+    // and produces error for next nodes in the same query.
+
+    let xml = cloneXML(mainXml);
 
     function nsResolver(prefix) {
         let ns = {'src': 'http://www.srcML.org/srcML/src'};
@@ -190,8 +209,11 @@ function getXmlData(xml, query) {
 
     let nodes = xml.evaluate(query, xml, nsResolver, XPathResult.ANY_TYPE, null);
     let res = nodes.iterateNext();
-
-    console.log("res", res);
+    let i = 0;
+    while (i < index) {
+        res = nodes.iterateNext();
+        i += 1;
+    }
 
     /**
      * remove first child sib, sib, parent sib, grandparent sib, grand-grandparent sib, ... <- recursive
@@ -218,9 +240,8 @@ function getXmlData(xml, query) {
 
     let fileName = par.getAttribute("filename");
     let temp = new XMLSerializer().serializeToString(par);
-    return "{\"source\":\"WEB\",\"destination\":\"IDEA\",\"command\":\"xmlResult\",\"data\":{\"fileName\":\""
-        + (fileName.replace(/['"]+/g, '\\"')) + "\" ,\"xml\":\""
-        + (temp.replace(/['"]+/g, '\\"')) + "\"}}";
+    return "{\"fileName\":\"" + (fileName.replace(/['"]+/g, '\\"')) + "\" ,\"xml\":\""
+        + (temp.replace(/['"]+/g, '\\"')) + "\"}";
 
 }
 

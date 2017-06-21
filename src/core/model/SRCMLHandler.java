@@ -3,8 +3,6 @@ package core.model;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.File;
-import java.util.Arrays;
 
 /**
  * Created by saharmehrpour on 6/6/17.
@@ -14,8 +12,9 @@ public class SRCMLHandler {
 
     public static String createXMLFile(String path) {
 
-        String[] str = new String[]{"srcml", "--verbose", path + "/src" + "-o", path + "/source_xml.xml"};
-
+        // We can skip writing the file
+        // We don't need it here. The file is only written as a reference
+        String[] str = new String[]{"srcml", "--verbose", path + "/src", "-o", path + "/source_xml.xml"};
         runShellCommand(str); // to save the xml
 
         return runShellCommand(new String[]{"srcml", "--verbose", path + "/src"})[0];

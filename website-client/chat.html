@@ -13,57 +13,34 @@
     <div class="nav-wrapper green-blue">
         <div class="container"><a class="brand-logo center">Active Documentation</a></div>
         <ul id="nav-mobile" class="right hide-on-med-and-down">
-            <li><a href="sass.html">Schedule</a></li>
-            <li><a href="badges.html">Calendar</a></li>
-            <li><a href="collapsible.html">Archives</a></li>
+            <li><a id="link_generate_rules">Generate Rules</a></li>
+            <li><a id="link_rule_result">Rule Results</a></li>
         </ul>
     </div>
 </nav>
 
 <br>
 
-<div id="filetext">
+<div id="connection" class="main">
     <div>
 
         <br>
         <div class="container">
             <div class="row">
-                <form class="col s12" id="uriForm">
-                    <div class="row">
-                        <div class="input-field col s12">
-                            <!--<input type="text" id="uri" value="ws://localhost:8887" style="width:200px;">-->
-                            <input type="submit" id="connect" value="Connect" class="btn dark-blue">
-                            <input type="button" id="disconnect" value="Disconnect" disabled="disabled"
-                                   class="btn dark-blue">
-                        </div>
+                <div class="row">
+                    <div class="input-field col s12">
+                        <input type="button" id="connect" value="Connect" class="btn dark-blue">
+                        <input type="button" id="disconnect" value="Disconnect" disabled="disabled"
+                               class="btn dark-blue">
                     </div>
-                </form>
-
-                <!--<form class="col s12" id="sendForm">-->
-                <!--<div class="row">-->
-                <!--<div class="input-field col s6">-->
-                <!--<input type="text" id="textField" value="" style="width:200px;">-->
-                <!--<input type="submit" value="Send" class="btn dark-blue">-->
-                <!--</div>-->
-                <!--</div>-->
-                <!--</form>-->
-                <!--<form class="col s12">-->
-                <!--<div class="row">-->
-                <!--<div class="input-field col s6">-->
-                <!--<textarea id="log" rows="30" cols="50"-->
-                <!--style="font-family: monospace; color: red; margin: 0px; width: auto; height: 200px;"-->
-                <!--spellcheck="false"></textarea>-->
-                <!--</div>-->
-                <!--</div>-->
-                <!--</form>-->
-                <!--<hr>-->
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 
-<div>
+<div id="ruleResults" class="main">
     <div class="container rule-table">
         <table id="RT">
             <tr>
@@ -83,65 +60,39 @@
 </div>
 
 
-<!--<div id="ruleBox" class="container">-->
-<!--<div class="row">-->
-<!--<div class="row">-->
-<!--<div class="col s12 m12">-->
-<!--<div class="card blue-grey darken-1">-->
-<!--<div class="card-content white-text">-->
-<!--<span class="card-title">How to Use Active Documentation</span>-->
-<!--<p>Connect to the IntelliJ IDE with the Active Documentation plugin and start working.-->
-<!--If Active Documentation catches any errors, it will alert you in the place of this-->
-<!--message.</p>-->
-<!--</div>-->
-<!--<div class="card-action">-->
-<!--&lt;!&ndash;-->
-<!--<a href="#">This is a link</a>-->
-<!--<a href="#">This is a link</a> &ndash;&gt;-->
-<!--<div class="chip">-->
-<!--Intro-->
-<!--<i class="close material-icons">close</i>-->
-<!--</div>-->
-<!--</div>-->
-<!--</div>-->
-<!--</div>-->
-<!--</div>-->
-<!--<hr>-->
-<!--</div>-->
-<!--</div>-->
+<div id="ruleGeneration" class="main hidden">
+    <div class="rule-forms">
+        Rule Description:<br>
+        <input type="text" id="ruleDescription"><br>
+        Detail:<br>
+        <input type="text" name="detail" id="ruleDetail"><br>
+        Classes with:<br>
+        <select name="elements" id="elements">
+            <option value="variable">Variable</option>
+            <option value="annotation">Annotation</option>
+            <option value="all">(All Classes)</option>
+        </select><br>
+        named:<br>
+        <input type="text" name="elementName" id="initElementName"><br>
+        must have: <br>
+        <select name="conditions" id="conditions">
+            <option value="method">Method</option>
+            <option value="variable">Variable</option>
+            <option value="constructor">Constructor</option>
+        </select><br>
+        <input type="text" name="elementName" id="condElementName"><br>
+        <input type="button" value="Generate" id="ruleGenerator">
+    </div>
+</div>
 
-<!--<footer class="page-footer green-blue">-->
-<!--<div class="container">-->
-<!--<div class="row">-->
-<!--<div class="col l6 s12">-->
-<!--<h5 class="white-text">Footer Content</h5>-->
-<!--<p class="grey-text text-lighten-4">You can use rows and columns here to organize your footer-->
-<!--content.</p>-->
-<!--</div>-->
-<!--<div class="col l4 offset-l2 s12">-->
-<!--<h5 class="white-text">Links</h5>-->
-<!--<ul>-->
-<!--<li><a class="grey-text text-lighten-3" href="#!">Link 1</a></li>-->
-<!--<li><a class="grey-text text-lighten-3" href="#!">Link 2</a></li>-->
-<!--<li><a class="grey-text text-lighten-3" href="#!">Link 3</a></li>-->
-<!--<li><a class="grey-text text-lighten-3" href="#!">Link 4</a></li>-->
-<!--</ul>-->
-<!--</div>-->
-<!--</div>-->
-<!--</div>-->
-<!--<div class="footer-copyright">-->
-<!--<div class="container">-->
-<!--Rahul Kindi-->
-<!--<a class="grey-text text-lighten-4 right" href="#!">More Links</a>-->
-<!--</div>-->
-<!--</div>-->
-<!--</footer>-->
 
 <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
 <script type="text/javascript" src="js/d3/d3.js"></script>
 <script type="text/javascript" src="prototype.js"></script>
 <script type="text/javascript" src="ruleExecutor.js"></script>
+<script type="text/javascript" src="ruleGenerator.js"></script>
 <script type="text/javascript" src="websocket_response_handler.js"></script>
+<script type="text/javascript" src="main.js"></script>
 <script>let $jq = jQuery.noConflict();</script>
 
 </body>
