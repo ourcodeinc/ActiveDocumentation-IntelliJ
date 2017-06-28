@@ -35,33 +35,41 @@ function setupForm() {
 function generateNewRule() {
     let condition = "//src:class";
     let initClass = "";
+    let initTitle = "";
+    let condTitle = "";
 
     switch (d3.select("#elements").property("value")) {
         case "variable":
             condition = condition + `[src:block/src:decl_stmt/src:decl/src:name[text()=\"${$("initElementName").value}\"]`;
             initClass = condition + ']';
             condition = condition + ' and ';
+            initTitle = `All classes with Variable ${$("initElementName").value}`;
             break;
         case "annotation":
             condition = condition + `[src:annotation/src:name[text()=\"${$("initElementName").value}\"]`;
             initClass = condition + ']';
             condition = condition + ' and ';
+            initTitle = `All @${$("initElementName").value} classes`;
             break;
         case "all":
             initClass = condition;
             condition = condition + '[';
+            initTitle = `All classes`;
             break;
     }
 
     switch (d3.select("#conditions").property("value")) {
         case "method":
             condition = condition + `src:block/src:function/src:name[text()=\"${$("condElementName").value}\"]]`;
+            condTitle = `Classes with Method ${$("condElementName").value}`;
             break;
         case "constructor":
             condition = condition + "count(src:block/src:constructor)>0]";
+            condTitle = `Classes with constructors`;
             break;
         case "variable":
             condition = condition + `src:block/src:decl_stmt/src:decl/src:name[text()=\"${$("condElementName").value}\"]]`;
+            condTitle = `Classes with Variable ${$("condElementName").value}`;
             break;
     }
 
@@ -79,7 +87,10 @@ function generateNewRule() {
         'initialGroup': initClass,
         'countInitialGroup': "count(" + initClass + ")",
         'conditionedGroup': condition,
-        'countConditionedGroup': "count(" + condition + ")"
+        'countConditionedGroup': "count(" + condition + ")",
+        'titleInitialGroup': initTitle,
+        'titleConditionedGroup': condTitle,
+        'verification': 'count'
     };
 
     ruleTable.push(newRule);

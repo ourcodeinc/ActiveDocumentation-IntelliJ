@@ -82,7 +82,7 @@ function sendToServer(command, data) {
         let message = "{\"source\":\"WEB\",\"destination\":\"IDEA\",\"command\":\"" + command + "\",\"data\":"
             + data + "}";
 
-        console.log(message);
+        //console.log(message);
 
         ws.send(message.toString());
     }

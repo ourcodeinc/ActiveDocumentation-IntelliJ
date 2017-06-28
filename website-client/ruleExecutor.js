@@ -9,6 +9,7 @@ function runXPathQuery(xmlString, ruleTableI) {
     let xml = parser.parseFromString(xmlString, "text/xml");
     let initialResult = [];
     let conditionedResult = [];
+    let match = false;
 
     function nsResolver(prefix) {
         let ns = {'src': 'http://www.srcML.org/srcML/src'};
@@ -22,15 +23,16 @@ function runXPathQuery(xmlString, ruleTableI) {
     }
 
 
-    // first compare the 'count' of groups
-    let count1Node = xml.evaluate(ruleTableI.countInitialGroup, xml, nsResolver, XPathResult.ANY_TYPE, null);
-    let count1 = count1Node.numberValue;
-
-    let count2Node = xml.evaluate(ruleTableI.countConditionedGroup, xml, nsResolver, XPathResult.ANY_TYPE, null);
-    let count2 = count2Node.numberValue;
-
-    if (count1 !== count2)
-        console.log("Not matching!");
+    switch (ruleTableI.verification) {
+        case "count":
+            // compare the 'count' of groups
+            match = countGroups(xml, ruleTableI);
+            break;
+        case "array":
+            // compare arrays of groups
+            match = arrayGroups(xml, ruleTableI);
+            break;
+    }
 
 
     // find the links
@@ -58,18 +60,67 @@ function runXPathQuery(xmlString, ruleTableI) {
         index += 1;
     }
 
-
-    let data = {
-        'ruleDescription': ruleTableI.ruleDescription, 'detail': ruleTableI.detail,
-        'initialGroup': ruleTableI.initialGroup, 'initialResult': initialResult,
-        'conditionedGroup': ruleTableI.conditionedGroup, 'conditionedResult': conditionedResult
-    };
+    let data = cloneJSON(ruleTableI);
+    data['initialResult'] = initialResult;
+    data['conditionedResult'] = conditionedResult;
+    data['match'] = match;
 
     console.log(data);
 
     displayRulesAndResult(data);
 
 }
+
+/**
+ * count and compare results
+ * @param xml
+ * @param ruleTableI
+ */
+function countGroups(xml, ruleTableI) {
+    function nsResolver(prefix) {
+        let ns = {'src': 'http://www.srcML.org/srcML/src'};
+        return ns[prefix] || null;
+    }
+
+    let count1Node = xml.evaluate(ruleTableI.countInitialGroup, xml, nsResolver, XPathResult.ANY_TYPE, null);
+    let count1 = count1Node.numberValue;
+
+    let count2Node = xml.evaluate(ruleTableI.countConditionedGroup, xml, nsResolver, XPathResult.ANY_TYPE, null);
+    let count2 = count2Node.numberValue;
+
+    return (count1 === count2);
+}
+
+/**
+ * compare array of results
+ * @param xml
+ * @param ruleTableI
+ */
+function arrayGroups(xml, ruleTableI) {
+    function nsResolver(prefix) {
+        let ns = {'src': 'http://www.srcML.org/srcML/src'};
+        return ns[prefix] || null;
+    }
+
+    let array1 = [], array2 = [];
+
+    let array1Node = xml.evaluate(ruleTableI.arrayInitialGroup, xml, nsResolver, XPathResult.ANY_TYPE, null);
+    let res1 = array1Node.iterateNext();
+    while (res1) {
+        array1.push(new XMLSerializer().serializeToString(res1));
+        res1 = array1Node.iterateNext();
+    }
+
+    let array2Node = xml.evaluate(ruleTableI.arrayConditionedGroup, xml, nsResolver, XPathResult.ANY_TYPE, null);
+    let res2 = array2Node.iterateNext();
+    while (res2) {
+        array2.push(new XMLSerializer().serializeToString(res2));
+        res2 = array2Node.iterateNext();
+    }
+
+    return (arrayContains(array2, array1));
+}
+
 
 /**
  * display the data in the browser
@@ -80,7 +131,9 @@ function displayRulesAndResult(data) {
     d3.select("#RT")
         .append('tr')
         .append('th')
-        .html(data.ruleDescription);
+        .html(data.ruleDescription)
+        .classed('matching', data.match)
+        .classed('mismatch', !data.match);
 
     d3.select("#RT")
         .append('tr')
@@ -90,7 +143,7 @@ function displayRulesAndResult(data) {
     d3.select("#RT")
         .append('tr')
         .selectAll('td')
-        .data([data.initialGroup, data.initialResult])
+        .data([data.titleInitialGroup, data.initialResult])
         .enter()
         .append('td')
         .each(function (d, i) {
@@ -114,7 +167,7 @@ function displayRulesAndResult(data) {
     d3.select("#RT")
         .append('tr')
         .selectAll('td')
-        .data([data.conditionedGroup, data.conditionedResult])
+        .data([data.titleConditionedGroup, data.conditionedResult])
         .enter()
         .append('td')
         .each(function (d, i) {
@@ -140,51 +193,8 @@ function displayRulesAndResult(data) {
 /**
  * clear the table in the browser
  */
- function clearRuleTable() {
+function clearRuleTable() {
     d3.select("#RT").selectAll('tr').remove();
-}
-
-
-/**
- * check whether two arrays are equals
- * @param array1
- * @param array2
- * @returns {boolean}
- */
-function arraysEqual(array1, array2) {
-
-    let arr1 = array1.slice(0);
-    let arr2 = array2.slice(0);
-
-    if (arr1.length !== arr2.length)
-        return false;
-    for (let i = arr2.length; i--;) {
-        if (arr1.indexOf(arr2[i]) === -1)
-            return false;
-        arr1.splice(arr1.indexOf(arr2[i]), 1)
-    }
-
-    return true;
-}
-
-/**
- * deep copy of an xml variable
- * @param xml
- * @returns {Document}
- */
-function cloneXML(xml) {
-    let newDocument = xml.implementation.createDocument(
-        xml.namespaceURI, //namespace to use
-        "",                     //name of the root element (or for empty document)
-        null                      //doctype (null for XML)
-    );
-    let newNode = newDocument.importNode(
-        xml.documentElement, //node to import
-        true                         //clone its descendants
-    );
-    newDocument.appendChild(newNode);
-
-    return newDocument;
 }
 
 
@@ -243,16 +253,4 @@ function getXmlData(mainXml, query, index) {
     return "{\"fileName\":\"" + (fileName.replace(/['"]+/g, '\\"')) + "\" ,\"xml\":\""
         + (temp.replace(/['"]+/g, '\\"')) + "\"}";
 
-}
-
-/**
- * find the 'unit' parent of the node
- * @param node
- * @returns {*}
- */
-function findUnitNode(node) {
-    if (node.nodeName === 'unit')
-        return node;
-    else
-        return findUnitNode(node.parentNode);
 }

@@ -2,8 +2,6 @@ import com.google.gson.JsonObject;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 
-import core.model.SRCMLHandler;
-
 import java.io.*;
 
 // A quick class to format some data as a JSONObject message that the web-client can process

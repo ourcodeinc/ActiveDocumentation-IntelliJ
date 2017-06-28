@@ -74,14 +74,16 @@
         </select><br>
         named:<br>
         <input type="text" name="elementName" id="initElementName"><br>
-        must have: <br>
+        <input type="radio" name="condition" value="mustHave">must have: <br>
         <select name="conditions" id="conditions">
             <option value="method">Method</option>
             <option value="variable">Variable</option>
             <option value="constructor">Constructor</option>
         </select><br>
         <input type="text" name="elementName" id="condElementName"><br>
-        <input type="button" value="Generate" id="ruleGenerator">
+        <input type="button" value="Generate" id="ruleGenerator"><br>
+
+        <input type="radio" name="condition" value="mustBeFollowed">must be followed by: <br>
     </div>
 </div>
 
@@ -89,6 +91,7 @@
 <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
 <script type="text/javascript" src="js/d3/d3.js"></script>
 <script type="text/javascript" src="prototype.js"></script>
+<script type="text/javascript" src="utilities.js"></script>
 <script type="text/javascript" src="ruleExecutor.js"></script>
 <script type="text/javascript" src="ruleGenerator.js"></script>
 <script type="text/javascript" src="websocket_response_handler.js"></script>
