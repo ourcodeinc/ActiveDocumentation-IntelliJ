@@ -19,6 +19,7 @@ import com.intellij.psi.PsiManager;
 
 import core.model.SRCMLHandler;
 
+import core.model.SRCMLxml;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -34,11 +35,36 @@ public class FileChangeManager implements ProjectComponent {
     private final MessageBusConnection connection;
     private ChatServer s;
     private List<VirtualFile> ignoredFiles = new ArrayList<>();
+    private SRCMLxml srcml;
+    private String rules;
 
-    public FileChangeManager(ChatServer server) {
+    public FileChangeManager(ChatServer server, SRCMLxml xmlP, String rule) {
         connection = ApplicationManager.getApplication().getMessageBus().connect();
         s = server;
 
+        rules = rule;
+        srcml = xmlP;
+    }
+
+    public SRCMLxml getSrcml() {
+        return srcml;
+    }
+
+    public String getRules() {
+        return rules;
+    }
+
+    public void setSrcml(SRCMLxml srcml) {
+        this.srcml = srcml;
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML", srcml.xml}).toString());
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", this.getRules()}).toString());
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
+    }
+
+    public void setRules(String rules) {
+        this.rules = rules;
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", rules}).toString());
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
     }
 
     public void initComponent() {
@@ -62,19 +88,15 @@ public class FileChangeManager implements ProjectComponent {
 
                     if (event instanceof VFileCreateEvent) { // Create files
                         handleVFileCreateEvent(event);
-                        System.out.println("CREATE");
 
                     } else if (event instanceof VFileContentChangeEvent) { // Text Change
                         handleVFileChangeEvent(event);
-                        System.out.println("CHANGE");
 
                     } else if (event instanceof VFileDeleteEvent) { // Delete files
                         handleVFileDeleteEvent(event);
-                        System.out.println("DEL");
 
                     } else if (event instanceof VFilePropertyChangeEvent) { // Property Change
                         handleVFilePropertyChangeEvent(event);
-                        System.out.println("PROP_CHANGE");
                     }
                 }
             }
@@ -91,7 +113,6 @@ public class FileChangeManager implements ProjectComponent {
             e.printStackTrace();
         }
     }
-
 
     @NotNull
     @Override
@@ -157,7 +178,7 @@ public class FileChangeManager implements ProjectComponent {
                     System.out.println("error in writing the rules");
                     return;
                 }
-                s.setRules(MessageProcessor.getIntitialRules().toString());
+                this.setRules(MessageProcessor.getIntitialRules().toString());
 
         }
 
@@ -215,47 +236,127 @@ public class FileChangeManager implements ProjectComponent {
 
         // if we are dealing with ruleJson.txt
         if (file.getName().equals("ruleJson.txt")) {
-            s.setRules(MessageProcessor.getIntitialRules().toString());
+            this.setRules(MessageProcessor.getIntitialRules().toString());
             return;
         }
-
-        Project project = ProjectManager.getInstance().getOpenProjects()[0];
-        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
 
         // do not handle if the file is not a part of the project
-        if (!PsiManager.getInstance(project).isInProject(psiFile)) {
+        if (!shouldConsiderEvent(file)) {
             return;
         }
 
-        s.setXml(SRCMLHandler.createXMLFile(project.getBasePath()));
-
+        System.out.println("CHANGE");
+        this.setSrcml(SRCMLHandler.updateXMLForProject(this.getSrcml(), file.getPath()));
     }
 
     // when a file is created
     private void handleVFileCreateEvent(VFileEvent event) {
 
         VirtualFile file = event.getFile();
-        Project project = ProjectManager.getInstance().getOpenProjects()[0];
 
-        if (!file.isDirectory()) {
-            s.setXml(SRCMLHandler.createXMLFile(project.getBasePath()));
+        // if we are dealing with ruleJson.txt
+        if (file.getName().equals("ruleJson.txt")) {
+            this.setRules(MessageProcessor.getIntitialRules().toString());
+            return;
         }
+
+        // do not handle if the file is not a part of the project
+        if (!shouldConsiderEvent(file)) {
+            return;
+        }
+
+        System.out.println("CREATE");
+        this.setSrcml(SRCMLHandler.addXMLForProject(this.getSrcml(), file.getPath()));
 
     }
 
     // when a file's properties change. for instance, if the file is renamed.
     private void handleVFilePropertyChangeEvent(VFileEvent event) {
+        VirtualFile file = event.getFile();
 
         Project project = ProjectManager.getInstance().getOpenProjects()[0];
-        s.setXml(SRCMLHandler.createXMLFile(project.getBasePath()));
+        List<String> newPaths = getFilePaths(project);
+
+        System.out.println("PROP_CHANGE");
+        for (String path : srcml.getPaths()) {
+            if (!newPaths.contains(path)) {
+
+                SRCMLxml newsrcML = SRCMLHandler.removeXMLForProject(srcml, path);
+                newsrcML = SRCMLHandler.addXMLForProject(newsrcML, file.getPath());
+                this.setSrcml(newsrcML);
+                break;
+            }
+        }
 
     }
 
     // when a file is deleted
     private void handleVFileDeleteEvent(VFileEvent event) {
+        VirtualFile file = event.getFile();
 
-        Project project = ProjectManager.getInstance().getOpenProjects()[0];
-        s.setXml(SRCMLHandler.createXMLFile(project.getBasePath()));
+        // if we are dealing with ruleJson.txt
+        if (file.getName().equals("ruleJson.txt")) {
+            this.setRules("");
+            return;
+        }
+
+        System.out.println("DELETE");
+        this.setSrcml(SRCMLHandler.removeXMLForProject(this.getSrcml(), file.getPath()));
 
     }
+
+
+    /**
+     * chech whether we should consider the file change
+     *
+     * @param file
+     * @return boolean
+     */
+    private boolean shouldConsiderEvent(VirtualFile file) {
+
+        if (file.isDirectory())
+            return false;
+        else if (!file.getCanonicalPath().endsWith(".java")) {
+            return false;
+        }
+        Project project = ProjectManager.getInstance().getOpenProjects()[0];
+        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+
+        return PsiManager.getInstance(project).isInProject(psiFile);
+
+    }
+
+
+    /**
+     * generate list of java file paths
+     *
+     * @param project
+     * @return list of file paths in the project
+     */
+    public static List<String> getFilePaths(Project project) {
+        List<String> paths = new ArrayList<>();
+
+        // start off with root
+        VirtualFile rootDirectoryVirtualFile = project.getBaseDir();
+
+        // set up queue
+        List<VirtualFile> q = new ArrayList<>();
+        q.add(rootDirectoryVirtualFile);
+
+        // traverse the queue
+        while (!q.isEmpty()) {
+            VirtualFile item = q.get(0);
+            q.remove(0);
+            for (VirtualFile childOfItem : item.getChildren()) {
+                if (childOfItem.isDirectory())
+                    q.add(childOfItem);
+                else if (childOfItem.getCanonicalPath().endsWith(".java")) {
+                    paths.add(childOfItem.toString().substring(7)); // remove file:// from the beginning
+                }
+            }
+        }
+
+        return paths;
+    }
+
 }

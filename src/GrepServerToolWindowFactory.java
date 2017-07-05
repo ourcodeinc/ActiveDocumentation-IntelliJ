@@ -2,11 +2,13 @@
  * This module creates the GUI for the plugin
  */
 
+import core.model.SRCMLxml;
+import org.java_websocket.WebSocketImpl;
+import org.jetbrains.annotations.NotNull;
+
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
-import org.java_websocket.WebSocketImpl;
-import org.jetbrains.annotations.NotNull;
 import com.intellij.ui.content.*;
 
 import javax.swing.*;
@@ -50,8 +52,7 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
             int port = 8887; // 843 flash policy port
 
             // generateProjectHierarchyAsJSON() populates initialClassTable as well
-            s = new ChatServer(port, SRCMLHandler.createXMLFile(project.getBasePath()),
-                    MessageProcessor.getIntitialRules().toString());
+            s = new ChatServer(port);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -59,7 +60,10 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
         }
 
         // This will allow file changes to be sent to the web client
-        FileChangeManager fcm = new FileChangeManager(s);
+        FileChangeManager fcm = new FileChangeManager(s,
+                SRCMLHandler.createXMLForProject(new SRCMLxml(FileChangeManager.getFilePaths(project),
+                        project.getBasePath())),
+                MessageProcessor.getIntitialRules().toString());
         s.setManager(fcm);
         fcm.initComponent();
 

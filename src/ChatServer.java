@@ -20,40 +20,20 @@ import java.util.List;
 public class ChatServer extends WebSocketServer {
 
     private List<String> backedUpMessages = new LinkedList<>();
-    private String xml;
-    private String rules;
-
     private FileChangeManager manager; // to process received messages
 
     /**
      * only used in GrepServerToolWindowFactory.run()
      *
      * @param port = 8887
-     * @param xmlP = srcML xml
-     * @param rule = rules
      * @throws UnknownHostException
      */
-    ChatServer(int port, String xmlP, String rule) throws UnknownHostException {
+    ChatServer(int port) throws UnknownHostException {
         super(new InetSocketAddress(port));
-        rules = rule;
-        xml = xmlP;
     }
 
     public void setManager(FileChangeManager fcm) {
         manager = fcm;
-    }
-
-    public void setRules(String newRules) {
-        rules = newRules;
-        this.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", rules}).toString());
-        this.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
-    }
-
-    public void setXml(String newXml) {
-        xml = newXml;
-        this.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML", xml}).toString());
-        this.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", rules}).toString());
-        this.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
     }
 
     @Override
@@ -62,8 +42,8 @@ public class ChatServer extends WebSocketServer {
         System.out.println("(onOpen) " + conn.getRemoteSocketAddress().getAddress().getHostAddress() + " entered the room!");
 
         this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "ENTER", (conn + " has entered the room!")}).toString());
-        this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML", xml}).toString());
-        this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", rules}).toString());
+        this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML", manager.getSrcml().xml}).toString());
+        this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", manager.getRules()}).toString());
         this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
 
         sendBackedUpMessages();
@@ -101,7 +81,6 @@ public class ChatServer extends WebSocketServer {
     }
 
     /**
-     * Sends <var>text</var> to all currently connected WebSocket clients.
      *
      * @param text The String to send across the network.
      */

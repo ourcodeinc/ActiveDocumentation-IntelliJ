@@ -1,26 +1,107 @@
+/**
+ * Created by saharmehrpour on 6/6/17.
+ */
+
 package core.model;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-/**
- * Created by saharmehrpour on 6/6/17.
- */
-
 public class SRCMLHandler {
 
-    public static String createXMLFile(String path) {
+    /**
+     * Create a srcML xml file initially
+     *
+     * @param srcml a partially defined SRCMLxml object
+     * @return SRCMLxml object
+     */
+    public static SRCMLxml createXMLForProject(SRCMLxml srcml) {
 
-        // We can skip writing the file
-        // We don't need it here. The file is only written as a reference
-        String[] str = new String[]{"srcml", "--verbose", path + "/src", "-o", path + "/source_xml.xml"};
-        runShellCommand(str); // to save the xml
+//        // We can skip writing the file
+//        // We don't need it here. The file is only written as a reference
+//        String[] str = new String[]{"srcml", "--verbose", srcml.projectPath + "/src", "-o", srcml.projectPath + "/source_xml.xml"};
+//        runShellCommand(str); // to save the xml
 
-        return runShellCommand(new String[]{"srcml", "--verbose", path + "/src"})[0];
-
+        for (int index = 0; index < srcml.fileNumber; index++) {
+            srcml.xmls.add(createXMLForFile(srcml.paths.get(index)));
+        }
+        srcml.attachXmls();
+        return srcml;
     }
 
+
+    /**
+     * update the xml for a file in project
+     *
+     * @param srcml    object
+     * @param filePath of the modified file
+     * @return srcml
+     */
+    public static SRCMLxml updateXMLForProject(SRCMLxml srcml, String filePath) {
+
+        for (int index = 0; index < srcml.fileNumber; index++) {
+            if (srcml.paths.get(index).equals(filePath))
+                srcml.xmls.set(index, createXMLForFile(srcml.paths.get(index)));
+        }
+        srcml.attachXmls();
+        return srcml;
+    }
+
+
+    /**
+     * remove an xml file
+     *
+     * @param srcml
+     * @param filePath
+     * @return
+     */
+    public static SRCMLxml removeXMLForProject(SRCMLxml srcml, String filePath) {
+        for (int index = 0; index < srcml.fileNumber; index++) {
+            if (srcml.paths.get(index).equals(filePath)) {
+                srcml.paths.remove(index);
+                srcml.xmls.remove(index);
+                srcml.fileNumber -= 1;
+                srcml.attachXmls();
+                break;
+            }
+        }
+        return srcml;
+    }
+
+    /**
+     * add an xml file
+     *
+     * @param srcml
+     * @param filePath
+     * @return
+     */
+    public static SRCMLxml addXMLForProject(SRCMLxml srcml, String filePath) {
+        srcml.paths.add(filePath);
+        srcml.xmls.add(createXMLForFile(filePath));
+        srcml.fileNumber += 1;
+        srcml.attachXmls();
+        return srcml;
+    }
+
+
+    /**
+     * create an xml for a specific file
+     *
+     * @param path of the file
+     * @return xml String
+     */
+    private static String createXMLForFile(String path) {
+        return runShellCommand(new String[]{"srcml", path})[0];
+    }
+
+
+    /**
+     * run the shell command
+     *
+     * @param command (terminal command)
+     * @return output and errors
+     */
     private static String[] runShellCommand(String[] command) {
         try {
             Process p = Runtime.getRuntime().exec(command);
@@ -46,6 +127,13 @@ public class SRCMLHandler {
 
     }
 
+
+    /**
+     * find the length of a java class from its xml file
+     *
+     * @param fullPath of the xml file
+     * @return number of characters
+     */
     public static int findLineNumber(String fullPath) {
 
         String[] str = new String[]{"srcml", "--unit", "1", fullPath};
