@@ -1,0 +1,123 @@
+
+.green-blue {
+    background-color: #41b6c4 !important;
+}
+
+.dark-blue {
+    background-color: #225ea8;
+}
+
+.btn:hover {
+    background-color: #1d91c0;
+}
+
+.link {
+    cursor: pointer;
+}
+
+select {
+    display: table;
+    width: 25rem;
+}
+
+input[type=text] {
+    border: 1px solid #9e9e9e;
+    height: 2rem;
+    width: 25rem;
+}
+
+input[type=text]:disabled {
+    border: 1px dotted rgba(0, 0, 0, 0.26);
+}
+
+input[type=radio]:not(:checked), [type="radio"]:checked {
+    position: relative;
+    left: 0;
+    opacity: 1;
+    margin: 10px;
+}
+
+.rule-forms {
+    padding: 10px;
+}
+
+.hidden {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* ruleTable Div */
+.ruleDiv {
+    clear: both;
+    background-color: #f8f8f8;
+    border-left: 2px solid #aaa;
+}
+
+.ruleResult {
+    padding: 0 15px;
+}
+
+.quantifierDiv, .conditionDiv {
+    float: left;
+    width: 40%;
+    padding-left: 10px;
+}
+
+.ruleTitle {
+    background-color: #e9e9e9;
+    padding: 0 5px;
+    border-radius: 7px;
+}
+
+.paddedDiv {
+    padding: 0 10px;
+}
+
+/* rules */
+.matches {
+    color: #1f78b4
+}
+
+.satisfied {
+    color: #33a02c;
+}
+
+.missing {
+    color: #e31a1c;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+.ruleResult li {
+    display: block;
+}
+
+.partResultDiv {
+    background-color: #3e3e3e;
+    border-radius: 7px;
+    padding: 0 5px;
+}
+
+/* SRCML xml styling */
+
+.partResultDiv * {
+    color: whitesmoke;
+}
+
+class, specifier {
+    color: rgb(183, 100, 24) !important;
+}
+
+name {
+    color: rgb(218, 166, 69) !important;
+}
+
+block {
+    color: whitesmoke;
+}
+
+annotation, annotation * {
+    color: rgb(173, 171, 0) !important;
+}

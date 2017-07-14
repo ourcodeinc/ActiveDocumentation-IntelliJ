@@ -84,7 +84,7 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
     private synchronized void publishServices() {
         try {
             webEngine.setJavaScriptEnabled(true);
-            File file = new File("/Users/saharmehrpour/Documents/Workspace/IntelliJTestPlugin/website-client/chat.html");
+            File file = new File("/Users/saharmehrpour/Documents/Workspace/ActiveDocumentation/website-client/chat.html");
             System.out.println(file.exists() + " file existence");
             webEngine.load(file.toURI().toURL().toString());
         } catch (Exception ex) {
