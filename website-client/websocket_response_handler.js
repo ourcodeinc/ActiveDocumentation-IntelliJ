@@ -1,12 +1,17 @@
+/**
+ * Modified the file by @saharmehrpour
+ */
+
 let ws;
 let xml;
-let rules;
-let ruleTable = [];
 
+// Unfortunately the intelliJ plugin doesn't understand global variables.
+// So we need to pass on the variable to functions and update the variable
+// by processing the returned value
+let ruleTable = [];
 
 function connectionManager() {
 
-    //d3.select("#connect").on("click", () => {
     ws = new WebSocket("ws://localhost:8887");
     ws.onopen = function () {
         clearRuleTable();
@@ -21,19 +26,24 @@ function connectionManager() {
         switch (message.command) {
 
             case "UPDATE_RULE_TABLE_AND_CONTAINER":
-                rules = eval(JSON.parse(message.data).text);
+                eval(JSON.parse(message.data).text);
                 break;
 
             case "VERIFY_RULES":
+                // verifyRules();
                 clearRuleTable();
                 for (let i = 0; i < ruleTable.length; i++) {
-                    runXPathQuery(xml, ruleTable[i]);
+                    ruleTable = runXPathQuery(xml, ruleTable, i);
                 }
+
+                d3.select(`#page_title`).on("change", () => managePageTitleChange(ruleTable));
+
                 break;
 
             case "XML":
                 xml = messageInfo;
 
+                // test
                 let parser = new DOMParser();
                 console.log(parser.parseFromString(xml, "text/xml"));
                 break;
@@ -50,24 +60,6 @@ function connectionManager() {
 
     };
 
-    // ws.onclose = function () {
-    //     $("disconnect").disable();
-    //     $("connect").enable();
-    //     ws = null;
-    // };
-    // //$("uri", "connect").invoke("disable");
-    // $("disconnect").enable();
-    // $("connect").disable();
-    // });
-    //
-    // d3.select("#disconnect").on("click", () => {
-    //     if (ws) {
-    //         ws.close();
-    //         ws = null;
-    //         $("disconnect").disable();
-    //         $("connect").enable();
-    //     }
-    // });
 }
 
 

@@ -22,34 +22,32 @@ In this version, the core of the plugin is based on [SRCML](http://www.srcml.org
 
 ## ruleJson.txt
 
-There must be a file name `ruleJson.txt`. In this file, there exists a JSON object named `ruleTable`. Here is the example for this file:
+There must be a file name `ruleJson.txt` in the project folder. In this file, there exists a JSON object named `ruleTable`. Here is the example for this file:
 
 ```
 ruleTable=
 [
     {
-        "ruleDescription": "All classes must have a constructor",
-        "detail": "No detail!",
-        "verification": "count",
-        "initialGroup": "//src:class",
-        "countInitialGroup": "count(//src:class)",
-        "titleInitialGroup": "All classes",
-        "conditionedGroup": "//src:class[count(src:block/src:constructor)>0]",
-        "countConditionedGroup": "count(//src:class[count(src:block/src:constructor)>0])",
-        "titleConditionedGroup": "Classes with constructors"
+        "ruleDescription": "All classes must have a constructor", 
+        "detail": "No detail!", 
+        "quantifierXpath": "//src:class", 
+        "quantifierTitle": "All classes", 
+        "quantifierXpathName": "//src:class/src:name/text()", 
+        "conditionedTitle": "Classes with constructors", 
+        "conditionedXpath": "//src:class[count(src:block/src:constructor)>0]", 
+        "conditionedXpathName": "//src:class[count(src:block/src:constructor)>0]/src:name/text()"
     },
     {
-        "ruleDescription": "All @Entity classes must be registered.",
-        "detail": "All @Entity classes must register themselves so that they can be used with Objectify. You need the statement ObjectifyService.register(TheEntityClassInQuestion);",
-        "verification": "array",
-        "initialGroup": "//src:class[src:annotation/src:name/text()=\"Entity\"]",
-        "arrayInitialGroup": "//src:class[src:annotation/src:name/text()=\"Entity\"]/src:name/text()",
-        "titleInitialGroup": "All @Entity classes",
-        "conditionedGroup": "//src:call[src:name//text()=\"register\"]",
-        "arrayConditionedGroup": "//src:call[src:name//text()=\"register\"]/src:argument_list//src:name[position()=1]/text()",
-        "titleConditionedGroup": "Registered classes"
+        "ruleDescription": "All @Entity classes must be registered.", 
+        "detail": "All @Entity classes must register themselves so that they can be used with Objectify. You need the statement ObjectifyService.register(TheEntityClassInQuestion);", 
+        "quantifierXpath": "//src:class[src:annotation/src:name/text()=\"Entity\"]", 
+        "quantifierXpathName": "//src:class[src:annotation/src:name/text()=\"Entity\"]/src:name/text()", 
+        "quantifierTitle": "All @Entity classes", 
+        "conditionedXpath": "//src:call[src:name//text()=\"register\"]", 
+        "conditionedXpathName": "//src:call[src:name//text()=\"register\"]/src:argument_list//src:name[position()=1]/text()", 
+        "conditionedTitle": "Registered classes"
     }
 ]
 ```
 
-The format of this file is not final. But in the current format, there exists an attribute `verification` which is either `count` or `array`. If the value is `count`, there must be two attributes `countInitialGroup` and `countConditionedGroup`. Otherwise, attributes `arrayInitialGroup` and `arrayConditionedGroup` must exist. The reason is that for some rules, one XPath query is not sufficient as the logic of the rule consists of two parts (or more); Searching and Verifying.
+The format of this file is not final.

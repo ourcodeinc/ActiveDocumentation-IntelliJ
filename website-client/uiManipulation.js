@@ -4,6 +4,21 @@
 
 
 /**
+ * event handler for when the title[tag] is changed
+ * @param rules
+ */
+function managePageTitleChange(rules) {
+    clearRuleTable();
+    let targetTag = document.getElementById(`page_title`).value;
+
+    for (let i = 0; i < rules.length; i++) {
+        if (rules[i].tags.indexOf(targetTag) > -1)
+            displayResult(rules, i);
+    }
+
+}
+
+/**
  * clear the table in the browser
  */
 function clearRuleTable() {
@@ -13,11 +28,12 @@ function clearRuleTable() {
 
 /**
  * display the data in the browser
- * @param data: rulJson + initialResult[] + conditionResult[] + match T/F
+ * @param rules: ruleJson + initialResult[] + conditionResult[] + match T/F
+ * @param ruleIndex
  */
-function displayResult(data) {
+function displayResult(rules, ruleIndex) {
 
-    let tooltip = d3.select('.tooltip');
+    let displayData = rules[ruleIndex];
 
     let ruleDiv = d3.select("#RT")
         .append('div')
@@ -25,29 +41,43 @@ function displayResult(data) {
         .append('div')
         .classed('ruleDiv', true);
 
-    ruleDiv.append('div')
+    // rule Description and Detail
+    let span = ruleDiv.append('div')
         .classed('paddedDiv', true)
-        .on('click', function () {
-            let node = d3.select(this.nextSibling)/*.select('.ruleResult')*/;
-            node.classed('hidden', !node.classed('hidden'));
-        })
         .append('div')
-        .classed('ruleTitle', true)
-        .html(() => {
-            return `<p><b>${data.ruleDescription}</b></p><p>${data.detail}</p>`
-        });
+        .classed('ruleTitleDiv', true)
+        .append('span');
 
-    let ruleResultDiv = ruleDiv.append('div')
-        .classed('ruleResult hidden', true);
+    span.append("textarea")
+        .attr("spellcheck", false)
+        //.append('input')
+        //.attr('type', 'text')
+        //.attr('value', displayData.ruleDescription)
+        .text(displayData.ruleDescription)
+        .attr("id", `rule_desc_${displayData.index}`)
+        .classed('ruleDescription', true)
+        .on("change", () => updateRules(rules, displayData.index));
 
+    span.append('br');
+    span.append('textarea')
+        .text(displayData.detail)
+        .attr("spellcheck", false)
+        .attr("id", `rule_detail_${displayData.index}`)
+        .classed('ruleDetail', true)
+        .on("change", () => updateRules(rules, displayData.index));
+
+    // rule result = quantifier + condition
+    let ruleResultDiv = ruleDiv.append('div');
+
+    // quantifier
     let quantifierDiv = ruleResultDiv.append('div')
         .classed('quantifierDiv', true);
     quantifierDiv.append('p')
-        .text(data.quantifierTitle);
+        .text(displayData.quantifierTitle);
     quantifierDiv.append('em')
         .classed('link matches', true)
         .text(() => {
-            return (data.satisfied + data.missing) + ' matches'
+            return (displayData.satisfied + displayData.missing) + ' matches'
         })
         .on("click", function () {
             let parentNode = d3.select(this.parentNode).select('.quantifierList');
@@ -56,18 +86,18 @@ function displayResult(data) {
     quantifierDiv.append('div')
         .classed('quantifierList hidden', true)
         .node()
-        .appendChild(listRender(data, 'quantifier').node());
+        .appendChild(listRender(displayData, 'quantifier').node());
 
-
+    // condition
     let conditionDiv = ruleResultDiv.append('div')
         .classed('conditionDiv', true);
     conditionDiv.append('p')
-        .text(data.conditionedTitle);
+        .text(displayData.conditionedTitle);
     let p = conditionDiv.append('p');
     p.append('em')
         .classed('link satisfied', true)
         .text(() => {
-            return data.satisfied + ' satisfied ';
+            return displayData.satisfied + ' satisfied ';
         })
         .on('click', function () {
             let parentNode = d3.select(this.parentNode.parentNode).select('.conditionList');
@@ -76,12 +106,12 @@ function displayResult(data) {
     p.append('em')
         .classed('missing', true)
         .text(() => {
-            return data.missing + ' missing';
+            return displayData.missing + ' missing';
         });
     conditionDiv.append('div')
         .classed('conditionList hidden', true)
         .node()
-        .appendChild(listRender(data, 'satisfied').node());
+        .appendChild(listRender(displayData, 'satisfied').node());
 
 
     // fixing the float div heights and widths
@@ -90,13 +120,15 @@ function displayResult(data) {
 
 }
 
+
 /**
- * create a list div node
+ * create a list div node for quantifier and conditioned result
  * @param data
  * @param group
  * @returns {string}
  */
 function listRender(data, group) {
+
 //let regex = /(<([^>]+)>)/ig;
     let detached = d3.select(document.createElement('div'));
 
@@ -133,3 +165,41 @@ function listRender(data, group) {
 }
 
 
+/**
+ * update the rule and send to server
+ * @param rules
+ * @param index
+ */
+function updateRules(rules, index) {
+    let data = [];
+
+    for (let i = 0; i < rules.length; i++) { // can't be run in the plugin
+        if (rules[i].index === index) {
+
+            let modifiedRule = cloneJSON(rules[i]);// can't be run in the plugin
+
+            modifiedRule.ruleDescription = document.getElementById(`rule_desc_${index}`).value;
+            modifiedRule.detail = document.getElementById(`rule_detail_${index}`).value;
+
+            data.push(modifiedRule);
+        }
+        else {
+            data.push(rules[i])
+        }
+    }
+
+    let ruleTableString = "\"ruleTable=" + JSON.stringify(data).substr(1);
+    sendToServer("NewRule", ruleTableString);
+
+}
+
+
+/**
+ * print the logs in the textarea
+ * the related div must be un-commented in the chat.html
+ * @param dataString
+ */
+function printLog(dataString) {
+    let previousLog = document.getElementById(`debug_output`).value;
+    d3.select("#debug_output").html(previousLog + '\n' + dataString);
+}

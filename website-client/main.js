@@ -1,3 +1,6 @@
+/**
+ * Created by saharmehrpour on 6/19/17.
+ */
 
 function navBarHandler() {
     d3.select("#link_generate_rules").on("click", () => {
@@ -10,12 +13,9 @@ function navBarHandler() {
         d3.select("#connection").classed("hidden", false);
         d3.select("#ruleResults").classed("hidden", false);
     });
+
 }
 
-
-/**
- * Created by saharmehrpour on 6/19/17.
- */
 
 (function () {
     let instance = null;
