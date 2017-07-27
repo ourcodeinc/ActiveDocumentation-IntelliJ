@@ -36,32 +36,32 @@ a {
     text-decoration: none;
 }
 
+h4 {
+    margin: 25px 0 10px 0;
+}
+
 /* from materialize  NAV */
 
 nav .nav-wrapper {
     position: relative;
     height: 100%;
+    box-shadow: 0 2px 2px #888888;
 }
 
 nav {
-    height: 64px;
-    line-height: 64px;
+    height: 40px;
+    line-height: 40px;
     display: block;
-}
-
-nav {
     color: #fff;
     background-color: #8c8d8d;
     width: 100%;
-    height: 56px;
-    line-height: 56px;
 }
 
 nav .brand-logo.center {
     left: 50%;
     -webkit-transform: translateX(-50%);
     transform: translateX(-50%);
-    margin-top: 10px;
+    /*margin-top: 10px;*/
 }
 
 nav .brand-logo {
@@ -254,6 +254,15 @@ select:focus {
 .ruleTitleDiv input[type=text]:focus, .ruleTitleDiv input[type=text]:hover,
 .ruleTitleDiv textarea:hover, .ruleTitleDiv textarea:focus {
     background-color: #f9f9f9;
+}
+
+.changed {
+    border-left: 2px solid #8b1e1b !important;
+    box-shadow: -1px 0 5px #8b1e1b;
+}
+
+.changedText {
+    text-shadow: 1px 1px 5px;
 }
 
 /* * * */

@@ -26,6 +26,7 @@ public class SRCMLHandler {
         for (int index = 0; index < srcml.fileNumber; index++) {
             srcml.xmls.add(createXMLForFile(srcml.paths.get(index)));
         }
+
         srcml.attachXmls();
         return srcml;
     }

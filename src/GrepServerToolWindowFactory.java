@@ -71,11 +71,13 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
         }
 
         // This will allow file changes to be sent to the web client
+
         FileChangeManager fcm = new FileChangeManager(s,
                 SRCMLHandler.createXMLForProject(new SRCMLxml(FileChangeManager.getFilePaths(project),
                         project.getBasePath())),
                 MessageProcessor.getIntitialRules().toString());
         s.setManager(fcm);
+
         fcm.initComponent();
 
     }

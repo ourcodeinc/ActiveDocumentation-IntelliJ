@@ -5,13 +5,19 @@
 function navBarHandler() {
     d3.select("#link_generate_rules").on("click", () => {
         d3.selectAll(".main").classed("hidden", true);
+        d3.select("#header_2").classed("hidden", true);
         d3.select("#ruleGeneration").classed("hidden", false);
     });
 
     d3.select("#link_rule_result").on("click", () => {
         d3.selectAll(".main").classed("hidden", true);
-        d3.select("#connection").classed("hidden", false);
+        d3.select("#header_2").classed("hidden", false);
         d3.select("#ruleResults").classed("hidden", false);
+    });
+    d3.select("#link_lists").on("click", () => {
+        d3.selectAll(".main").classed("hidden", true);
+        d3.select("#header_2").classed("hidden", true);
+        d3.select("#tableOfContent").classed("hidden", false);
     });
 
 }

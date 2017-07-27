@@ -25,18 +25,36 @@ function connectionManager() {
 
         switch (message.command) {
 
+            // when the rules are changed
             case "UPDATE_RULE_TABLE_AND_CONTAINER":
                 eval(JSON.parse(message.data).text);
+
                 break;
 
             case "VERIFY_RULES":
-                // verifyRules();
                 clearRuleTable();
+                clearTableOfContent();
+                displayTableOfContent(ruleTable);
+                d3.select(`#page_title`).on("change", () => managePageTitleChange(ruleTable));
+                document.getElementById(`page_title`).value = 'All rules';
+
                 for (let i = 0; i < ruleTable.length; i++) {
-                    ruleTable = runXPathQuery(xml, ruleTable, i);
+                    ruleTable = runXPathQuery(xml, ruleTable, ruleTable[i].index);
+                    displayResult(ruleTable, ruleTable[i].index);
                 }
 
-                d3.select(`#page_title`).on("change", () => managePageTitleChange(ruleTable));
+
+
+                break;
+
+            // when the code changes
+            case "CHECK_RULES":
+
+                for (let i = 0; i < ruleTable.length; i++) {
+                    ruleTable = checkRules(xml, ruleTable, ruleTable[i].index);
+                }
+
+                console.log(ruleTable);
 
                 break;
 

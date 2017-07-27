@@ -62,7 +62,7 @@ public class ChatServer extends WebSocketServer {
 
         JsonParser parser = new JsonParser();
         final JsonObject messageAsJson = parser.parse(message).getAsJsonObject();
-        //System.out.println("(onMessage) " + messageAsJson);
+        System.out.println("(onMessage) " /*+ messageAsJson*/);
 
         manager.processReceivedMessages(messageAsJson);
 
@@ -70,7 +70,7 @@ public class ChatServer extends WebSocketServer {
 
     @Override
     public void onFragment(WebSocket conn, Framedata fragment) {
-        System.out.println("(onFragment) " + "received fragment: " + fragment);
+        System.out.println("(onFragment) " /*+ "received fragment: " + fragment*/);
     }
 
 
@@ -99,8 +99,7 @@ public class ChatServer extends WebSocketServer {
         Collection<WebSocket> con = connections();
         if (con.size() == 0) {
             if (backedUpMessages.size() > 0) {
-                System.out.println("(sendBackedUpMessages) "
-                        + "Can't clear out backlog since there's no connection right now.");
+                System.out.println("(sendBackedUpMessages) " + "Can't clear out backlog since there's no connection right now.");
             }
         } else {
             sendMessage(con);
@@ -120,7 +119,7 @@ public class ChatServer extends WebSocketServer {
             synchronized (con) {
                 for (WebSocket c : con) {
                     c.send(itemToSend);
-                    System.out.println("(sendMessage) " + "Server sent: " + itemToSend);
+                    System.out.println("(sendMessage) " /*+ "Server sent: " + itemToSend*/);
                 }
             }
             backedUpMessages.remove(0);

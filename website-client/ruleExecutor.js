@@ -2,20 +2,6 @@
  * Created by saharmehrpour.
  */
 
-
-/**
- * Verify the rules
- */
-function verifyRules() {
-    clearRuleTable();
-    d3.select("#page_title").attr("value", `All rules (${ruleTable.length})`);
-
-    for (let i = 0; i < ruleTable.length; i++) {
-        //runXPathQuery2(xml, i);
-        runXPathQuery(xml, ruleTable[i]);
-    }
-}
-
 /**
  * runs the XPath query and then call the function to display them
  * @param xmlString
@@ -27,7 +13,10 @@ function runXPathQuery(xmlString, rules, ruleIndex) {
     let xml = parser.parseFromString(xmlString, "text/xml");
     let quantifierResult = [];
     let conditionedResult = [];
-    let rulesI = rules[ruleIndex];
+    //let rulesI = rules[ruleIndex];
+    let rulesI = rules.filter((d) => {
+        return d.index === ruleIndex
+    })[0];
 
     function nsResolver(prefix) {
         let ns = {'src': 'http://www.srcML.org/srcML/src'};
@@ -79,16 +68,52 @@ function runXPathQuery(xmlString, rules, ruleIndex) {
         index += 1;
     }
 
-    rules[ruleIndex]['quantifierResult'] = quantifierResult;
-    rules[ruleIndex]['conditionedResult'] = conditionedResult;
+    rulesI['quantifierResult'] = quantifierResult;
+    rulesI['conditionedResult'] = conditionedResult;
     let matching = compareResults(quantifierResult, conditionedResult);
-    rules[ruleIndex]['satisfied'] = matching;
-    rules[ruleIndex]['missing'] = quantifierResult.length - matching;
+    rulesI['satisfied'] = matching;
+    rulesI['missing'] = quantifierResult.length - matching;
 
-    displayResult(rules, ruleIndex);
     return rules;
 
 }
+
+
+/**
+ * re-run the xpath queries and detect changes.
+ * @param xmlString
+ * @param rules
+ * @param ruleIndex
+ */
+function checkRules(xmlString, rules, ruleIndex) {
+    let rulesI = rules.filter((d) => {
+        return d.index === ruleIndex
+    })[0];
+
+    let prevQuantifierResult = rulesI['quantifierResult'].slice(0);
+    let prevConditionedResult = rulesI['conditionedResult'].slice(0);
+    let prevMatching = rulesI['satisfied'];
+    let prevMissing = rulesI['missing'];
+
+    rules = runXPathQuery(xmlString, rules, ruleIndex);
+
+    rulesI = rules.filter((d) => {
+        return d.index === ruleIndex
+    })[0];
+
+    rulesI['changed'] = (!ResultArraysEqual(prevQuantifierResult, rulesI['quantifierResult']) ||
+    !ResultArraysEqual(prevConditionedResult, rulesI['conditionedResult']) ||
+    prevMatching !== rulesI['satisfied'] ||
+    prevMissing !== rulesI['missing']);
+
+    rulesI['missingChanged'] = prevMissing !== rulesI['missing'];
+    rulesI['satisfiedChanged'] = prevMatching !== rulesI['satisfied'];
+    rulesI['allChanged'] = (prevMatching + prevMissing) !== (rulesI['missing'] + rulesI['satisfied']);
+
+    updateDisplayResult(rules, ruleIndex);
+    return rules;
+}
+
 
 /**
  * compare the quantifier and the result

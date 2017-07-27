@@ -23,6 +23,39 @@ function arraysEqual(array1, array2) {
     return true;
 }
 
+
+/**
+ * check whether two arrays are equals
+ * @param array1
+ * @param array2
+ * @returns {boolean}
+ */
+function ResultArraysEqual(array1, array2) {
+
+    let arr1 = array1.slice(0);
+    let arr2 = array2.slice(0);
+
+    if (arr1.length !== arr2.length)
+        return false;
+    for (let i = arr2.length; i--;) {
+
+        let item = arr1.filter((d) => d.name === arr2[i].name);
+        if (item.length === 0)
+            return false;
+
+        // only remove one occurrence
+        let removed = false;
+        arr1 = arr1.filter((d) => {
+            if(!removed && d.name === arr2[i].name){
+                removed = ! removed;
+                return false;
+            }
+            return true;
+        });
+    }
+    return true;
+}
+
 /**
  * check whether one arrays contains all elements of the other array
  * @param container

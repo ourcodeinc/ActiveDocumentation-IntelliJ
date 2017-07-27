@@ -57,8 +57,9 @@ public class FileChangeManager implements ProjectComponent {
     public void setSrcml(SRCMLxml srcml) {
         this.srcml = srcml;
         s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML", srcml.xml}).toString());
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", this.getRules()}).toString());
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
+        //s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", this.getRules()}).toString());
+        //s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES", ""}).toString());
     }
 
     public void setRules(String rules) {

@@ -9,15 +9,20 @@
 </head>
 
 <body>
-<nav>
+<nav id="header_1">
+    <div class="nav-wrapper">
+        <ul id="nav-mobile" class="right hide-on-med-and-down">
+            <li><a id="link_generate_rules">Generate Rules</a></li>
+            <li><a id="link_rule_result">Rule Results</a></li>
+            <li><a id="link_lists">Rule and Tag list</a></li>
+        </ul>
+    </div>
+</nav>
+<nav id="header_2" class="hidden">
     <div class="nav-wrapper">
         <div class="container">
             <input type="text" class="brand-logo center" value="Active Documentation" id="page_title">
         </div>
-        <!--<ul id="nav-mobile" class="right hide-on-med-and-down">-->
-        <!--<li><a id="link_generate_rules">Generate Rules</a></li>-->
-        <!--<li><a id="link_rule_result">Rule Results</a></li>-->
-        <!--</ul>-->
     </div>
 </nav>
 
@@ -25,11 +30,31 @@
 
 
 <!--<div class="container center-align" style="padding: 10px">-->
-    <!--<textarea id="debug_output" style="height: 200px;width: 400px;"></textarea>-->
+<!--<textarea id="debug_output" style="height: 200px;width: 400px;"></textarea>-->
 <!--</div>-->
 
 
-<div id="ruleResults" class="main">
+<div id="tableOfContent" class="main">
+    <div class="container">
+        <div style="border-bottom: 1px solid #ddd;">
+            <h4>Rules</h4>
+        </div>
+        <ul id="rules_list"></ul>
+        <div style="border-bottom: 1px solid #ddd;">
+            <h4>Tags</h4>
+        </div>
+        <ul id="tags_list"></ul>
+    </div>
+</div>
+
+<div id="individualRule" class="main hidden">
+    <div class="container">
+        Individual Rule Div
+    </div>
+</div>
+
+
+<div id="ruleResults" class="main hidden">
     <div class="container rule-table">
         <div class="result" id="RT"></div>
     </div>
