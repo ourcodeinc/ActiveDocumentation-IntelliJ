@@ -2,26 +2,6 @@
  * Created by saharmehrpour on 6/19/17.
  */
 
-function navBarHandler() {
-    d3.select("#link_generate_rules").on("click", () => {
-        d3.selectAll(".main").classed("hidden", true);
-        d3.select("#header_2").classed("hidden", true);
-        d3.select("#ruleGeneration").classed("hidden", false);
-    });
-
-    d3.select("#link_rule_result").on("click", () => {
-        d3.selectAll(".main").classed("hidden", true);
-        d3.select("#header_2").classed("hidden", false);
-        d3.select("#ruleResults").classed("hidden", false);
-    });
-    d3.select("#link_lists").on("click", () => {
-        d3.selectAll(".main").classed("hidden", true);
-        d3.select("#header_2").classed("hidden", true);
-        d3.select("#tableOfContent").classed("hidden", false);
-    });
-
-}
-
 
 (function () {
     let instance = null;
@@ -36,11 +16,33 @@ function navBarHandler() {
             alert("FATAL: WebSocket not natively supported. This demo will not work!");
         }
 
-        connectionManager();
+        //NavBarHandler();
 
-        navBarHandler();
+        let tableOfContentManager = new TableOfContent();
+        let ruleTableManager = new RuleTable();
+        let ruleGenerator = new RuleGenerator();
 
-        initRuleGenerator();
+        WebSocketHandler(tableOfContentManager, ruleTableManager);
+
+
+        let hashManager = new UrlChangingHandling();
+
+        if ("onhashchange" in window) { // event supported?
+            window.onhashchange = function () {
+                hashManager.hashChangedHandler(window.location.hash);
+            }
+        }
+        else { // event not supported:
+            let storedHash = window.location.hash;
+            window.setInterval(function () {
+                if (window.location.hash != storedHash) {
+                    storedHash = window.location.hash;
+                    hashManager.hashChangedHandler(storedHash);
+                }
+            }, 100);
+        }
+
+        location.hash = "#/index";
 
     }
 

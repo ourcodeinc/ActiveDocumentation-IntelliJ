@@ -118,6 +118,10 @@ nav input[type=text]:focus, nav input[type=text]:hover {
     float: right !important;
 }
 
+.left {
+    float: left !important;
+}
+
 .green-blue {
     background-color: #41b6c4 !important;
 }
@@ -132,6 +136,10 @@ nav input[type=text]:focus, nav input[type=text]:hover {
 
 .link {
     cursor: pointer;
+}
+
+.inactive {
+    color: #1d91c0 !important;
 }
 
 /*    forms    */

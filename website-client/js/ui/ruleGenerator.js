@@ -2,7 +2,7 @@
  * Created by saharmehrpour on 6/19/17.
  */
 
-function initRuleGenerator() {
+function RuleGenerator() {
 
     setupForm();
 
@@ -12,6 +12,7 @@ function initRuleGenerator() {
  * setup the rule generating form by de/activating the inputs
  */
 function setupForm() {
+
     d3.select("#ruleGenerator").on("click", generateNewRule);
 
     d3.select("#elements").on("change", function () {
@@ -97,7 +98,7 @@ function generateNewRule() {
     let ruleTableString = "\"ruleTable=" + JSON.stringify(ruleTable).substr(1);
 
 
-    sendToServer("NewRule", ruleTableString);
+    //sendToServer("NewRule", ruleTableString);
 
     // No need - the server sends the message to update the rule results
     // // display the result
@@ -105,4 +106,4 @@ function generateNewRule() {
     // for (let i = 0; i < ruleTable.length; i++) {
     //     runXPathQuery(xml, ruleTable[i]);
     // }
-}
+};

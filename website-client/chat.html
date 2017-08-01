@@ -11,7 +11,11 @@
 <body>
 <nav id="header_1">
     <div class="nav-wrapper">
-        <ul id="nav-mobile" class="right hide-on-med-and-down">
+        <ul class="left hide-on-med-and-down">
+            <li><a id="back_button" class="inactive"> < </a></li>
+            <li><a id="forward_button" class="inactive"> > </a></li>
+        </ul>
+        <ul class="right hide-on-med-and-down">
             <li><a id="link_generate_rules">Generate Rules</a></li>
             <li><a id="link_rule_result">Rule Results</a></li>
             <li><a id="link_lists">Rule and Tag list</a></li>
@@ -53,13 +57,11 @@
     </div>
 </div>
 
-
 <div id="ruleResults" class="main hidden">
     <div class="container rule-table">
         <div class="result" id="RT"></div>
     </div>
 </div>
-
 
 <div id="ruleGeneration" class="main hidden">
     <div class="rule-forms">
@@ -91,12 +93,21 @@
 
 <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
 <script type="text/javascript" src="js/d3/d3.js"></script>
-<script type="text/javascript" src="prototype.js"></script>
+<script type="text/javascript" src="js/prototype.js"></script>
+
 <script type="text/javascript" src="utilities.js"></script>
-<script type="text/javascript" src="ruleExecutor.js"></script>
-<script type="text/javascript" src="ruleGenerator.js"></script>
-<script type="text/javascript" src="uiManipulation.js"></script>
-<script type="text/javascript" src="websocket_response_handler.js"></script>
+<script type="text/javascript" src="urlChangingHandling.js"></script>
+<script type="text/javascript" src="webSocketHandler.js"></script>
+
+<script type="text/javascript" src="js/core/ruleExecutor.js"></script>
+
+<script type="text/javascript" src="js/ui/ruleGenerator.js"></script>
+<script type="text/javascript" src="js/ui/ruleTable.js"></script>
+<script type="text/javascript" src="js/ui/tableOfContent.js"></script>
+
+<!--<script type="text/javascript" src="uiManipulation.js"></script>-->
+<!--<script type="text/javascript" src="websocket_response_handler.js"></script>-->
+
 <script type="text/javascript" src="main.js"></script>
 <script>let $jq = jQuery.noConflict();</script>
 

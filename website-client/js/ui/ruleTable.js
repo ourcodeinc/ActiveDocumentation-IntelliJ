@@ -1,58 +1,57 @@
 /**
- * Created by saharmehrpour on 7/6/17.
+ * Created by saharmehrpour on 8/1/17.
  */
 
-
-/**
- * event handler for when the title[tag] is changed
- * @param rules
- */
-function managePageTitleChange(rules) {
-    let targetTag = document.getElementById(`page_title`).value.split(" ");
-
-    for (let i = 0; i < rules.length; i++) {
-        if (targetTag[0] === 'All') {
-            d3.select(`#rule_result_${rules[i].index}`).classed('hidden', false);
-        }
-        else
-            d3.select(`#rule_result_${rules[i].index}`).classed('hidden', !arrayContains(rules[i].tags, targetTag));
-    }
-
+function RuleTable() {
+    this.div = d3.select("#ruleResults");
 }
+
+
+RuleTable.prototype.setRules = function (ruleList) {
+    this.rules = ruleList;
+};
+
+RuleTable.prototype.setWS = function (webSocket) {
+    this.ws = webSocket;
+};
 
 /**
  * clear the table in the browser
  */
-function clearRuleTable() {
-    d3.select("#RT").selectAll('div').remove();
-}
-
+RuleTable.prototype.clearRuleTable = function () {
+    d3.select("#ruleResults")
+        .select("#RT").selectAll('div').remove();
+};
 
 /**
- * clear the table of content
+ * display all rules
  */
-function clearTableOfContent() {
-    d3.select("#rules_list").selectAll('li').remove();
-    d3.select("#tags_list").selectAll('li').remove();
-}
+RuleTable.prototype.displayRules = function () {
+
+    for (let i = 0; i < this.rules.length; i++) {
+        this.displayResult(this.rules[i].index);
+    }
+};
 
 
 /**
  * display the data in the browser
- * @param rules: ruleJson + initialResult[] + conditionResult[] + match T/F
+ * rules: ruleJson + initialResult[] + conditionResult[] + match T/F
  * @param ruleIndex
  */
-function displayResult(rules, ruleIndex) {
+RuleTable.prototype.displayResult = function (ruleIndex) {
 
-    //let displayData = rules[ruleIndex];
-    let displayData = rules.filter((d) => {
+    let self = this;
+
+    let displayData = this.rules.filter((d) => {
         return d.index === ruleIndex
     })[0];
 
     let ruleDiv = d3.select("#RT")
         .append('div')
-        .classed('paddedDiv', true)
+        .classed('paddedDiv ruleContainer', true)
         .attr('id', `rule_result_${ruleIndex}`)
+        .attr('data-tags', displayData.tags)
         .append('div')
         .classed('ruleDiv', true);
 
@@ -71,7 +70,7 @@ function displayResult(rules, ruleIndex) {
         .text(displayData.ruleDescription)
         .attr("id", `rule_desc_${displayData.index}`)
         .classed('ruleDescription', true)
-        .on("change", () => updateRules(rules, displayData.index));
+        .on("change", () => this.updateRules(this.rules, displayData.index));
 
     span.append('br');
     span.append('textarea')
@@ -79,7 +78,7 @@ function displayResult(rules, ruleIndex) {
         .attr("spellcheck", false)
         .attr("id", `rule_detail_${displayData.index}`)
         .classed('ruleDetail', true)
-        .on("change", () => updateRules(rules, displayData.index));
+        .on("change", () => this.updateRules(this.rules, displayData.index));
 
     // rule result = quantifier + condition
     let ruleResultDiv = ruleDiv.append('div');
@@ -101,7 +100,7 @@ function displayResult(rules, ruleIndex) {
     quantifierDiv.append('div')
         .classed('quantifierList hidden', true)
         .node()
-        .appendChild(listRender(displayData, 'quantifier').node());
+        .appendChild(self.listRender(displayData, 'quantifier').node());
 
     // condition
     let conditionDiv = ruleResultDiv.append('div')
@@ -126,24 +125,36 @@ function displayResult(rules, ruleIndex) {
     conditionDiv.append('div')
         .classed('conditionList hidden', true)
         .node()
-        .appendChild(listRender(displayData, 'satisfied').node());
+        .appendChild(self.listRender(displayData, 'satisfied').node());
 
 
     // fixing the float div heights and widths
     ruleResultDiv.append('div')
         .style('clear', 'both');
 
-}
+};
+
+
+/**
+ * update display of all rules
+ */
+RuleTable.prototype.updateDisplayRules = function () {
+
+    for (let i = 0; i < this.rules.length; i++) {
+        this.updateDisplayResult(this.rules[i].index);
+    }
+};
 
 
 /**
  * update the vis after a change in the code
- * @param rules
  * @param ruleIndex
  */
-function updateDisplayResult(rules, ruleIndex) {
+RuleTable.prototype.updateDisplayResult = function (ruleIndex) {
 
-    let displayData = rules.filter((d) => {
+    let self = this;
+
+    let displayData = self.rules.filter((d) => {
         return d.index === ruleIndex
     })[0];
 
@@ -165,7 +176,7 @@ function updateDisplayResult(rules, ruleIndex) {
         quantifierDiv.append('div')
             .classed('quantifierList hidden', true)
             .node()
-            .appendChild(listRender(displayData, 'quantifier').node());
+            .appendChild(self.listRender(displayData, 'quantifier').node());
 
         // condition
         let conditionDiv = ruleDiv.select('.conditionDiv', true);
@@ -188,11 +199,42 @@ function updateDisplayResult(rules, ruleIndex) {
         conditionDiv.append('div')
             .classed('conditionList hidden', true)
             .node()
-            .appendChild(listRender(displayData, 'satisfied').node());
+            .appendChild(self.listRender(displayData, 'satisfied').node());
 
     }
 
-}
+};
+
+
+/**
+ * update the rule and send to server
+ * @param index
+ */
+RuleTable.prototype.updateRules = function (index) {
+
+    let self = this;
+
+    let data = []; // TODO remove unnecessary attributes
+
+    for (let i = 0; i < self.rules.length; i++) {
+        if (self.rules[i].index === index) {
+
+            let modifiedRule = cloneJSON(self.rules[i]);
+
+            modifiedRule.ruleDescription = document.getElementById(`rule_desc_${index}`).value;
+            modifiedRule.detail = document.getElementById(`rule_detail_${index}`).value;
+
+            data.push(modifiedRule);
+        }
+        else {
+            data.push(self.rules[i])
+        }
+    }
+
+    let ruleTableString = "\"ruleTable=" + JSON.stringify(data).substr(1);
+    this.sendToServer("NewRule", ruleTableString);
+
+};
 
 
 /**
@@ -201,9 +243,11 @@ function updateDisplayResult(rules, ruleIndex) {
  * @param group
  * @returns {string}
  */
-function listRender(data, group) {
+RuleTable.prototype.listRender = function (data, group) {
 
-//let regex = /(<([^>]+)>)/ig;
+    let self = this;
+
+    //let regex = /(<([^>]+)>)/ig;
     let detached = d3.select(document.createElement('div'));
 
     switch (group) {
@@ -216,7 +260,7 @@ function listRender(data, group) {
                     .classed('link', true)
                     .html((data.quantifierResult[i]['snippet']))
                     .on('click', () => {
-                        sendToServer("xmlResult", data.quantifierResult[i]['xml'])
+                        self.sendToServer("xmlResult", data.quantifierResult[i]['xml'])
                     });
             }
             break;
@@ -230,7 +274,7 @@ function listRender(data, group) {
                     .classed('link', true)
                     .html((data.conditionedResult[i]['snippet']))
                     .on('click', () => {
-                        sendToServer("xmlResult", data.conditionedResult[i]['xml'])
+                        self.sendToServer("xmlResult", data.conditionedResult[i]['xml'])
                     });
             }
             break;
@@ -238,92 +282,19 @@ function listRender(data, group) {
     return detached;
 }
 
-
 /**
- * update the rule and send to server
- * @param rules
- * @param index
+ * send the message to the server
+ * @param command without quotation
+ * @param data with quotation
  */
-function updateRules(rules, index) {
-    let data = []; // TODO remove unnecessary attributes
+RuleTable.prototype.sendToServer = function (command, data) {
 
-    for (let i = 0; i < rules.length; i++) {
-        if (rules[i].index === index) {
+    if (this.ws) {
+        let message = "{\"source\":\"WEB\",\"destination\":\"IDEA\",\"command\":\"" + command + "\",\"data\":"
+            + data + "}";
 
-            let modifiedRule = cloneJSON(rules[i]);
+        //console.log(message);
 
-            modifiedRule.ruleDescription = document.getElementById(`rule_desc_${index}`).value;
-            modifiedRule.detail = document.getElementById(`rule_detail_${index}`).value;
-
-            data.push(modifiedRule);
-        }
-        else {
-            data.push(rules[i])
-        }
+        this.ws.send(message.toString());
     }
-
-    let ruleTableString = "\"ruleTable=" + JSON.stringify(data).substr(1);
-    sendToServer("NewRule", ruleTableString);
-
-}
-
-
-/**
- * display the list of rules and list aof tags
- * @param rules
- */
-function displayTableOfContent(rules) {
-    let tagList = [];
-
-    for (let i = 0; i < rules.length; i++) {
-        tagList = tagList.concat(rules[i].tags);
-    }
-
-    let uniqueTags = [...new Set(tagList)];
-
-    d3.select("#rules_list").selectAll("li")
-        .data(rules)
-        .enter()
-        .append('li')
-        .classed('link', true)
-        .html((d) => {
-            return '&#9656; ' + d.ruleDescription
-        })
-        .on("click", (d) => {
-            document.getElementById(`page_title`).value = d.ruleDescription;
-            displayResult(rules, d.index);
-            d3.selectAll(".main").classed("hidden", true);
-            d3.select("#individualRule").classed("hidden", false);
-        });
-
-    d3.select("#tags_list").selectAll("li")
-        .data(uniqueTags)
-        .enter()
-        .append('li')
-        .classed('link', true)
-        .html((d) => {
-            return '&#9656; ' + d
-        })
-        .on("click", (d) => {
-            document.getElementById(`page_title`).value = d;
-
-            location.hash = `#/${d}`;
-
-            managePageTitleChange(rules);
-            d3.selectAll(".main").classed("hidden", true);
-            d3.select("#header_2").classed("hidden", false);
-            d3.select("#ruleResults").classed("hidden", false);
-        });
-
-}
-
-
-/**
- * print the logs in the textarea
- * the related div must be un-commented in the chat.html
- * @param dataString
- */
-function printLog(dataString) {
-    let previousLog = document.getElementById(`debug_output`).value;
-    d3.select("#debug_output").html(previousLog + '\n' + dataString);
-}
+};

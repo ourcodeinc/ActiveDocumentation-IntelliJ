@@ -114,7 +114,6 @@ function checkRules(xmlString, rules, ruleIndex) {
     rulesI['satisfiedChanged'] = prevMatching !== rulesI['satisfied'];
     rulesI['allChanged'] = (prevMatching + prevMissing) !== (rulesI['missing'] + rulesI['satisfied']);
 
-    updateDisplayResult(rules, ruleIndex);
     return rules;
 }
 
