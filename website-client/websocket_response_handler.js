@@ -3,7 +3,8 @@
  */
 
 let ws;
-let xml;
+let xml = []; // object of `filePath` and `xml`
+let xmlFilesCount; // not useful yet
 
 // Unfortunately the intelliJ plugin doesn't understand global variables.
 // So we need to pass on the variable to functions and update the variable
@@ -19,19 +20,23 @@ function connectionManager() {
     ws.onmessage = function (e) {
 
         let message = JSON.parse(e.data);
-        // console.log(message);
-
         let messageInfo = message.data;
 
         switch (message.command) {
 
             // when the rules are changed
             case "UPDATE_RULE_TABLE_AND_CONTAINER":
+
+                // printLog("testing: UPDATE_RULE_TABLE_AND_CONTAINER");
+
                 eval(JSON.parse(message.data).text);
 
                 break;
 
             case "VERIFY_RULES":
+
+                // printLog("testing: VERIFY_RULES");
+
                 clearRuleTable();
                 clearTableOfContent();
                 displayTableOfContent(ruleTable);
@@ -40,9 +45,9 @@ function connectionManager() {
 
                 for (let i = 0; i < ruleTable.length; i++) {
                     ruleTable = runXPathQuery(xml, ruleTable, ruleTable[i].index);
+                    // printLog("rule number " + i);
                     displayResult(ruleTable, ruleTable[i].index);
                 }
-
 
 
                 break;
@@ -53,17 +58,20 @@ function connectionManager() {
                 for (let i = 0; i < ruleTable.length; i++) {
                     ruleTable = checkRules(xml, ruleTable, ruleTable[i].index);
                 }
+                break;
 
-                console.log(ruleTable);
+            case "NUM_OF_XML":
 
+                xmlFilesCount = messageInfo;
                 break;
 
             case "XML":
-                xml = messageInfo;
+                xml.push(messageInfo);
+                //xml = messageInfo;
 
                 // test
-                let parser = new DOMParser();
-                console.log(parser.parseFromString(xml, "text/xml"));
+                //let parser = new DOMParser();
+                //console.log(parser.parseFromString(xml, "text/xml"));
                 break;
 
             case "ENTER":

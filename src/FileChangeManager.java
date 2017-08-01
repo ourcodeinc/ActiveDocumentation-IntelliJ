@@ -27,18 +27,17 @@ import java.io.IOException;
 import java.util.List;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 
 public class FileChangeManager implements ProjectComponent {
 
     private final MessageBusConnection connection;
     private ChatServer s;
-    private List<VirtualFile> ignoredFiles = new ArrayList<>();
+    private List<VirtualFile> ignoredFiles/* = new ArrayList<>()*/;
     private SRCMLxml srcml;
     private String rules;
 
-    public FileChangeManager(ChatServer server, SRCMLxml xmlP, String rule) {
+    FileChangeManager(ChatServer server, SRCMLxml xmlP, String rule) {
         connection = ApplicationManager.getApplication().getMessageBus().connect();
         s = server;
 
@@ -46,41 +45,40 @@ public class FileChangeManager implements ProjectComponent {
         srcml = xmlP;
     }
 
-    public SRCMLxml getSrcml() {
+    SRCMLxml getSrcml() {
         return srcml;
     }
 
-    public String getRules() {
+    String getRules() {
         return rules;
     }
 
-    public void setSrcml(SRCMLxml srcml) {
-        this.srcml = srcml;
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML", srcml.xml}).toString());
-        //s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", this.getRules()}).toString());
-        //s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES", ""}).toString());
-    }
-
-    public void setRules(String rules) {
+    private void setRules(String rules) {
         this.rules = rules;
         s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", rules}).toString());
         s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
     }
 
+    private void updateSrcml() {
+        //public void setSrcml(SRCMLxml srcml) {
+        //this.srcml = srcml;
+        //s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML", srcml.xml}).toString());
+        //s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", this.getRules()}).toString());
+        //s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES", ""}).toString());
+    }
+
     public void initComponent() {
-        // What is the difference of opening the socket here vs. when toolWindow is created?
         s.start();
 
-        System.out.println("ChatServer started on port: " + s.getPort());
+        System.out.println("(initComponent) ChatServer started on port: " + s.getPort());
 
-        createIgnoredFileList();
+        ignoredFiles = utilities.createIgnoredFileList();
 
         connection.subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener.Adapter() {
             @Override
             public void after(@NotNull List<? extends VFileEvent> events) {
 
-                // TODO handle events
                 // update rules in ChatServer
 
                 for (VFileEvent event : events) {
@@ -104,7 +102,8 @@ public class FileChangeManager implements ProjectComponent {
         });
     }
 
-    public void disposeComponent() {
+    public void disposeComponent() {  // Not working
+        System.out.println("(disposeComponent)");
         connection.disconnect();
         try {
             s.stop();
@@ -125,17 +124,17 @@ public class FileChangeManager implements ProjectComponent {
     // ProjectComponent
 
     @Override
-    public void projectOpened() {
+    public void projectOpened() { // Not working
         System.out.println("(project Opened)");
     }
 
     @Override
-    public void projectClosed() {
+    public void projectClosed() { // Not working
         System.out.println("(project Closed)");
     }
 
 
-    public void processReceivedMessages(JsonObject messageAsJson) {
+    void processReceivedMessages(JsonObject messageAsJson) {
 
         String command = messageAsJson.get("command").getAsString();
         String projectPath = ProjectManager.getInstance().getOpenProjects()[0].getBasePath();
@@ -185,18 +184,6 @@ public class FileChangeManager implements ProjectComponent {
 
     }
 
-
-    private void createIgnoredFileList() {
-
-        List<String> files = new ArrayList<>(Arrays.asList(".idea", "out", "source_xml.xml", "tempResultXmlFile.xml", "testProject.iml"));
-        for (String f : files) {
-            VirtualFile vfile = ProjectManager.getInstance().getOpenProjects()[0].getBaseDir().findFileByRelativePath(f);
-            if (vfile != null) {
-                ignoredFiles.add(vfile);
-            }
-        }
-    }
-
     // checks if we should ignore a file
     private boolean shouldIgnoreFile(VirtualFile s) {
         if (ignoredFiles == null) {
@@ -205,29 +192,10 @@ public class FileChangeManager implements ProjectComponent {
         for (VirtualFile vfile : ignoredFiles) {
             if (vfile.getCanonicalPath().equals(s.getCanonicalPath())) {
                 return true;
-            } else if (isFileAChildOf(s, vfile)) {
+            } else if (utilities.isFileAChildOf(s, vfile)) {
                 return true;
             }
         }
-        return false;
-    }
-
-    // determines if one file/directory is stored somewhere down the line in another directory
-    private static boolean isFileAChildOf(VirtualFile maybeChild, VirtualFile possibleParent) {
-        final VirtualFile parent = possibleParent.getCanonicalFile();
-        if (!parent.exists() || !parent.isDirectory()) {
-            // this cannot possibly be the parent
-            return false;
-        }
-
-        VirtualFile child = maybeChild.getCanonicalFile();
-        while (child != null) {
-            if (child.equals(parent)) {
-                return true;
-            }
-            child = child.getParent();
-        }
-        // No match found, and we've hit the root directory
         return false;
     }
 
@@ -247,7 +215,10 @@ public class FileChangeManager implements ProjectComponent {
         }
 
         System.out.println("CHANGE");
-        this.setSrcml(SRCMLHandler.updateXMLForProject(this.getSrcml(), file.getPath()));
+        SRCMLHandler.updateXMLForProject(this.getSrcml(), file.getPath());
+        this.updateSrcml();
+
+        //this.setSrcml(SRCMLHandler.updateXMLForProject(this.getSrcml(), file.getPath()));
     }
 
     // when a file is created
@@ -267,7 +238,9 @@ public class FileChangeManager implements ProjectComponent {
         }
 
         System.out.println("CREATE");
-        this.setSrcml(SRCMLHandler.addXMLForProject(this.getSrcml(), file.getPath()));
+        SRCMLHandler.addXMLForProject(this.getSrcml(), file.getPath());
+        this.updateSrcml();
+        //this.setSrcml(SRCMLHandler.addXMLForProject(this.getSrcml(), file.getPath()));
 
     }
 
@@ -282,9 +255,13 @@ public class FileChangeManager implements ProjectComponent {
         for (String path : srcml.getPaths()) {
             if (!newPaths.contains(path)) {
 
-                SRCMLxml newsrcML = SRCMLHandler.removeXMLForProject(srcml, path);
-                newsrcML = SRCMLHandler.addXMLForProject(newsrcML, file.getPath());
-                this.setSrcml(newsrcML);
+//                SRCMLxml newsrcML = SRCMLHandler.removeXMLForProject(srcml, path);
+//                newsrcML = SRCMLHandler.addXMLForProject(newsrcML, file.getPath());
+//                this.setSrcml(newsrcML);
+
+                SRCMLHandler.removeXMLForProject(srcml, path);
+                SRCMLHandler.addXMLForProject(srcml, file.getPath());
+                this.updateSrcml();
                 break;
             }
         }
@@ -302,15 +279,17 @@ public class FileChangeManager implements ProjectComponent {
         }
 
         System.out.println("DELETE");
-        this.setSrcml(SRCMLHandler.removeXMLForProject(this.getSrcml(), file.getPath()));
+        //this.setSrcml(SRCMLHandler.removeXMLForProject(this.getSrcml(), file.getPath()));
+
+        SRCMLHandler.removeXMLForProject(srcml, file.getPath());
+        this.updateSrcml();
 
     }
-
 
     /**
      * chech whether we should consider the file change
      *
-     * @param file
+     * @param file VirtualFile
      * @return boolean
      */
     private boolean shouldConsiderEvent(VirtualFile file) {
@@ -327,14 +306,13 @@ public class FileChangeManager implements ProjectComponent {
 
     }
 
-
     /**
      * generate list of java file paths
      *
-     * @param project
+     * @param project Project
      * @return list of file paths in the project
      */
-    public static List<String> getFilePaths(Project project) {
+    static List<String> getFilePaths(Project project) {
         List<String> paths = new ArrayList<>();
 
         // start off with root
@@ -360,4 +338,22 @@ public class FileChangeManager implements ProjectComponent {
         return paths;
     }
 
+    /**
+     * check whether the given project is the same as the project for which
+     * srcml is created. It updates the srcml and project path accordingly.
+     */
+    void checkChangedProject() {
+        Project activeProject = ProjectManager.getInstance().getOpenProjects()[0];
+        String projectPath = activeProject.getBasePath();
+
+        if (!this.srcml.getProjectPath().equals(projectPath)) {
+            SRCMLxml srcml = new SRCMLxml(FileChangeManager.getFilePaths(activeProject), projectPath);
+            SRCMLHandler.createXMLForProject(srcml);
+            System.out.println("XML data is created.");
+
+            this.srcml = srcml;
+            this.rules = MessageProcessor.getIntitialRules().toString();
+
+        }
+    }
 }

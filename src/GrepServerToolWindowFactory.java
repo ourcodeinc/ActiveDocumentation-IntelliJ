@@ -1,4 +1,5 @@
-/*
+/**
+ * edited by saharmehrpour
  * This module creates the GUI for the plugin
  */
 
@@ -22,6 +23,9 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import javax.swing.*;
 import java.io.File;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+
 public class GrepServerToolWindowFactory implements ToolWindowFactory {
 
     private ChatServer s;
@@ -33,6 +37,36 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
      */
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
+
+        // start the connection when the project is loaded and indexing is done
+        try {
+            WebSocketImpl.DEBUG = false;
+            int port = findAvailablePort(new int[]{8887, 8888, 8889, 8885, 8886}); // 843 flash policy port
+            s = new ChatServer(port);
+            System.out.println("-> started on port: " + port);
+
+        } catch (Exception e) {
+            System.out.println("Error in creating a Chat server.");
+            e.printStackTrace();
+        }
+
+        // This will allow file changes to be sent to the web client
+
+        System.out.println("-> project path: " + project.getBasePath());
+
+        SRCMLxml srcml = new SRCMLxml(FileChangeManager.getFilePaths(project), project.getBasePath());
+        SRCMLHandler.createXMLForProject(srcml);
+        System.out.println("XML data is created.");
+
+        FileChangeManager fcm = new FileChangeManager(s, srcml, MessageProcessor.getIntitialRules().toString());
+        s.setManager(fcm);
+
+        fcm.initComponent();
+
+
+        // generate the GUI
+
+        System.out.println("(createToolWindowContent)");
 
         final JFXPanel fxPanel = new JFXPanel();
 
@@ -55,31 +89,6 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
         JComponent component = toolWindow.getComponent();
         component.add(fxPanel);
 
-        System.out.println("(createToolWindowContent)");
-
-        // start the connection when the project is loaded and indexing is done
-        try {
-            WebSocketImpl.DEBUG = false;
-            int port = 8887; // 843 flash policy port
-
-            // generateProjectHierarchyAsJSON() populates initialClassTable as well
-            s = new ChatServer(port);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-
-        }
-
-        // This will allow file changes to be sent to the web client
-
-        FileChangeManager fcm = new FileChangeManager(s,
-                SRCMLHandler.createXMLForProject(new SRCMLxml(FileChangeManager.getFilePaths(project),
-                        project.getBasePath())),
-                MessageProcessor.getIntitialRules().toString());
-        s.setManager(fcm);
-
-        fcm.initComponent();
-
     }
 
 
@@ -87,11 +96,36 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
         try {
             webEngine.setJavaScriptEnabled(true);
             File file = new File("/Users/saharmehrpour/Documents/Workspace/ActiveDocumentation/website-client/chat.html");
-            System.out.println(file.exists() + " file existence");
             webEngine.load(file.toURI().toURL().toString());
         } catch (Exception ex) {
             System.err.print("error " + ex.getMessage());
             ex.printStackTrace();
+        }
+    }
+
+
+    private int findAvailablePort(int[] ports) throws IOException {
+        ServerSocket tempSocket = null;
+        boolean found = false;
+        int foundPort = 0;
+        for (int port : ports) {
+
+            try {
+                tempSocket = new ServerSocket(port);
+                found = true;
+                foundPort = port;
+                break;
+            } catch (IOException e) {
+                //e.printStackTrace();
+            }
+        }
+
+        if (!found)
+            throw new IOException("no free port found");
+
+        else {
+            tempSocket.close();
+            return foundPort;
         }
     }
 

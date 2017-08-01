@@ -14,21 +14,17 @@ public class SRCMLHandler {
      * Create a srcML xml file initially
      *
      * @param srcml a partially defined SRCMLxml object
-     * @return SRCMLxml object
      */
-    public static SRCMLxml createXMLForProject(SRCMLxml srcml) {
+    public static void createXMLForProject(SRCMLxml srcml) {
 
 //        // We can skip writing the file
 //        // We don't need it here. The file is only written as a reference
 //        String[] str = new String[]{"srcml", "--verbose", srcml.projectPath + "/src", "-o", srcml.projectPath + "/source_xml.xml"};
 //        runShellCommand(str); // to save the xml
 
-        for (int index = 0; index < srcml.fileNumber; index++) {
+        for (int index = 0; index < Math.min(100, srcml.fileNumber); index++) {
             srcml.xmls.add(createXMLForFile(srcml.paths.get(index)));
         }
-
-        srcml.attachXmls();
-        return srcml;
     }
 
 
@@ -37,16 +33,16 @@ public class SRCMLHandler {
      *
      * @param srcml    object
      * @param filePath of the modified file
-     * @return srcml
+//     * @return srcml
      */
-    public static SRCMLxml updateXMLForProject(SRCMLxml srcml, String filePath) {
+    public static void/*SRCMLxml*/ updateXMLForProject(SRCMLxml srcml, String filePath) {
 
         for (int index = 0; index < srcml.fileNumber; index++) {
             if (srcml.paths.get(index).equals(filePath))
                 srcml.xmls.set(index, createXMLForFile(srcml.paths.get(index)));
         }
-        srcml.attachXmls();
-        return srcml;
+//        srcml.attachXmls();
+//        return srcml;
     }
 
 
@@ -55,19 +51,18 @@ public class SRCMLHandler {
      *
      * @param srcml
      * @param filePath
-     * @return
      */
-    public static SRCMLxml removeXMLForProject(SRCMLxml srcml, String filePath) {
+    public static void/*SRCMLxml*/ removeXMLForProject(SRCMLxml srcml, String filePath) {
         for (int index = 0; index < srcml.fileNumber; index++) {
             if (srcml.paths.get(index).equals(filePath)) {
                 srcml.paths.remove(index);
                 srcml.xmls.remove(index);
                 srcml.fileNumber -= 1;
-                srcml.attachXmls();
+//                srcml.attachXmls();
                 break;
             }
         }
-        return srcml;
+//        return srcml;
     }
 
     /**
@@ -75,14 +70,13 @@ public class SRCMLHandler {
      *
      * @param srcml
      * @param filePath
-     * @return
      */
-    public static SRCMLxml addXMLForProject(SRCMLxml srcml, String filePath) {
+    public static void/*SRCMLxml*/ addXMLForProject(SRCMLxml srcml, String filePath) {
         srcml.paths.add(filePath);
         srcml.xmls.add(createXMLForFile(filePath));
         srcml.fileNumber += 1;
-        srcml.attachXmls();
-        return srcml;
+//        srcml.attachXmls();
+//        return srcml;
     }
 
 

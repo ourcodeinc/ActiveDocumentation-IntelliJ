@@ -8,21 +8,30 @@ import java.io.*;
 public class MessageProcessor {
 
     private static final String[] dataKeys = {"source", "destination", "command", "data"};
+    private static final String[] xmlKeys = {"filePath", "xml"};
 
-    public static JsonObject encodeData(Object[] source_Destination_Protocol_Data_Array) {
+    static JsonObject encodeData(Object[] source_Destination_Protocol_Data_Array) {
+        return createJsonObject(source_Destination_Protocol_Data_Array, dataKeys);
+    }
+
+    static JsonObject encodeXMLData(Object[] filepath_xml_Array) {
+        return createJsonObject(filepath_xml_Array, xmlKeys);
+    }
+
+    private static JsonObject createJsonObject(Object[] data_Array, String[] keys) {
         JsonObject jsonObject = new JsonObject();
-        for (int i = 0; i < dataKeys.length; i++) {
-            if (source_Destination_Protocol_Data_Array[i] instanceof String) {
-                jsonObject.addProperty(dataKeys[i], (String) source_Destination_Protocol_Data_Array[i]);
-            } else if (source_Destination_Protocol_Data_Array[i] instanceof JsonObject) {
-                jsonObject.add(dataKeys[i], (JsonObject) source_Destination_Protocol_Data_Array[i]);
+        for (int i = 0; i < keys.length; i++) {
+            if (data_Array[i] instanceof String) {
+                jsonObject.addProperty(keys[i], (String) data_Array[i]);
+            } else if (data_Array[i] instanceof JsonObject) {
+                jsonObject.add(keys[i], (JsonObject) data_Array[i]);
             }
         }
         return jsonObject;
     }
 
     // returns a JSONObject with the initial rules from ruleJson.txt (the file where users modify rules)
-    public static JsonObject getIntitialRules() {
+    static JsonObject getIntitialRules() {
         System.out.println("(sendRulesInitially) " + "Send Rules initially");
         JsonObject data = new JsonObject();
 
@@ -40,6 +49,7 @@ public class MessageProcessor {
             data.addProperty("text", result);
 
         } catch (IOException e) {
+            System.out.println("No ruleJson file / error in reading the ruleJson file");
             e.printStackTrace();
         }
 

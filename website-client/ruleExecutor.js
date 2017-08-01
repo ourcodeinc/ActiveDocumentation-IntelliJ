@@ -4,16 +4,14 @@
 
 /**
  * runs the XPath query and then call the function to display them
- * @param xmlString
+ * @param xmlFiles
  * @param rules
  * @param ruleIndex
  */
-function runXPathQuery(xmlString, rules, ruleIndex) {
+function runXPathQuery(xmlFiles, rules, ruleIndex) {
     let parser = new DOMParser();
-    let xml = parser.parseFromString(xmlString, "text/xml");
     let quantifierResult = [];
     let conditionedResult = [];
-    //let rulesI = rules[ruleIndex];
     let rulesI = rules.filter((d) => {
         return d.index === ruleIndex
     })[0];
@@ -23,49 +21,55 @@ function runXPathQuery(xmlString, rules, ruleIndex) {
         return ns[prefix] || null;
     }
 
-    // checks validity of the XML
-    if (!xml.evaluate) {
-        console.log('error in xml.evaluate');
-        return;
-    }
+    for (let j = 0; j < xmlFiles.length; j++) {
 
-    // run xpath queries
-    let quantifierNodes = xml.evaluate(rulesI.quantifierXpath, xml, nsResolver, XPathResult.ANY_TYPE, null);
-    let quantifierNameNodes = xml.evaluate(rulesI.quantifierXpathName, xml, nsResolver, XPathResult.ANY_TYPE, null);
-    let resultQNode = quantifierNodes.iterateNext();
-    let resultQNameNode = quantifierNameNodes.iterateNext();
-    let index = 0;
-    while (resultQNode) {
-        let xmlAndText = getXmlData(xml, rulesI.quantifierXpath, index);
-        quantifierResult.push({
-            "result": new XMLSerializer().serializeToString(resultQNode),
-            "xml": xmlAndText.xml,
-            "xmlText": xmlAndText.xmlText,
-            "name": resultQNameNode ? new XMLSerializer().serializeToString(resultQNameNode) : "error in xpath",
-            "snippet": xmlAndText.snippet
-        });
-        resultQNode = quantifierNodes.iterateNext();
-        resultQNameNode = quantifierNameNodes.iterateNext();
-        index += 1;
-    }
+        // printLog("file " + j);
 
-    let conditionedNodes = xml.evaluate(rulesI.conditionedXpath, xml, nsResolver, XPathResult.ANY_TYPE, null);
-    let conditionedNameNodes = xml.evaluate(rulesI.conditionedXpathName, xml, nsResolver, XPathResult.ANY_TYPE, null);
-    let resultCNode = conditionedNodes.iterateNext();
-    let resultCNameNode = conditionedNameNodes.iterateNext();
-    index = 0;
-    while (resultCNode) {
-        let xmlAndText = getXmlData(xml, rulesI.conditionedXpath, index);
-        conditionedResult.push({
-            "result": new XMLSerializer().serializeToString(resultCNode),
-            "xml": xmlAndText.xml,
-            "xmlText": xmlAndText.xmlText,
-            "name": resultCNameNode ? new XMLSerializer().serializeToString(resultCNameNode) : "error in xpath",
-            "snippet": xmlAndText.snippet
-        });
-        resultCNode = conditionedNodes.iterateNext();
-        resultCNameNode = conditionedNameNodes.iterateNext();
-        index += 1;
+        // checks validity of the XML
+        let xml = parser.parseFromString(xmlFiles[j].xml, "text/xml");
+        if (!xml.evaluate) {
+            console.log('error in xml.evaluate');
+            return;
+        }
+
+        // run xpath queries
+        let quantifierNodes = xml.evaluate(rulesI.quantifierXpath, xml, nsResolver, XPathResult.ANY_TYPE, null);
+        let quantifierNameNodes = xml.evaluate(rulesI.quantifierXpathName, xml, nsResolver, XPathResult.ANY_TYPE, null);
+        let resultQNode = quantifierNodes.iterateNext();
+        let resultQNameNode = quantifierNameNodes.iterateNext();
+        let index = 0;
+        while (resultQNode) {
+            let xmlAndText = getXmlData(xml, rulesI.quantifierXpath, index);
+            quantifierResult.push({
+                "result": new XMLSerializer().serializeToString(resultQNode),
+                "xml": xmlAndText.xml,
+                "xmlText": xmlAndText.xmlText,
+                "name": resultQNameNode ? new XMLSerializer().serializeToString(resultQNameNode) : "error in xpath",
+                "snippet": xmlAndText.snippet
+            });
+            resultQNode = quantifierNodes.iterateNext();
+            resultQNameNode = quantifierNameNodes.iterateNext();
+            index += 1;
+        }
+
+        let conditionedNodes = xml.evaluate(rulesI.conditionedXpath, xml, nsResolver, XPathResult.ANY_TYPE, null);
+        let conditionedNameNodes = xml.evaluate(rulesI.conditionedXpathName, xml, nsResolver, XPathResult.ANY_TYPE, null);
+        let resultCNode = conditionedNodes.iterateNext();
+        let resultCNameNode = conditionedNameNodes.iterateNext();
+        index = 0;
+        while (resultCNode) {
+            let xmlAndText = getXmlData(xml, rulesI.conditionedXpath, index);
+            conditionedResult.push({
+                "result": new XMLSerializer().serializeToString(resultCNode),
+                "xml": xmlAndText.xml,
+                "xmlText": xmlAndText.xmlText,
+                "name": resultCNameNode ? new XMLSerializer().serializeToString(resultCNameNode) : "error in xpath",
+                "snippet": xmlAndText.snippet
+            });
+            resultCNode = conditionedNodes.iterateNext();
+            resultCNameNode = conditionedNameNodes.iterateNext();
+            index += 1;
+        }
     }
 
     rulesI['quantifierResult'] = quantifierResult;
@@ -164,6 +168,7 @@ function getXmlData(mainXml, query, index) {
     let resTextArray = new XMLSerializer().serializeToString(res).split(/\r?\n/);
     let resText = resTextArray.length > 1 ? resTextArray[0] + '\n' + resTextArray[1] : resTextArray[0];
 
+
     /**
      * remove first node sib, sib, parent sib, grandparent sib, grand-grandparent sib, ... <- recursive
      * @param node
@@ -186,10 +191,13 @@ function getXmlData(mainXml, query, index) {
             break;
         }
 
-    if (res.firstChild && res.firstChild.nodeType !== -1 && nameIndex !== -1)
+    if (res.firstChild && res.firstChild.nodeType !== -1 && nameIndex !== -1 && nameIndex !== res.children.length)
         par = removeSib(res.children[nameIndex]);
-    else
+    else if (res.nextSibling)
         par = removeSib(res.nextSibling);
+    else
+        par = res;
+
 
     let fileName = par.getAttribute("filename");
     let temp = new XMLSerializer().serializeToString(par);

@@ -1,5 +1,6 @@
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import org.java_websocket.*;
 import org.java_websocket.framing.Framedata;
 import org.java_websocket.handshake.ClientHandshake;
@@ -10,6 +11,10 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+
+/**
+ * edited by saharmehrpour
+ */
 
 /**
  * A simple WebSocketServer implementation. Keeps track of a "chatroom".
@@ -32,7 +37,7 @@ public class ChatServer extends WebSocketServer {
         super(new InetSocketAddress(port));
     }
 
-    public void setManager(FileChangeManager fcm) {
+    void setManager(FileChangeManager fcm) {
         manager = fcm;
     }
 
@@ -41,8 +46,17 @@ public class ChatServer extends WebSocketServer {
         // this.sendToAll( "new connection: " + handshake.getResourceDescriptor() );
         System.out.println("(onOpen) " + conn.getRemoteSocketAddress().getAddress().getHostAddress() + " entered the room!");
 
+        // check whether the project is changed
+        manager.checkChangedProject();
+
         this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "ENTER", (conn + " has entered the room!")}).toString());
-        this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML", manager.getSrcml().xml}).toString());
+
+        for (int i = 0; i < Math.min(100, manager.getSrcml().fileNumber); i++) {
+            this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML",
+                    MessageProcessor.encodeXMLData(new Object[]{manager.getSrcml().getPaths().get(i), manager.getSrcml().getXmls().get(i)})
+            }).toString());
+        }
+
         this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", manager.getRules()}).toString());
         this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
 
@@ -51,14 +65,12 @@ public class ChatServer extends WebSocketServer {
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        //this.sendToAll(conn + " has left the room!");
         this.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "LEFT", (conn + " has left the room!")}).toString());
         System.out.println("(onClose) " + conn + " has left the room!");
     }
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        //this.sendToAll(message);
 
         JsonParser parser = new JsonParser();
         final JsonObject messageAsJson = parser.parse(message).getAsJsonObject();
@@ -81,10 +93,9 @@ public class ChatServer extends WebSocketServer {
     }
 
     /**
-     *
      * @param text The String to send across the network.
      */
-    public void sendToAll(String text) {
+    void sendToAll(String text) {
         Collection<WebSocket> con = connections();
         backedUpMessages.add(text);
         if (con.size() == 0) {
