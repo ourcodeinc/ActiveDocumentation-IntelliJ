@@ -3,118 +3,161 @@
  */
 
 /**
- * runs the XPath query and then call the function to display them
+ * verify the rules for all xml files
  * @param xmlFiles
- * @param rules
- * @param ruleIndex
+ * @param ruleTable
  */
-function runXPathQuery(xmlFiles, rules, ruleIndex) {
+function verifyRules(xmlFiles, ruleTable) {
+    for (let i = 0; i < ruleTable.length; i++) {
+        for (let j = 0; j < xmlFiles.length; j++)
+            ruleTable[i] = runXPathQuery(xmlFiles[j], ruleTable[i]);
+    }
+    return ruleTable;
+}
+
+
+/**
+ * runs the XPath query and then call the function to display them
+ * @param xmlFile
+ * @param ruleI
+ */
+function runXPathQuery(xmlFile, ruleI) {
     let parser = new DOMParser();
     let quantifierResult = [];
     let conditionedResult = [];
-    let rulesI = rules.filter((d) => {
-        return d.index === ruleIndex
-    })[0];
 
     function nsResolver(prefix) {
         let ns = {'src': 'http://www.srcML.org/srcML/src'};
         return ns[prefix] || null;
     }
 
-    for (let j = 0; j < xmlFiles.length; j++) {
-
-        // printLog("file " + j);
-
-        // checks validity of the XML
-        let xml = parser.parseFromString(xmlFiles[j].xml, "text/xml");
-        if (!xml.evaluate) {
-            console.log('error in xml.evaluate');
-            return;
-        }
-
-        // run xpath queries
-        let quantifierNodes = xml.evaluate(rulesI.quantifierXpath, xml, nsResolver, XPathResult.ANY_TYPE, null);
-        let quantifierNameNodes = xml.evaluate(rulesI.quantifierXpathName, xml, nsResolver, XPathResult.ANY_TYPE, null);
-        let resultQNode = quantifierNodes.iterateNext();
-        let resultQNameNode = quantifierNameNodes.iterateNext();
-        let index = 0;
-        while (resultQNode) {
-            let xmlAndText = getXmlData(xml, rulesI.quantifierXpath, index);
-            quantifierResult.push({
-                "result": new XMLSerializer().serializeToString(resultQNode),
-                "xml": xmlAndText.xml,
-                "xmlText": xmlAndText.xmlText,
-                "name": resultQNameNode ? new XMLSerializer().serializeToString(resultQNameNode) : "error in xpath",
-                "snippet": xmlAndText.snippet
-            });
-            resultQNode = quantifierNodes.iterateNext();
-            resultQNameNode = quantifierNameNodes.iterateNext();
-            index += 1;
-        }
-
-        let conditionedNodes = xml.evaluate(rulesI.conditionedXpath, xml, nsResolver, XPathResult.ANY_TYPE, null);
-        let conditionedNameNodes = xml.evaluate(rulesI.conditionedXpathName, xml, nsResolver, XPathResult.ANY_TYPE, null);
-        let resultCNode = conditionedNodes.iterateNext();
-        let resultCNameNode = conditionedNameNodes.iterateNext();
-        index = 0;
-        while (resultCNode) {
-            let xmlAndText = getXmlData(xml, rulesI.conditionedXpath, index);
-            conditionedResult.push({
-                "result": new XMLSerializer().serializeToString(resultCNode),
-                "xml": xmlAndText.xml,
-                "xmlText": xmlAndText.xmlText,
-                "name": resultCNameNode ? new XMLSerializer().serializeToString(resultCNameNode) : "error in xpath",
-                "snippet": xmlAndText.snippet
-            });
-            resultCNode = conditionedNodes.iterateNext();
-            resultCNameNode = conditionedNameNodes.iterateNext();
-            index += 1;
-        }
+    // checks validity of the XML
+    let xml = parser.parseFromString(xmlFile['xml'], "text/xml");
+    if (!xml.evaluate) {
+        console.log('error in xml.evaluate');
+        return;
     }
 
-    rulesI['quantifierResult'] = quantifierResult;
-    rulesI['conditionedResult'] = conditionedResult;
-    let matching = compareResults(quantifierResult, conditionedResult);
-    rulesI['satisfied'] = matching;
-    rulesI['missing'] = quantifierResult.length - matching;
+    // run xpath queries
+    let quantifierNodes = xml.evaluate(ruleI.quantifierXpath, xml, nsResolver, XPathResult.ANY_TYPE, null);
+    let quantifierNameNodes = xml.evaluate(ruleI.quantifierXpathName, xml, nsResolver, XPathResult.ANY_TYPE, null);
+    let resultQNode = quantifierNodes.iterateNext();
+    let resultQNameNode = quantifierNameNodes.iterateNext();
+    let index = 0;
+    while (resultQNode) {
+        let xmlAndText = getXmlData(xml, ruleI.quantifierXpath, index);
+        quantifierResult.push({
+            "filePath": xmlFile['filePath'],
+            "result": new XMLSerializer().serializeToString(resultQNode),
+            "xml": xmlAndText.xml,
+            "xmlText": xmlAndText.xmlText,
+            "name": resultQNameNode ? new XMLSerializer().serializeToString(resultQNameNode) : "error in xpath",
+            "snippet": xmlAndText.snippet
+        });
+        resultQNode = quantifierNodes.iterateNext();
+        resultQNameNode = quantifierNameNodes.iterateNext();
+        index += 1;
+    }
 
-    return rules;
+    let conditionedNodes = xml.evaluate(ruleI.conditionedXpath, xml, nsResolver, XPathResult.ANY_TYPE, null);
+    let conditionedNameNodes = xml.evaluate(ruleI.conditionedXpathName, xml, nsResolver, XPathResult.ANY_TYPE, null);
+    let resultCNode = conditionedNodes.iterateNext();
+    let resultCNameNode = conditionedNameNodes.iterateNext();
+    index = 0;
+    while (resultCNode) {
+        let xmlAndText = getXmlData(xml, ruleI.conditionedXpath, index);
+        conditionedResult.push({
+            "filePath": xmlFile['filePath'],
+            "result": new XMLSerializer().serializeToString(resultCNode),
+            "xml": xmlAndText.xml,
+            "xmlText": xmlAndText.xmlText,
+            "name": resultCNameNode ? new XMLSerializer().serializeToString(resultCNameNode) : "error in xpath",
+            "snippet": xmlAndText.snippet
+        });
+        resultCNode = conditionedNodes.iterateNext();
+        resultCNameNode = conditionedNameNodes.iterateNext();
+        index += 1;
+    }
+
+    let matching = compareResults(quantifierResult, conditionedResult);
+
+    let resultData = {
+        'quantifierResult': quantifierResult,
+        'conditionedResult': conditionedResult,
+        'satisfied': matching,
+        'missing': quantifierResult.length - matching
+    };
+
+    if (!ruleI.hasOwnProperty('xPathQueryResult'))
+        ruleI['xPathQueryResult'] = [];
+
+    let resultArray = ruleI['xPathQueryResult'].filter((d) => {
+        return d['filePath'] === xmlFile['filePath']
+    });
+
+    if (resultArray.length === 0)
+        ruleI['xPathQueryResult'].push({'filePath': xmlFile['filePath'], 'data': resultData});
+    else // TODO error prone! check this later!
+        ruleI['xPathQueryResult'].filter((d) => {
+            return d['filePath'] === xmlFile['filePath']
+        })[0]['data'] = resultData;
+
+    return ruleI;
 
 }
 
 
 /**
- * re-run the xpath queries and detect changes.
- * @param xmlString
- * @param rules
- * @param ruleIndex
+ * re-run the xpath queries and detect changes for one file.
+ * @param xmlFiles
+ * @param ruleTable
+ * @param filePath
  */
-function checkRules(xmlString, rules, ruleIndex) {
-    let rulesI = rules.filter((d) => {
-        return d.index === ruleIndex
+function checkRules(xmlFiles, ruleTable, filePath) {
+
+    let targetXml = xmlFiles.filter((d) => {
+        return d['filePath'] === filePath
     })[0];
 
-    let prevQuantifierResult = rulesI['quantifierResult'].slice(0);
-    let prevConditionedResult = rulesI['conditionedResult'].slice(0);
-    let prevMatching = rulesI['satisfied'];
-    let prevMissing = rulesI['missing'];
+    for (let i = 0; i < ruleTable.length; i++) {
 
-    rules = runXPathQuery(xmlString, rules, ruleIndex);
+        let ruleResultI = ruleTable[i]['xPathQueryResult'].filter((d) => {
+            return d['filePath'] === filePath;
+        })[0]['data'];
 
-    rulesI = rules.filter((d) => {
-        return d.index === ruleIndex
-    })[0];
+        // console.log(ruleResultI);
 
-    rulesI['changed'] = (!ResultArraysEqual(prevQuantifierResult, rulesI['quantifierResult']) ||
-    !ResultArraysEqual(prevConditionedResult, rulesI['conditionedResult']) ||
-    prevMatching !== rulesI['satisfied'] ||
-    prevMissing !== rulesI['missing']);
+        let prevQuantifierResult = ruleResultI['quantifierResult'].slice(0);
+        let prevConditionedResult = ruleResultI['conditionedResult'].slice(0);
+        let prevSatisfied = ruleResultI['satisfied'];
+        let prevMissing = ruleResultI['missing'];
+        
+        // console.log(prevSatisfied, prevMissing);
 
-    rulesI['missingChanged'] = prevMissing !== rulesI['missing'];
-    rulesI['satisfiedChanged'] = prevMatching !== rulesI['satisfied'];
-    rulesI['allChanged'] = (prevMatching + prevMissing) !== (rulesI['missing'] + rulesI['satisfied']);
+        ruleTable[i] = runXPathQuery(targetXml, ruleTable[i]);
 
-    return rules;
+        ruleResultI = ruleTable[i]['xPathQueryResult'].filter((d) => {
+            return d['filePath'] === filePath;
+        })[0]['data'];
+
+        // console.log(ruleResultI);
+
+        ruleResultI['changed'] = (!ResultArraysEqual(prevQuantifierResult, ruleResultI['quantifierResult']) ||
+        !ResultArraysEqual(prevConditionedResult, ruleResultI['conditionedResult']) ||
+        prevSatisfied !== ruleResultI['satisfied'] ||
+        prevMissing !== ruleResultI['missing']);
+
+        ruleResultI['missingChanged'] = prevMissing !== ruleResultI['missing'];
+        ruleResultI['satisfiedChanged'] = prevSatisfied !== ruleResultI['satisfied'];
+        ruleResultI['allChanged'] = (prevSatisfied + prevMissing) !== (ruleResultI['missing'] + ruleResultI['satisfied']);
+
+        // if (ruleResultI['changed']) {
+        //     console.log("changed", ruleTable[i])
+        // }
+        //
+        // console.log("========");
+    }
+    return ruleTable;
 }
 
 

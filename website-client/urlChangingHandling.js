@@ -2,9 +2,13 @@
  * Created by saharmehrpour on 8/1/17.
  */
 
-function UrlChangingHandling() {
+function UrlChangingHandling(ruleTableManager) {
 
     this.history = [];
+    this.clicked = false;
+    this.activeHash = -1;
+
+    this.ruleTableManager = ruleTableManager;
 
     this.navBarHandler();
 
@@ -18,11 +22,7 @@ UrlChangingHandling.prototype.hashChangedHandler = function (hash) {
 
     let self = this;
 
-    if (self.activeHash === self.history.length - 1 || self.history.length === 0) {
-        self.history.push(hash);
-        self.activeHash = self.history.length - 1;
-        d3.select('#back_button').classed('inactive', false);
-    }
+    self.updateHistory(hash);
 
     document.body.scrollTop = document.documentElement.scrollTop = 0;
 
@@ -38,21 +38,25 @@ UrlChangingHandling.prototype.hashChangedHandler = function (hash) {
             d3.select("#tableOfContent").classed("hidden", false);
             break;
 
-        case 'rules':
-            d3.selectAll(".main").classed("hidden", true);
-            d3.select("#header_2").classed("hidden", false);
-            d3.select("#ruleResults").classed("hidden", false);
-            break;
-
         case 'tags':
-            document.getElementById(`page_title`).value = splittedHash[2];
-            this.titleChangeHandler();
+            document.getElementById(`page_title`).value = splittedHash[2].split('+').join(" ");
+            this.ruleTableManager.updateTagRules();
             break;
 
         case 'ruleGenerating':
             d3.selectAll(".main").classed("hidden", true);
             d3.select("#header_2").classed("hidden", true);
             d3.select("#ruleGeneration").classed("hidden", false);
+            break;
+
+        case 'rules':
+            this.ruleTableManager.cleanRuleTable();
+
+        case 'codeChanged':
+            d3.selectAll(".main").classed("hidden", true);
+            d3.select("#header_2").classed("hidden", false);
+            d3.select("#ruleResults").classed("hidden", false);
+
             break;
 
     }
@@ -76,11 +80,11 @@ UrlChangingHandling.prototype.navBarHandler = function () {
         location.hash = '#/index';
     });
 
-    d3.select(`#page_title`).on("change", () => this.titleChangeHandler());
-
     d3.select("#back_button").on("click", () => {
         if (self.activeHash > 0) {
             self.activeHash = self.activeHash - 1;
+            self.clicked = true;
+
             location.hash = self.history[self.activeHash];
             d3.select('#forward_button').classed('inactive', false);
         }
@@ -91,6 +95,8 @@ UrlChangingHandling.prototype.navBarHandler = function () {
     d3.select("#forward_button").on("click", () => {
         if (self.activeHash < self.history.length - 1) {
             self.activeHash = self.activeHash + 1;
+            self.clicked = true;
+
             location.hash = self.history[self.activeHash];
             d3.select('#back_button').classed('inactive', false);
         }
@@ -100,26 +106,20 @@ UrlChangingHandling.prototype.navBarHandler = function () {
     });
 };
 
-/**
- * event handler for when the title[tag] is changed
- */
-UrlChangingHandling.prototype.titleChangeHandler = function () {
-    let targetTag = document.getElementById(`page_title`).value.split(" ");
 
-    if (targetTag[0] === 'All') {
-        d3.selectAll(`.ruleContainer`).classed('hidden', false);
-    }
-    else {
-        d3.selectAll(`.ruleContainer`).classed('hidden', true);
-        d3.selectAll(`.ruleContainer`)
-            .classed('hidden', function () {
-                let tags = d3.select(this).attr('data-tags').split(',');
-                return !arrayContains(tags, targetTag)
-            });
-    }
+UrlChangingHandling.prototype.updateHistory = function (hash) {
+    let self = this;
 
-    d3.selectAll(".main").classed("hidden", true);
-    d3.select("#header_2").classed("hidden", false);
-    d3.select("#ruleResults").classed("hidden", false);
+    if (!self.clicked) {
+        if (self.history.length - 1 > self.activeHash) {
+            for (let i = self.history.length - 1; i > self.activeHash; i--)
+                console.log(self.history.pop());
+        }
+        self.history.push(hash);
+        self.activeHash += 1;
+        d3.select('#back_button').classed('inactive', self.activeHash === 0);
+        d3.select('#forward_button').classed('inactive', true);
+    }
+    self.clicked = false;
 
 };

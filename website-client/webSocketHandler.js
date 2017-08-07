@@ -3,7 +3,7 @@
  */
 
 function WebSocketHandler(tableOfContentManager, ruleTableManager) {
-    
+
     let xml = []; // object of `filePath` and `xml`
     let ruleTable = [];
     let ws = new WebSocket("ws://localhost:8887");
@@ -36,28 +36,30 @@ function WebSocketHandler(tableOfContentManager, ruleTableManager) {
                 tableOfContentManager.clearTableOfContent();
                 tableOfContentManager.displayTableOfContent();
 
-                //document.getElementById(`page_title`).value = 'All rules'; // TODO replace by hash
+                ruleTable = verifyRules(xml, ruleTable);
 
-                for (let i = 0; i < ruleTable.length; i++) {
-                    ruleTable = runXPathQuery(xml, ruleTable, ruleTable[i].index);
-                }
+                // console.log("start", ruleTable);
 
                 tableOfContentManager.setRules(ruleTable);
                 ruleTableManager.setRules(ruleTable);
                 ruleTableManager.displayRules();
 
-
                 break;
 
             // when the code changes
             case "CHECK_RULES":
-                for (let i = 0; i < ruleTable.length; i++) {
-                    ruleTable = checkRules(xml, ruleTable, ruleTable[i].index);
-                }
+
+                // console.log("before", ruleTable);
+
+                ruleTable = checkRules(xml, ruleTable, message.data);
+
+                // console.log("after", ruleTable);
 
                 tableOfContentManager.setRules(ruleTable);
                 ruleTableManager.setRules(ruleTable);
-                ruleTableManager.updateDisplayRules();
+                ruleTableManager.updateDisplayRules(message.data);
+
+                location.hash = "#/codeChanged";
 
                 break;
 
@@ -66,6 +68,13 @@ function WebSocketHandler(tableOfContentManager, ruleTableManager) {
 
                 //let parser = new DOMParser();
                 //console.log(parser.parseFromString(xml, "text/xml"));
+                break;
+
+            case "UPDATE_XML":
+                xml.filter((d)=>
+                    d.filePath === message.data['filePath']
+                )[0].xml = message.data['xml'];
+
                 break;
 
             case "ENTER":

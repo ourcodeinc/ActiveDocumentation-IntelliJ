@@ -47,10 +47,6 @@ TableOfContent.prototype.displayTableOfContent = function () {
         })
         .on("click", (d) => {
             location.hash = `#/rules/${d.index}`;
-            // document.getElementById(`page_title`).value = d.ruleDescription;
-            // displayResult(self.rules, d.index);
-            // d3.selectAll(".main").classed("hidden", true);
-            // d3.select("#individualRule").classed("hidden", false);
         });
 
     d3.select("#tags_list").selectAll("li")
@@ -63,11 +59,6 @@ TableOfContent.prototype.displayTableOfContent = function () {
         })
         .on("click", (d) => {
             location.hash = `#/tags/${d}`;
-            // document.getElementById(`page_title`).value = d;
-            // managePageTitleChange(self.rules);
-            // d3.selectAll(".main").classed("hidden", true);
-            // d3.select("#header_2").classed("hidden", false);
-            // d3.select("#ruleResults").classed("hidden", false);
         });
 
 };

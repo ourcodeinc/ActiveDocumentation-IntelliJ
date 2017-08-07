@@ -25,7 +25,7 @@
         WebSocketHandler(tableOfContentManager, ruleTableManager);
 
 
-        let hashManager = new UrlChangingHandling();
+        let hashManager = new UrlChangingHandling(ruleTableManager);
 
         if ("onhashchange" in window) { // event supported?
             window.onhashchange = function () {

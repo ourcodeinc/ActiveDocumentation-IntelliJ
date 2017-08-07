@@ -9,6 +9,7 @@ public class MessageProcessor {
 
     private static final String[] dataKeys = {"source", "destination", "command", "data"};
     private static final String[] xmlKeys = {"filePath", "xml"};
+    private static final String[] newXmlKeys = {"filePath", "xml"};
 
     static JsonObject encodeData(Object[] source_Destination_Protocol_Data_Array) {
         return createJsonObject(source_Destination_Protocol_Data_Array, dataKeys);
@@ -16,6 +17,10 @@ public class MessageProcessor {
 
     static JsonObject encodeXMLData(Object[] filepath_xml_Array) {
         return createJsonObject(filepath_xml_Array, xmlKeys);
+    }
+
+    static JsonObject encodeNewXMLData(Object[] filepath_newXml) {
+        return createJsonObject(filepath_newXml, newXmlKeys);
     }
 
     private static JsonObject createJsonObject(Object[] data_Array, String[] keys) {

@@ -33,16 +33,17 @@ public class SRCMLHandler {
      *
      * @param srcml    object
      * @param filePath of the modified file
-//     * @return srcml
+     * @return String new xml
      */
-    public static void/*SRCMLxml*/ updateXMLForProject(SRCMLxml srcml, String filePath) {
+    public static String updateXMLForProject(SRCMLxml srcml, String filePath) {
 
         for (int index = 0; index < srcml.fileNumber; index++) {
-            if (srcml.paths.get(index).equals(filePath))
+            if (srcml.paths.get(index).equals(filePath)) {
                 srcml.xmls.set(index, createXMLForFile(srcml.paths.get(index)));
+                return srcml.xmls.get(index);
+            }
         }
-//        srcml.attachXmls();
-//        return srcml;
+        return "";
     }
 
 
@@ -71,12 +72,12 @@ public class SRCMLHandler {
      * @param srcml
      * @param filePath
      */
-    public static void/*SRCMLxml*/ addXMLForProject(SRCMLxml srcml, String filePath) {
+    public static String addXMLForProject(SRCMLxml srcml, String filePath) {
         srcml.paths.add(filePath);
-        srcml.xmls.add(createXMLForFile(filePath));
+        String newXml = createXMLForFile(filePath);
+        srcml.xmls.add(newXml);
         srcml.fileNumber += 1;
-//        srcml.attachXmls();
-//        return srcml;
+        return newXml;
     }
 
 

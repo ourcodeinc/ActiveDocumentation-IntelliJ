@@ -4,6 +4,12 @@
 
 function RuleTable() {
     this.div = d3.select("#ruleResults");
+
+    d3.select("#page_title")
+        .on("change", () => {
+            let targetTag = document.getElementById(`page_title`).value.split(" ");
+            location.hash = '#/tags/' + targetTag.join('+');
+        });
 }
 
 
@@ -29,7 +35,7 @@ RuleTable.prototype.clearRuleTable = function () {
 RuleTable.prototype.displayRules = function () {
 
     for (let i = 0; i < this.rules.length; i++) {
-        this.displayResult(this.rules[i].index);
+        this.displayResult(this.rules[i]);
     }
 };
 
@@ -37,21 +43,19 @@ RuleTable.prototype.displayRules = function () {
 /**
  * display the data in the browser
  * rules: ruleJson + initialResult[] + conditionResult[] + match T/F
- * @param ruleIndex
+ * @param ruleI
  */
-RuleTable.prototype.displayResult = function (ruleIndex) {
+RuleTable.prototype.displayResult = function (ruleI) {
 
     let self = this;
 
-    let displayData = this.rules.filter((d) => {
-        return d.index === ruleIndex
-    })[0];
+    // console.log(ruleI);
 
     let ruleDiv = d3.select("#RT")
         .append('div')
         .classed('paddedDiv ruleContainer', true)
-        .attr('id', `rule_result_${ruleIndex}`)
-        .attr('data-tags', displayData.tags)
+        .attr('id', `rule_result_${ruleI.index}`)
+        .datum(ruleI)
         .append('div')
         .classed('ruleDiv', true);
 
@@ -64,34 +68,38 @@ RuleTable.prototype.displayResult = function (ruleIndex) {
 
     span.append("textarea")
         .attr("spellcheck", false)
-        //.append('input')
-        //.attr('type', 'text')
-        //.attr('value', displayData.ruleDescription)
-        .text(displayData.ruleDescription)
-        .attr("id", `rule_desc_${displayData.index}`)
+        .text(ruleI.ruleDescription)
+        .attr("id", `rule_desc_${ruleI.index}`)
         .classed('ruleDescription', true)
-        .on("change", () => this.updateRules(this.rules, displayData.index));
+        .on("change", () => this.updateRules(ruleI.index));
 
     span.append('br');
     span.append('textarea')
-        .text(displayData.detail)
+        .text(ruleI.detail)
         .attr("spellcheck", false)
-        .attr("id", `rule_detail_${displayData.index}`)
+        .attr("id", `rule_detail_${ruleI.index}`)
         .classed('ruleDetail', true)
-        .on("change", () => this.updateRules(this.rules, displayData.index));
+        .on("change", () => this.updateRules(ruleI.index));
 
     // rule result = quantifier + condition
     let ruleResultDiv = ruleDiv.append('div');
+
+    // sum up the number of satisfied and missing
+    let totalSatisfied = 0, totalMissing = 0;
+    for (let i = 0; i < ruleI['xPathQueryResult'].length; i++) {
+        totalSatisfied += ruleI['xPathQueryResult'][i]['data']['satisfied'];
+        totalMissing += ruleI['xPathQueryResult'][i]['data']['missing']
+    }
 
     // quantifier
     let quantifierDiv = ruleResultDiv.append('div')
         .classed('quantifierDiv', true);
     quantifierDiv.append('p')
-        .text(displayData.quantifierTitle);
+        .text(ruleI.quantifierTitle);
     quantifierDiv.append('em')
         .classed('link matches', true)
         .text(() => {
-            return (displayData.satisfied + displayData.missing) + ' matches'
+            return (totalSatisfied + totalMissing) + ' matches'
         })
         .on("click", function () {
             let parentNode = d3.select(this.parentNode).select('.quantifierList');
@@ -100,18 +108,18 @@ RuleTable.prototype.displayResult = function (ruleIndex) {
     quantifierDiv.append('div')
         .classed('quantifierList hidden', true)
         .node()
-        .appendChild(self.listRender(displayData, 'quantifier').node());
+        .appendChild(self.listRender(ruleI, 'quantifier').node());
 
     // condition
     let conditionDiv = ruleResultDiv.append('div')
         .classed('conditionDiv', true);
     conditionDiv.append('p')
-        .text(displayData.conditionedTitle);
+        .text(ruleI.conditionedTitle);
     let p = conditionDiv.append('p');
     p.append('em')
         .classed('link satisfied', true)
         .text(() => {
-            return displayData.satisfied + ' satisfied ';
+            return totalSatisfied + ' satisfied ';
         })
         .on('click', function () {
             let parentNode = d3.select(this.parentNode.parentNode).select('.conditionList');
@@ -120,12 +128,12 @@ RuleTable.prototype.displayResult = function (ruleIndex) {
     p.append('em')
         .classed('missing', true)
         .text(() => {
-            return displayData.missing + ' missing';
+            return totalMissing + ' missing';
         });
     conditionDiv.append('div')
         .classed('conditionList hidden', true)
         .node()
-        .appendChild(self.listRender(displayData, 'satisfied').node());
+        .appendChild(self.listRender(ruleI, 'conditioned').node());
 
 
     // fixing the float div heights and widths
@@ -137,71 +145,85 @@ RuleTable.prototype.displayResult = function (ruleIndex) {
 
 /**
  * update display of all rules
+ * @param filePath
  */
-RuleTable.prototype.updateDisplayRules = function () {
+RuleTable.prototype.updateDisplayRules = function (filePath) {
 
     for (let i = 0; i < this.rules.length; i++) {
-        this.updateDisplayResult(this.rules[i].index);
+        this.updateDisplayResult(this.rules[i], filePath);
     }
 };
 
 
 /**
  * update the vis after a change in the code
- * @param ruleIndex
+ * @param ruleI
+ * @param filePath
  */
-RuleTable.prototype.updateDisplayResult = function (ruleIndex) {
+RuleTable.prototype.updateDisplayResult = function (ruleI, filePath) {
 
     let self = this;
 
-    let displayData = self.rules.filter((d) => {
-        return d.index === ruleIndex
-    })[0];
+    let ruleIfile = ruleI['xPathQueryResult'].filter((d) => d['filePath'] === filePath)[0]['data'];
 
     let ruleDiv = d3.select("#RT")
-        .select(`#rule_result_${ruleIndex}`)
+        .select(`#rule_result_${ruleI.index}`)
         .select('.ruleDiv')
-        .classed('changed', () => displayData.changed);
+        .classed('changed', () => ruleIfile.changed)
+        .classed('hidden', () => !ruleIfile.changed && ruleIfile.missing === 0 && ruleIfile.satisfied === 0)
+        .datum(ruleI);
 
-    if (displayData.changed) {
+    // quantifier
+    let quantifierDiv = ruleDiv.select('.quantifierDiv');
 
-        // quantifier
-        let quantifierDiv = ruleDiv.select('.quantifierDiv');
+    quantifierDiv.select('em')
+        .classed('changedText', ruleIfile.allChanged)
+        .text(() => `${ruleIfile['satisfied'] + ruleIfile['missing']} matches`);
 
-        quantifierDiv.select('em')
-            .classed('changedText', displayData.allChanged)
-            .text(() => `${displayData.satisfied + displayData.missing} matches`);
+    let partResultDiv = quantifierDiv
+        .selectAll('.partResultDiv')
+        .classed('hidden', true);
 
-        quantifierDiv.select('.quantifierList').remove();
-        quantifierDiv.append('div')
-            .classed('quantifierList hidden', true)
-            .node()
-            .appendChild(self.listRender(displayData, 'quantifier').node());
+    partResultDiv.filter(function (d) {
+        return d['filePath'] === filePath;
+    })
+        .remove();
 
-        // condition
-        let conditionDiv = ruleDiv.select('.conditionDiv', true);
+    quantifierDiv
+        .select('.quantifierList')
+        .node()
+        .appendChild(self.listRender(ruleIfile, 'quantifierChanged').node());
 
-        conditionDiv
-            .selectAll('em')
-            .each(function (d, i) {
-                if (i === 0)
-                    d3.select(this)
-                        .classed('changedText', displayData.satisfiedChanged)
-                        .text(() => `${displayData.satisfied} satisfied `);
-                else
-                    d3.select(this)
-                        .classed('changedText', displayData.missingChanged)
-                        .text(() => `${displayData.missing} missing `);
+    // condition
+    let conditionDiv = ruleDiv.select('.conditionDiv');
 
-            });
+    conditionDiv
+        .selectAll('em')
+        .each(function (d, i) {
+            if (i === 0)
+                d3.select(this)
+                    .classed('changedText', ruleI.satisfiedChanged)
+                    .text(() => `${ruleIfile['satisfied']} satisfied `);
+            else
+                d3.select(this)
+                    .classed('changedText', ruleI.missingChanged)
+                    .text(() => `${ruleIfile['missing']} missing `);
+        });
 
-        conditionDiv.select('.conditionList').remove();
-        conditionDiv.append('div')
-            .classed('conditionList hidden', true)
-            .node()
-            .appendChild(self.listRender(displayData, 'satisfied').node());
+    partResultDiv = conditionDiv
+        .selectAll('.partResultDiv')
+        .classed('hidden', true);
 
-    }
+    partResultDiv.filter(function (d) {
+        return d['filePath'] === filePath;
+    })
+        .remove();
+
+    conditionDiv
+        .select('.conditionList')
+        .node()
+        .appendChild(self.listRender(ruleIfile, 'conditionedChanged').node());
+
 
 };
 
@@ -238,6 +260,72 @@ RuleTable.prototype.updateRules = function (index) {
 
 
 /**
+ * remove the changes caused by updateDisplayRules
+ */
+RuleTable.prototype.cleanRuleTable = function () {
+
+    this.div.selectAll('.partResultDiv, .ruleContainer')
+        .classed('hidden', false);
+
+    let ruleDiv = d3.select("#RT")
+        .selectAll('.ruleDiv')
+        .classed('changed', false)
+        .classed('hidden', false);
+
+    this.div.selectAll('.ruleDiv')
+        .each(function (ruleI) {
+
+            // sum up the number of satisfied and missing
+            let totalSatisfied = 0, totalMissing = 0;
+            for (let i = 0; i < ruleI['xPathQueryResult'].length; i++) {
+                totalSatisfied += ruleI['xPathQueryResult'][i]['data']['satisfied'];
+                totalMissing += ruleI['xPathQueryResult'][i]['data']['missing']
+            }
+
+            d3.select(this).selectAll('.matches')
+                .text(() => {
+                    return (totalSatisfied + totalMissing) + ' matches'
+                });
+
+            d3.select(this).selectAll('.satisfied')
+                .text(() => {
+                    return totalSatisfied + ' satisfied ';
+                });
+
+            d3.select(this).selectAll('.missing')
+                .text(() => {
+                    return totalMissing + ' missing ';
+                });
+        });
+
+    document.getElementById(`page_title`).value = "All Rules";
+};
+
+
+/**
+ * event handler for when the title[tag] is changed
+ */
+RuleTable.prototype.updateTagRules = function () {
+    let targetTag = document.getElementById(`page_title`).value.split(" ");
+    if (targetTag[0] === 'All') {
+        d3.selectAll(`.ruleContainer`).classed('hidden', false);
+    }
+    else {
+        d3.selectAll(`.ruleContainer`).classed('hidden', true);
+        d3.selectAll(`.ruleContainer`)
+            .classed('hidden', function (d) {
+                return !arrayContains(d['tags'], targetTag)
+            });
+    }
+
+    d3.selectAll(".main").classed("hidden", true);
+    d3.select("#header_2").classed("hidden", false);
+    d3.select("#ruleResults").classed("hidden", false);
+
+};
+
+
+/**
  * create a list div node for quantifier and conditioned result
  * @param data
  * @param group
@@ -250,37 +338,41 @@ RuleTable.prototype.listRender = function (data, group) {
     //let regex = /(<([^>]+)>)/ig;
     let detached = d3.select(document.createElement('div'));
 
+    let list = [];
     switch (group) {
         case 'quantifier':
-            for (let i = 0; i < data.quantifierResult.length; i++) {
-                detached
-                    .append('div')
-                    .classed('partResultDiv', true)
-                    .append('pre')
-                    .classed('link', true)
-                    .html((data.quantifierResult[i]['snippet']))
-                    .on('click', () => {
-                        self.sendToServer("xmlResult", data.quantifierResult[i]['xml'])
-                    });
+            for (let i = 0; i < data['xPathQueryResult'].length; i++) {
+                list = list.concat(data['xPathQueryResult'][i]['data'].quantifierResult)
             }
             break;
-
-        case 'satisfied':
-            for (let i = 0; i < data.conditionedResult.length; i++) {
-                detached
-                    .append('div')
-                    .classed('partResultDiv', true)
-                    .append('pre')
-                    .classed('link', true)
-                    .html((data.conditionedResult[i]['snippet']))
-                    .on('click', () => {
-                        self.sendToServer("xmlResult", data.conditionedResult[i]['xml'])
-                    });
+        case 'conditioned':
+            for (let i = 0; i < data['xPathQueryResult'].length; i++) {
+                list = list.concat(data['xPathQueryResult'][i]['data'].conditionedResult)
             }
+            break;
+        case 'quantifierChanged':
+            list = data['quantifierResult'];
+            break;
+        case 'conditionedChanged':
+            list = data['conditionedResult'];
             break;
     }
+
+    for (let i = 0; i < list.length; i++) {
+        detached
+            .append('div')
+            .classed('partResultDiv', true)
+            .datum(list[i])
+            .append('pre')
+            .classed('link', true)
+            .html((list[i]['snippet']))
+            .on('click', () => {
+                self.sendToServer("xmlResult", list[i]['xml'])
+            });
+    }
+
     return detached;
-}
+};
 
 /**
  * send the message to the server

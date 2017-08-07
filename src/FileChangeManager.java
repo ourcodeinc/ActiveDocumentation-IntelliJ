@@ -59,13 +59,11 @@ public class FileChangeManager implements ProjectComponent {
         s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
     }
 
-    private void updateSrcml() {
-        //public void setSrcml(SRCMLxml srcml) {
-        //this.srcml = srcml;
-        //s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML", srcml.xml}).toString());
-        //s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", this.getRules()}).toString());
-        //s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES", ""}).toString());
+    private void updateSrcml(String filePath, String newXml) {
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_XML",
+                MessageProcessor.encodeNewXMLData(new Object[]{filePath, newXml})
+        }).toString());
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES", filePath}).toString());
     }
 
     public void initComponent() {
@@ -215,10 +213,9 @@ public class FileChangeManager implements ProjectComponent {
         }
 
         System.out.println("CHANGE");
-        SRCMLHandler.updateXMLForProject(this.getSrcml(), file.getPath());
-        this.updateSrcml();
+        String newXml = SRCMLHandler.updateXMLForProject(this.getSrcml(), file.getPath());
+        this.updateSrcml(file.getPath(), newXml);
 
-        //this.setSrcml(SRCMLHandler.updateXMLForProject(this.getSrcml(), file.getPath()));
     }
 
     // when a file is created
@@ -238,8 +235,8 @@ public class FileChangeManager implements ProjectComponent {
         }
 
         System.out.println("CREATE");
-        SRCMLHandler.addXMLForProject(this.getSrcml(), file.getPath());
-        this.updateSrcml();
+        String newXml = SRCMLHandler.addXMLForProject(this.getSrcml(), file.getPath());
+        this.updateSrcml(file.getPath(), newXml);
         //this.setSrcml(SRCMLHandler.addXMLForProject(this.getSrcml(), file.getPath()));
 
     }
@@ -255,13 +252,9 @@ public class FileChangeManager implements ProjectComponent {
         for (String path : srcml.getPaths()) {
             if (!newPaths.contains(path)) {
 
-//                SRCMLxml newsrcML = SRCMLHandler.removeXMLForProject(srcml, path);
-//                newsrcML = SRCMLHandler.addXMLForProject(newsrcML, file.getPath());
-//                this.setSrcml(newsrcML);
-
                 SRCMLHandler.removeXMLForProject(srcml, path);
-                SRCMLHandler.addXMLForProject(srcml, file.getPath());
-                this.updateSrcml();
+                String newXml = SRCMLHandler.addXMLForProject(srcml, file.getPath());
+                this.updateSrcml(file.getPath(), newXml);
                 break;
             }
         }
@@ -279,10 +272,9 @@ public class FileChangeManager implements ProjectComponent {
         }
 
         System.out.println("DELETE");
-        //this.setSrcml(SRCMLHandler.removeXMLForProject(this.getSrcml(), file.getPath()));
 
         SRCMLHandler.removeXMLForProject(srcml, file.getPath());
-        this.updateSrcml();
+        this.updateSrcml(file.getPath(), "");
 
     }
 
