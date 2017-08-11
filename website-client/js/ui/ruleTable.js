@@ -2,21 +2,34 @@
  * Created by saharmehrpour on 8/1/17.
  */
 
+/**
+ * @constructor
+ */
 function RuleTable() {
-    this.div = d3.select("#ruleResults");
+    this.div = d3.select("#RT");
 
     d3.select("#page_title")
         .on("change", () => {
             let targetTag = document.getElementById(`page_title`).value.split(" ");
-            location.hash = '#/tags/' + targetTag.join('+');
+            location.hash = '#/tag/' + targetTag.join('+');
         });
+
 }
 
 
+/**
+ * Set the variable 'rules'
+ * @param ruleList
+ */
 RuleTable.prototype.setRules = function (ruleList) {
     this.rules = ruleList;
 };
 
+
+/**
+ * set the variable 'ws' the webSocket
+ * @param webSocket
+ */
 RuleTable.prototype.setWS = function (webSocket) {
     this.ws = webSocket;
 };
@@ -24,9 +37,8 @@ RuleTable.prototype.setWS = function (webSocket) {
 /**
  * clear the table in the browser
  */
-RuleTable.prototype.clearRuleTable = function () {
-    d3.select("#ruleResults")
-        .select("#RT").selectAll('div').remove();
+RuleTable.prototype.resetRuleTable = function () {
+    this.div.selectAll('div').remove();
 };
 
 /**
@@ -51,9 +63,9 @@ RuleTable.prototype.displayResult = function (ruleI) {
 
     // console.log(ruleI);
 
-    let ruleDiv = d3.select("#RT")
+    let ruleDiv = this.div
         .append('div')
-        .classed('paddedDiv ruleContainer', true)
+        .classed('largePaddedDiv ruleContainer', true)
         .attr('id', `rule_result_${ruleI.index}`)
         .datum(ruleI)
         .append('div')
@@ -80,6 +92,24 @@ RuleTable.prototype.displayResult = function (ruleI) {
         .attr("id", `rule_detail_${ruleI.index}`)
         .classed('ruleDetail', true)
         .on("change", () => this.updateRules(ruleI.index));
+
+    // tag boxes
+    let tagBoxesDiv = ruleDiv.append('div');
+    let tagBoxes = tagBoxesDiv.selectAll('.tagBoundingBox')
+        .data(ruleI['tags']);
+
+    tagBoxes.enter()
+        .append('div')
+        .classed('tagBoundingBox', true)
+        .append('div')
+        .classed('tagBox', true)
+        .html((d) => {
+            return '<span class="link">' + d + '</span>';
+        })
+        .on('click', (d) => {
+            location.hash = `#/tag/${d}`;
+        });
+
 
     // rule result = quantifier + condition
     let ruleResultDiv = ruleDiv.append('div');
@@ -144,7 +174,7 @@ RuleTable.prototype.displayResult = function (ruleI) {
 
 
 /**
- * update display of all rules
+ * update display of the rules for a specific file
  * @param filePath
  */
 RuleTable.prototype.updateDisplayRules = function (filePath) {
@@ -166,7 +196,7 @@ RuleTable.prototype.updateDisplayResult = function (ruleI, filePath) {
 
     let ruleIfile = ruleI['xPathQueryResult'].filter((d) => d['filePath'] === filePath)[0]['data'];
 
-    let ruleDiv = d3.select("#RT")
+    let ruleDiv = this.div
         .select(`#rule_result_${ruleI.index}`)
         .select('.ruleDiv')
         .classed('changed', () => ruleIfile.changed)
@@ -234,27 +264,21 @@ RuleTable.prototype.updateDisplayResult = function (ruleI, filePath) {
  */
 RuleTable.prototype.updateRules = function (index) {
 
-    let self = this;
+    // let data = [];
 
-    let data = []; // TODO remove unnecessary attributes
+    for (let i = 0; i < this.rules.length; i++) {
+        delete this.rules[i]['xPathQueryResult'];
 
-    for (let i = 0; i < self.rules.length; i++) {
-        if (self.rules[i].index === index) {
+        if (this.rules[i].index === index) {
 
-            let modifiedRule = cloneJSON(self.rules[i]);
+            this.rules[i].ruleDescription = document.getElementById(`rule_desc_${index}`).value;
+            this.rules[i].detail = document.getElementById(`rule_detail_${index}`).value;
 
-            modifiedRule.ruleDescription = document.getElementById(`rule_desc_${index}`).value;
-            modifiedRule.detail = document.getElementById(`rule_detail_${index}`).value;
-
-            data.push(modifiedRule);
-        }
-        else {
-            data.push(self.rules[i])
+            //sendToServer(this.ws, "MODIFIED_RULE", `{\"index\":${index},\"ruleText\":${JSON.stringify(this.rules[i])}}`);
+            sendToServer(this.ws, "MODIFIED_RULE", this.rules[i]);
+            return;
         }
     }
-
-    let ruleTableString = "\"ruleTable=" + JSON.stringify(data).substr(1);
-    this.sendToServer("NewRule", ruleTableString);
 
 };
 
@@ -267,10 +291,14 @@ RuleTable.prototype.cleanRuleTable = function () {
     this.div.selectAll('.partResultDiv, .ruleContainer')
         .classed('hidden', false);
 
-    let ruleDiv = d3.select("#RT")
+    this.div
         .selectAll('.ruleDiv')
         .classed('changed', false)
         .classed('hidden', false);
+
+    this.div
+        .selectAll('em')
+        .classed('changedText', false);
 
     this.div.selectAll('.ruleDiv')
         .each(function (ruleI) {
@@ -318,10 +346,6 @@ RuleTable.prototype.updateTagRules = function () {
             });
     }
 
-    d3.selectAll(".main").classed("hidden", true);
-    d3.select("#header_2").classed("hidden", false);
-    d3.select("#ruleResults").classed("hidden", false);
-
 };
 
 
@@ -367,26 +391,10 @@ RuleTable.prototype.listRender = function (data, group) {
             .classed('link', true)
             .html((list[i]['snippet']))
             .on('click', () => {
-                self.sendToServer("xmlResult", list[i]['xml'])
+                sendToServer(self.ws, "XML_RESULT", list[i]['xml'])
             });
     }
 
     return detached;
 };
 
-/**
- * send the message to the server
- * @param command without quotation
- * @param data with quotation
- */
-RuleTable.prototype.sendToServer = function (command, data) {
-
-    if (this.ws) {
-        let message = "{\"source\":\"WEB\",\"destination\":\"IDEA\",\"command\":\"" + command + "\",\"data\":"
-            + data + "}";
-
-        //console.log(message);
-
-        this.ws.send(message.toString());
-    }
-};

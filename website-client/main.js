@@ -21,11 +21,13 @@
         let tableOfContentManager = new TableOfContent();
         let ruleTableManager = new RuleTable();
         let ruleGenerator = new RuleGenerator();
+        let tagInformationManager = new TagInformation();
+        let individualRuleManager = new IndividualRule();
 
-        WebSocketHandler(tableOfContentManager, ruleTableManager);
+        WebSocketHandler(tableOfContentManager, ruleTableManager, individualRuleManager, tagInformationManager);
 
 
-        let hashManager = new UrlChangingHandling(ruleTableManager);
+        let hashManager = new UrlChangingHandling(ruleTableManager, individualRuleManager, tagInformationManager);
 
         if ("onhashchange" in window) { // event supported?
             window.onhashchange = function () {

@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -35,30 +36,100 @@ public class FileChangeManager implements ProjectComponent {
     private ChatServer s;
     private List<VirtualFile> ignoredFiles/* = new ArrayList<>()*/;
     private SRCMLxml srcml;
-    private String rules;
+    //    private String rules;
+    private List<List<String>> ruleIndexText; // index - text
+    private List<List<String>> tagNameText; // tagName - text
 
-    FileChangeManager(ChatServer server, SRCMLxml xmlP, String rule) {
+    FileChangeManager(ChatServer server, SRCMLxml xmlP, /*String rule,*/ List<List<String>> ruleList, List<List<String>> tagList) {
         connection = ApplicationManager.getApplication().getMessageBus().connect();
         s = server;
 
-        rules = rule;
+//        rules = rule;
         srcml = xmlP;
+        ruleIndexText = ruleList;
+        tagNameText = tagList;
     }
 
+
+    /**
+     * find the corresponding rule for ruleIndex and update it
+     *
+     * @param ruleIndex String received from client
+     * @param ruleText  String received from client
+     */
+    private void setRuleIndexText(String ruleIndex, String ruleText) {
+        for (int i = 0; i < this.ruleIndexText.size(); i++) {
+            if (this.ruleIndexText.get(i).get(0).equals(ruleIndex)) {
+                this.ruleIndexText.set(i, new ArrayList<>(Arrays.asList(ruleIndex, ruleText)));
+                return;
+            }
+        }
+    }
+
+
+    /**
+     * find the corresponding tag for tagName and update it
+     *
+     * @param tagName String received from client
+     * @param tagText String received from client
+     */
+    private void setTagNameText(String tagName, String tagText) {
+        for (int i = 0; i < this.tagNameText.size(); i++) {
+            if (this.tagNameText.get(i).get(0).equals(tagName)) {
+                this.tagNameText.set(i, new ArrayList<>(Arrays.asList(tagName, tagText)));
+                return;
+            }
+        }
+    }
+
+
+    /**
+     * get the string of all rules to send to the client
+     *
+     * @return string
+     */
+    String getAllRules() {
+        String allRules = "ruleTable=[";
+        for (int i = 0; i < this.ruleIndexText.size(); i++) {
+            allRules = allRules + this.ruleIndexText.get(i).get(1);
+            if (i != this.ruleIndexText.size() - 1)
+                allRules = allRules + ',';
+        }
+        return allRules + "]";
+    }
+
+
+    /**
+     * get the string of all tags to send to the client
+     *
+     * @return string
+     */
+    String getAllTags() {
+        String allTags = "tagTable=[";
+        for (int i = 0; i < this.tagNameText.size(); i++) {
+            allTags = allTags + this.tagNameText.get(i).get(1);
+            if (i != this.tagNameText.size() - 1)
+                allTags = allTags + ',';
+        }
+        return allTags + "]";
+    }
+
+    /**
+     * getter
+     *
+     * @return srcml object
+     */
     SRCMLxml getSrcml() {
         return srcml;
     }
 
-    String getRules() {
-        return rules;
-    }
 
-    private void setRules(String rules) {
-        this.rules = rules;
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE_AND_CONTAINER", rules}).toString());
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
-    }
-
+    /**
+     * change the srcml and send some messages to clients if the srcml is updated
+     *
+     * @param filePath String
+     * @param newXml   String
+     */
     private void updateSrcml(String filePath, String newXml) {
         s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_XML",
                 MessageProcessor.encodeNewXMLData(new Object[]{filePath, newXml})
@@ -100,7 +171,11 @@ public class FileChangeManager implements ProjectComponent {
         });
     }
 
-    public void disposeComponent() {  // Not working
+    /**
+     * Overridden method
+     * Not working
+     */
+    public void disposeComponent() {
         System.out.println("(disposeComponent)");
         connection.disconnect();
         try {
@@ -121,24 +196,37 @@ public class FileChangeManager implements ProjectComponent {
 
     // ProjectComponent
 
+    /**
+     * Overridden method
+     * Not working
+     */
     @Override
-    public void projectOpened() { // Not working
+    public void projectOpened() {
         System.out.println("(project Opened)");
     }
 
+    /**
+     * Overridden method
+     * Not working
+     */
     @Override
-    public void projectClosed() { // Not working
+    public void projectClosed() {
         System.out.println("(project Closed)");
     }
 
 
+    /**
+     * process the message received from the client
+     *
+     * @param messageAsJson JsonObject
+     */
     void processReceivedMessages(JsonObject messageAsJson) {
 
         String command = messageAsJson.get("command").getAsString();
         String projectPath = ProjectManager.getInstance().getOpenProjects()[0].getBasePath();
 
         switch (command) {
-            case "xmlResult":
+            case "XML_RESULT":
                 try {
                     PrintWriter writer = new PrintWriter(projectPath + "/tempResultXmlFile.xml", "UTF-8");
                     writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>");
@@ -151,38 +239,58 @@ public class FileChangeManager implements ProjectComponent {
 
                 //System.out.println(SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml"));
 
-                EventQueue.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        String[] filePath = messageAsJson.get("data").getAsJsonObject().get("fileName").getAsString().split("/");
-                        String fileToFocusOn = filePath[filePath.length - 1];
-                        int indexToFocusOn = SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml");
-                        Project currentProject = ProjectManager.getInstance().getOpenProjects()[0];
-                        VirtualFile theVFile = FilenameIndex.getVirtualFilesByName(currentProject, fileToFocusOn, GlobalSearchScope.projectScope(currentProject)).iterator().next();
-                        FileEditorManager.getInstance(currentProject).openFile(theVFile, true);
-                        Editor theEditor = FileEditorManager.getInstance(currentProject).getSelectedTextEditor();
-                        theEditor.getCaretModel().moveToOffset(indexToFocusOn);
-                        theEditor.getScrollingModel().scrollToCaret(ScrollType.RELATIVE);
-                    }
+                EventQueue.invokeLater(() -> {
+                    String[] filePath = messageAsJson.get("data").getAsJsonObject().get("fileName").getAsString().split("/");
+                    String fileToFocusOn = filePath[filePath.length - 1];
+                    int indexToFocusOn = SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml");
+                    Project currentProject = ProjectManager.getInstance().getOpenProjects()[0];
+                    VirtualFile theVFile = FilenameIndex.getVirtualFilesByName(currentProject, fileToFocusOn, GlobalSearchScope.projectScope(currentProject)).iterator().next();
+                    FileEditorManager.getInstance(currentProject).openFile(theVFile, true);
+                    Editor theEditor = FileEditorManager.getInstance(currentProject).getSelectedTextEditor();
+                    theEditor.getCaretModel().moveToOffset(indexToFocusOn);
+                    theEditor.getScrollingModel().scrollToCaret(ScrollType.RELATIVE);
                 });
                 break;
 
-            case "NewRule":
-                try {
-                    PrintWriter writer = new PrintWriter(projectPath + "/ruleJson.txt", "UTF-8");
-                    writer.println(messageAsJson.get("data").getAsString());
-                    writer.close();
-                } catch (IOException e) {
-                    System.out.println("error in writing the rules");
-                    return;
-                }
-                this.setRules(MessageProcessor.getIntitialRules().toString());
+            case "MODIFIED_RULE":
+
+                String ruleIndex = Integer.toString(messageAsJson.get("data").getAsJsonObject().get("index").getAsInt());
+                String ruleText = messageAsJson.get("data").getAsJsonObject().get("ruleText").getAsJsonObject().toString();
+
+                this.setRuleIndexText(ruleIndex, ruleText);
+                this.writeToFile("ruleJson.txt");
+
+                // TODO send message
+
+                break;
+
+            case "MODIFIED_TAG":
+
+                String tagName = Integer.toString(messageAsJson.get("data").getAsJsonObject().get("tagName").getAsInt());
+                String tagText = messageAsJson.get("data").getAsJsonObject().get("tagText").getAsJsonObject().toString();
+
+                this.setTagNameText(tagName, tagText);
+                this.writeToFile("tagJson.txt");
+
+                // TODO send message
+
+                break;
+
+            case "NEW_RULE":
+
+                //TODO first add the rule, then write it in the file
+
+                break;
 
         }
 
     }
 
-    // checks if we should ignore a file
+
+    /** checks if we should ignore a file
+     * @param s virtual file
+     * @return true/false
+     */
     private boolean shouldIgnoreFile(VirtualFile s) {
         if (ignoredFiles == null) {
             return false;
@@ -197,13 +305,16 @@ public class FileChangeManager implements ProjectComponent {
         return false;
     }
 
+    //------------------ handle file events
+
     // when the text of a file changes
     private void handleVFileChangeEvent(VFileEvent event) {
         VirtualFile file = event.getFile();
 
         // if we are dealing with ruleJson.txt
         if (file.getName().equals("ruleJson.txt")) {
-            this.setRules(MessageProcessor.getIntitialRules().toString());
+            //TODO
+//            this.setRules(MessageProcessor.getInitialRules().toString());
             return;
         }
 
@@ -225,7 +336,8 @@ public class FileChangeManager implements ProjectComponent {
 
         // if we are dealing with ruleJson.txt
         if (file.getName().equals("ruleJson.txt")) {
-            this.setRules(MessageProcessor.getIntitialRules().toString());
+            // TODO
+//            this.setRules(MessageProcessor.getInitialRules().toString());
             return;
         }
 
@@ -267,7 +379,8 @@ public class FileChangeManager implements ProjectComponent {
 
         // if we are dealing with ruleJson.txt
         if (file.getName().equals("ruleJson.txt")) {
-            this.setRules("");
+            // TODO
+//            this.setRules("");
             return;
         }
 
@@ -278,8 +391,10 @@ public class FileChangeManager implements ProjectComponent {
 
     }
 
+    //----------------------------------
+
     /**
-     * chech whether we should consider the file change
+     * check whether we should consider the file change
      *
      * @param file VirtualFile
      * @return boolean
@@ -344,8 +459,45 @@ public class FileChangeManager implements ProjectComponent {
             System.out.println("XML data is created.");
 
             this.srcml = srcml;
-            this.rules = MessageProcessor.getIntitialRules().toString();
+//            this.rules = MessageProcessor.getInitialRules().toString();
 
         }
+    }
+
+    /**
+     * write in file
+     * @param fileName either ruleJson.txt or tagJson.txt
+     */
+    private void writeToFile(String fileName) {
+
+        try {
+            String projectPath = ProjectManager.getInstance().getOpenProjects()[0].getBasePath();
+
+            PrintWriter writer = new PrintWriter(projectPath + "/" + fileName, "UTF-8");
+            switch (fileName) {
+                case "ruleJson.txt":
+                    writer.println('[');
+                    for (int i = 0; i < this.ruleIndexText.size(); i++) {
+                        writer.println(this.ruleIndexText.get(i).get(1));
+                        if (i != this.ruleIndexText.size() - 1)
+                            writer.println(',');
+                    }
+                    writer.println(']');
+                    break;
+                case "tagJson.txt":
+                    writer.println('[');
+                    for (int i = 0; i < this.tagNameText.size(); i++) {
+                        writer.println(this.tagNameText.get(i).get(1));
+                        if (i != this.tagNameText.size() - 1)
+                            writer.println(',');
+                    }
+                    writer.println(']');
+                    break;
+            }
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("error in writing " + fileName);
+        }
+
     }
 }

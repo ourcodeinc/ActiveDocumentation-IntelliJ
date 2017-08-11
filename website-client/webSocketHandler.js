@@ -2,37 +2,44 @@
  * Created by saharmehrpour on 8/1/17.
  */
 
-function WebSocketHandler(tableOfContentManager, ruleTableManager) {
+function WebSocketHandler(tableOfContentManager, ruleTableManager, individualRuleManager, tagInformationManager) {
 
     let xml = []; // object of `filePath` and `xml`
-    let ruleTable = [];
+    let ruleTable = []; // retrieved from ruleJson.txt
+    let tagTable = []; // retrieved from ruleJson.txt
     let ws = new WebSocket("ws://localhost:8887");
 
     ruleTableManager.setWS(ws);
+    individualRuleManager.setWS(ws);
+    tagInformationManager.setWS(ws);
 
     ws.onopen = function () {
-        ruleTableManager.clearRuleTable();
+        ruleTableManager.resetRuleTable();
     };
 
     ws.onmessage = function (e) {
 
         let message = JSON.parse(e.data);
-        let messageInfo = message.data;
 
         switch (message.command) {
 
             // when the rules are changed
-            case "UPDATE_RULE_TABLE_AND_CONTAINER":
-                eval(JSON.parse(message.data).text);
+            case "RULE_TABLE":
+                eval(message.data);
 
                 tableOfContentManager.setRules(ruleTable);
                 ruleTableManager.setRules(ruleTable);
+                individualRuleManager.setRules(ruleTable);
+                break;
 
+            case "TAG_TABLE":
+                eval(message.data);
+                tagInformationManager.setTags(tagTable);
                 break;
 
             case "VERIFY_RULES":
 
-                ruleTableManager.clearRuleTable();
+                ruleTableManager.resetRuleTable();
                 tableOfContentManager.clearTableOfContent();
                 tableOfContentManager.displayTableOfContent();
 
@@ -42,6 +49,8 @@ function WebSocketHandler(tableOfContentManager, ruleTableManager) {
 
                 tableOfContentManager.setRules(ruleTable);
                 ruleTableManager.setRules(ruleTable);
+                individualRuleManager.setRules(ruleTable);
+
                 ruleTableManager.displayRules();
 
                 break;
@@ -57,6 +66,8 @@ function WebSocketHandler(tableOfContentManager, ruleTableManager) {
 
                 tableOfContentManager.setRules(ruleTable);
                 ruleTableManager.setRules(ruleTable);
+                individualRuleManager.setRules(ruleTable);
+
                 ruleTableManager.updateDisplayRules(message.data);
 
                 location.hash = "#/codeChanged";
@@ -64,14 +75,14 @@ function WebSocketHandler(tableOfContentManager, ruleTableManager) {
                 break;
 
             case "XML":
-                xml.push(messageInfo);
+                xml.push(message.data);
 
                 //let parser = new DOMParser();
                 //console.log(parser.parseFromString(xml, "text/xml"));
                 break;
 
             case "UPDATE_XML":
-                xml.filter((d)=>
+                xml.filter((d) =>
                     d.filePath === message.data['filePath']
                 )[0].xml = message.data['xml'];
 

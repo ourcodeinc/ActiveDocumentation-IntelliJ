@@ -16,12 +16,13 @@
             <li><a id="forward_button" class="inactive"> > </a></li>
         </ul>
         <ul class="right hide-on-med-and-down">
+            <li><a id="link_lists">Table of Content</a></li>
+            <li><a id="link_rule_result">Rules</a></li>
             <li><a id="link_generate_rules">Generate Rules</a></li>
-            <li><a id="link_rule_result">Rule Results</a></li>
-            <li><a id="link_lists">Rule and Tag list</a></li>
         </ul>
     </div>
 </nav>
+
 <nav id="header_2" class="hidden">
     <div class="nav-wrapper">
         <div class="container">
@@ -32,7 +33,6 @@
 
 <br>
 
-
 <!--<div class="container center-align" style="padding: 10px">-->
 <!--<textarea id="debug_output" style="height: 200px;width: 400px;"></textarea>-->
 <!--</div>-->
@@ -40,11 +40,12 @@
 
 <div id="tableOfContent" class="main">
     <div class="container">
-        <div style="border-bottom: 1px solid #ddd;">
+        <div class="darkNarrowBorderBottom">
             <h4>Tags</h4>
         </div>
+        <div id="alphabet_index"></div>
         <ul id="tags_list"></ul>
-        <div style="border-bottom: 1px solid #ddd;">
+        <div class="darkNarrowBorderBottom">
             <h4>Rules</h4>
         </div>
         <ul id="rules_list"></ul>
@@ -53,40 +54,42 @@
 
 <div id="individualRule" class="main hidden">
     <div class="container">
-        Individual Rule Div
     </div>
 </div>
 
 <div id="ruleResults" class="main hidden">
     <div class="container rule-table">
+        <div id="tagInfo"></div>
         <div class="result" id="RT"></div>
     </div>
 </div>
 
 <div id="ruleGeneration" class="main hidden">
-    <div class="rule-forms">
-        Rule Description:<br>
-        <input type="text" id="ruleDescription"><br>
-        Detail:<br>
-        <input type="text" name="detail" id="ruleDetail"><br>
-        Classes with:<br>
-        <select name="elements" id="elements">
-            <option value="variable">Variable</option>
-            <option value="annotation">Annotation</option>
-            <option value="all">(All Classes)</option>
-        </select><br>
-        named:<br>
-        <input type="text" name="elementName" id="initElementName"><br>
-        <input type="radio" name="condition" value="mustHave">must have: <br>
-        <select name="conditions" id="conditions">
-            <option value="method">Method</option>
-            <option value="variable">Variable</option>
-            <option value="constructor">Constructor</option>
-        </select><br>
-        <input type="text" name="elementName" id="condElementName"><br>
-        <input type="button" value="Generate" id="ruleGenerator"><br>
+    <div class="container">
+        <div class="rule-forms">
+            Rule Description:<br>
+            <input type="text" id="ruleDescription"><br>
+            Detail:<br>
+            <input type="text" name="detail" id="ruleDetail"><br>
+            Classes with:<br>
+            <select name="elements" id="elements">
+                <option value="variable">Variable</option>
+                <option value="annotation">Annotation</option>
+                <option value="all">(All Classes)</option>
+            </select><br>
+            named:<br>
+            <input type="text" name="elementName" id="initElementName"><br>
+            <!--<input type="radio" name="condition" value="mustHave">must have: <br>-->
+            <select name="conditions" id="conditions">
+                <option value="method">Method</option>
+                <option value="variable">Variable</option>
+                <option value="constructor">Constructor</option>
+            </select><br>
+            <input type="text" name="elementName" id="condElementName"><br>
+            <input type="button" value="Generate" id="ruleGenerator"><br>
 
-        <input type="radio" name="condition" value="mustBeFollowed">must be followed by: <br>
+            <!--<input type="radio" name="condition" value="mustBeFollowed">must be followed by: <br>-->
+        </div>
     </div>
 </div>
 
@@ -104,6 +107,8 @@
 <script type="text/javascript" src="js/ui/ruleGenerator.js"></script>
 <script type="text/javascript" src="js/ui/ruleTable.js"></script>
 <script type="text/javascript" src="js/ui/tableOfContent.js"></script>
+<script type="text/javascript" src="js/ui/individualRule.js"></script>
+<script type="text/javascript" src="js/ui/tagInformation.js"></script>
 
 <!--<script type="text/javascript" src="uiManipulation.js"></script>-->
 <!--<script type="text/javascript" src="websocket_response_handler.js"></script>-->

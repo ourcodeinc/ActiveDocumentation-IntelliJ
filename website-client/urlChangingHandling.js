@@ -2,13 +2,21 @@
  * Created by saharmehrpour on 8/1/17.
  */
 
-function UrlChangingHandling(ruleTableManager) {
+/**
+ * @param ruleTableManager
+ * @param individualRuleManager
+ * @param tagInformationManager
+ * @constructor
+ */
+function UrlChangingHandling(ruleTableManager, individualRuleManager, tagInformationManager) {
 
     this.history = [];
     this.clicked = false;
     this.activeHash = -1;
 
     this.ruleTableManager = ruleTableManager;
+    this.individualRuleManager = individualRuleManager;
+    this.tagInformationManager = tagInformationManager;
 
     this.navBarHandler();
 
@@ -24,10 +32,12 @@ UrlChangingHandling.prototype.hashChangedHandler = function (hash) {
 
     self.updateHistory(hash);
 
-    document.body.scrollTop = document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
 
-    d3.selectAll(".main_view").classed("hidden", true);
+    d3.selectAll(".main").classed("hidden", true);
     d3.select("#model_nav").classed("hidden", true);
+    d3.select("#tagInfo").classed("hidden", true);
 
     let splittedHash = hash.split("/");
 
@@ -38,8 +48,12 @@ UrlChangingHandling.prototype.hashChangedHandler = function (hash) {
             d3.select("#tableOfContent").classed("hidden", false);
             break;
 
-        case 'tags':
+        case 'tag':
+            d3.select("#header_2").classed("hidden", false);
+            d3.select("#ruleResults").classed("hidden", false);
+            d3.select("#tagInfo").classed("hidden", false);
             document.getElementById(`page_title`).value = splittedHash[2].split('+').join(" ");
+            this.tagInformationManager.displayTagInformation(splittedHash[2].split('+'));
             this.ruleTableManager.updateTagRules();
             break;
 
@@ -51,12 +65,22 @@ UrlChangingHandling.prototype.hashChangedHandler = function (hash) {
 
         case 'rules':
             this.ruleTableManager.cleanRuleTable();
+            d3.selectAll(".main").classed("hidden", true);
+            d3.select("#header_2").classed("hidden", false);
+            d3.select("#ruleResults").classed("hidden", false);
+            break;
 
         case 'codeChanged':
             d3.selectAll(".main").classed("hidden", true);
             d3.select("#header_2").classed("hidden", false);
             d3.select("#ruleResults").classed("hidden", false);
+            break;
 
+        case 'rule':
+            d3.selectAll(".main").classed("hidden", true);
+            d3.select("#header_2").classed("hidden", false);
+            d3.select("#individualRule").classed("hidden", false);
+            this.individualRuleManager.displayRule(+splittedHash[2]);
             break;
 
     }
@@ -76,6 +100,7 @@ UrlChangingHandling.prototype.navBarHandler = function () {
     d3.select("#link_rule_result").on("click", () => {
         location.hash = '#/rules';
     });
+
     d3.select("#link_lists").on("click", () => {
         location.hash = '#/index';
     });
@@ -92,6 +117,7 @@ UrlChangingHandling.prototype.navBarHandler = function () {
             d3.select('#back_button').classed('inactive', true);
         }
     });
+
     d3.select("#forward_button").on("click", () => {
         if (self.activeHash < self.history.length - 1) {
             self.activeHash = self.activeHash + 1;
@@ -107,6 +133,10 @@ UrlChangingHandling.prototype.navBarHandler = function () {
 };
 
 
+/**
+ * up date the hash list and 'active hash'
+ * @param hash
+ */
 UrlChangingHandling.prototype.updateHistory = function (hash) {
     let self = this;
 

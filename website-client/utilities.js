@@ -46,8 +46,8 @@ function ResultArraysEqual(array1, array2) {
         // only remove one occurrence
         let removed = false;
         arr1 = arr1.filter((d) => {
-            if(!removed && d.name === arr2[i].name){
-                removed = ! removed;
+            if (!removed && d.name === arr2[i].name) {
+                removed = !removed;
                 return false;
             }
             return true;
@@ -93,6 +93,11 @@ function cloneXML(xml) {
     return newDocument;
 }
 
+/**
+ * deep copy of a JSON variable
+ * @param json
+ * @returns {Document}
+ */
 function cloneJSON(json) {
     return JSON.parse(JSON.stringify(json));
 }
@@ -127,4 +132,36 @@ function countMatchingInArray(container, arr) {
         }
     }
     return matching;
+}
+
+
+/**
+ * send the message to the server
+ * @param ws web socket
+ * @param command
+ * @param data
+ */
+function sendToServer(ws, command, data) {
+    if (ws) {
+        let message = "{\"source\":\"WEB\",\"destination\":\"IDEA\",\"command\":\"" + command + "\",\"data\":";
+        switch (command) {
+            case 'MODIFIED_RULE':
+                message = message + `{\"index\":${data.index},\"ruleText\":${JSON.stringify(data)}}`;
+                break;
+            case 'MODIFIED_TAG':
+                message = message + `{\"tagName\":${data.tagName},\"tagText\":${JSON.stringify(data)}}`;
+                break;
+            case 'XML_RESULT':
+                message = message + data;
+                break;
+        }
+        message = message + '}';
+
+        // let message = "{\"source\":\"WEB\",\"destination\":\"IDEA\",\"command\":\"" + command + "\",\"data\":"
+        //     + data + "}";
+
+        //console.log(message);
+
+        ws.send(message.toString());
+    }
 }

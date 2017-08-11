@@ -1,7 +1,13 @@
 import com.google.gson.JsonObject;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.util.List;
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.io.*;
 
 // A quick class to format some data as a JSONObject message that the web-client can process
@@ -35,42 +41,122 @@ public class MessageProcessor {
         return jsonObject;
     }
 
-    // returns a JSONObject with the initial rules from ruleJson.txt (the file where users modify rules)
-    static JsonObject getIntitialRules() {
-        System.out.println("(sendRulesInitially) " + "Send Rules initially");
-        JsonObject data = new JsonObject();
+//    // returns a JSONObject with the initial rules from ruleJson.txt (the file where users modify rules)
+//    static JsonObject getInitialRules() {
+//        System.out.println("(sendRulesInitially)");
+//        JsonObject data = new JsonObject();
+//
+//        Project project = ProjectManager.getInstance().getOpenProjects()[0];
+//        File file = new File(project.getBasePath());
+//        String ruleFilePath = findRuleJsonFile(file);
+//
+//        try (BufferedReader br = new BufferedReader(new FileReader(ruleFilePath))) {
+//
+//            String sCurrentLine, result = "ruleTable=";
+//
+//            while ((sCurrentLine = br.readLine()) != null) {
+//                result = result + sCurrentLine + '\n';
+//            }
+//            data.addProperty("text", result);
+//
+//        } catch (IOException e) {
+//            System.out.println("No ruleJson file / error in reading the ruleJson file");
+//            e.printStackTrace();
+//        }
+//
+//        if (!data.has("text")) {
+//            data.addProperty("text", "");
+//        }
+//        System.out.println(data);
+//        return data;
+//    }
+
+
+    /**
+     * read rules from ruleJson.txt (the file where users modify rules)
+     *
+     * @return a list of the initial rules <index, rule text>
+     */
+    static List<List<String>> getInitialRulesAsList() {
+        return getList("index");
+    }
+
+    /**
+     * read rules from ruleJson.txt (the file where users modify rules)
+     *
+     * @return a list of the initial rules <index, rule text>
+     */
+    static List<List<String>> getInitialTagsAsList() {
+        return getList("tagName");
+    }
+
+    /**
+     * read from json file
+     * @param variable 'index' (rules) or 'fileName' (tags)
+     * @return List<List<String>>
+     */
+    private static List<List<String>> getList(String variable) {
+        List<List<String>> itemList = new ArrayList<>();
 
         Project project = ProjectManager.getInstance().getOpenProjects()[0];
         File file = new File(project.getBasePath());
-        String ruleFilePath = findRuleJsonFile(file);
+        String ruleFilePath = "";
+        switch (variable) {
+            case "index":
+                ruleFilePath = findJsonFile(file, "ruleJson.txt");
+                break;
+            case "tagName":
+                ruleFilePath = findJsonFile(file, "tagJson.txt");
+                break;
+        }
 
         try (BufferedReader br = new BufferedReader(new FileReader(ruleFilePath))) {
 
             String sCurrentLine, result = "";
-
             while ((sCurrentLine = br.readLine()) != null) {
                 result = result + sCurrentLine + '\n';
             }
-            data.addProperty("text", result);
+            try {
+                JSONArray allRules = new JSONArray(result);
+                for (int j = 0; j < allRules.length(); ++j) {
+                    JSONObject itemI = allRules.getJSONObject(j);
+                    switch (variable) {
+                        case "index":
+                            long ruleIndex = itemI.getInt("index");
+                            itemList.add(new ArrayList<>(Arrays.asList(Long.toString(ruleIndex), itemI.toString())));
+                            break;
+                        case "tagName":
+                            String tagName = itemI.getString("tagName");
+                            itemList.add(new ArrayList<>(Arrays.asList(tagName, itemI.toString())));
+                            break;
+                    }
+                }
+            } catch (JSONException e) {
+                System.out.println("error in parsing the json File");
+                e.printStackTrace();
+            }
 
         } catch (IOException e) {
-            System.out.println("No ruleJson file / error in reading the ruleJson file");
+            System.out.println("No json file / error in reading the json file");
             e.printStackTrace();
         }
 
-        if (!data.has("text")) {
-            data.addProperty("text", "");
-        }
-        return data;
+        return itemList;
     }
 
-    private static String findRuleJsonFile(File directory) {
+
+    /**
+     * @param directory of the project
+     * @param fileName target json file
+     * @return file path
+     */
+    private static String findJsonFile(File directory, String fileName) {
         File[] list = directory.listFiles();
         if (list != null)
             for (File file : list) {
                 if (file.isDirectory()) {
-                    findRuleJsonFile(file);
-                } else if ("ruleJson.txt".equalsIgnoreCase(file.getName())) {
+                    findJsonFile(file, fileName);
+                } else if (fileName.equalsIgnoreCase(file.getName())) {
                     return file.getPath();
                 }
             }
