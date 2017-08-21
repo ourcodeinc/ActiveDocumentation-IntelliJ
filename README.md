@@ -64,7 +64,7 @@ There must be a file name `ruleJson.txt` in the project folder. In this file, th
 
 The format of this file is not final.
 
-##tagJson.txt
+## tagJson.txt
 
 There is also another json file named `tagJson.txt`. In this file we store information
 about tags. Here is an example for this file:
