@@ -16,6 +16,9 @@ public class MessageProcessor {
     private static final String[] dataKeys = {"source", "destination", "command", "data"};
     private static final String[] xmlKeys = {"filePath", "xml"};
     private static final String[] newXmlKeys = {"filePath", "xml"};
+    private static final String[] modifiedRuleKeys = {"ruleIndex", "rule"};
+    private static final String[] modifiedTagKeys = {"tagName", "tag"};
+
 
     static JsonObject encodeData(Object[] source_Destination_Protocol_Data_Array) {
         return createJsonObject(source_Destination_Protocol_Data_Array, dataKeys);
@@ -27,6 +30,14 @@ public class MessageProcessor {
 
     static JsonObject encodeNewXMLData(Object[] filepath_newXml) {
         return createJsonObject(filepath_newXml, newXmlKeys);
+    }
+
+    static JsonObject encodeModifiedRule(Object[] ruleIndex_rule) {
+        return createJsonObject(ruleIndex_rule, modifiedRuleKeys);
+    }
+
+    static JsonObject encodeModifiedTag(Object[] tagName_tag) {
+        return createJsonObject(tagName_tag, modifiedTagKeys);
     }
 
     private static JsonObject createJsonObject(Object[] data_Array, String[] keys) {
@@ -133,12 +144,12 @@ public class MessageProcessor {
                 }
             } catch (JSONException e) {
                 System.out.println("error in parsing the json File");
-                e.printStackTrace();
+                //e.printStackTrace();
             }
 
         } catch (IOException e) {
             System.out.println("No json file / error in reading the json file");
-            e.printStackTrace();
+            //e.printStackTrace();
         }
 
         return itemList;

@@ -21,55 +21,12 @@ IndividualRule.prototype.displayRule = function (ruleIndex) {
     this.div.selectAll('div').remove();
     document.getElementById(`page_title`).value = `Rule ${ruleIndex}`;
 
-    let ruleDiv = this.div
-        .append('div')
-        .classed('paddedDiv ruleContainer', true)
-        .attr('id', `rule_result_${ruleI.index}`)
-        .datum(ruleI)
-        .append('div')
-        .classed('ruleDiv', true);
-
-    // rule Description and Detail
-    let span = ruleDiv.append('div')
-        .classed('paddedDiv', true)
-        .append('div')
-        .classed('ruleTitleDiv', true)
-        .append('span');
-
-    span.append("textarea")
-        .attr("spellcheck", false)
-        .text(ruleI.ruleDescription)
-        .attr("id", `rule_desc_${ruleI.index}`)
-        .classed('ruleDescription', true)
-        .on("change", () => this.updateRules(ruleI.index));
-
-    span.append('br');
-    span.append('textarea')
-        .text(ruleI.detail)
-        .attr("spellcheck", false)
-        .attr("id", `rule_detail_${ruleI.index}`)
-        .classed('ruleDetail', true)
-        .on("change", () => this.updateRules(ruleI.index));
-
-    // tag boxes
-    let tagBoxesDiv = ruleDiv.append('div');
-    let tagBoxes = tagBoxesDiv.selectAll('.tagBoundingBox')
-        .data(ruleI['tags']);
-
-    tagBoxes.enter()
-        .append('div')
-        .classed('tagBoundingBox', true)
-        .append('div')
-        .classed('tagBox', true)
-        .html((d) => {
-            return '<span class="link">' + d + '</span>';
-        })
-        .on('click', (d) => {
-            location.hash = `#/tag/${d}`;
-        });
-
-    // rule result = quantifier + condition
-    let ruleResultDiv = ruleDiv.append('div');
+    let tableData = [
+        [{'type': 'label', 'value': 'Rule Description'}, {'type': 'ruleDescription', 'value': ruleI.ruleDescription}],
+        [{'type': 'label', 'value': 'Rule Detail'}, {'type': 'ruleDetail', 'value': ruleI.detail}],
+        [{'type': 'label', 'value': 'Rule Tags'}, {'type': 'tags', 'value': ruleI.tags}],
+        [{'type': 'label', 'value': 'Quantifier'}, {'type': 'quantifierList', 'value': ruleI.quantifierTitle}],
+        [{'type': 'label', 'value': 'Conditioned'}, {'type': 'conditionedList', 'value': ruleI.conditionedTitle}]];
 
     // sum up the number of satisfied and missing
     let totalSatisfied = 0, totalMissing = 0;
@@ -78,54 +35,93 @@ IndividualRule.prototype.displayRule = function (ruleIndex) {
         totalMissing += ruleI['xPathQueryResult'][i]['data']['missing']
     }
 
-    // quantifier
-    let quantifierDiv = ruleResultDiv.append('div')
-        .classed('quantifierDiv', true);
-    quantifierDiv.append('p')
-        .text(ruleI.quantifierTitle);
-    quantifierDiv.append('em')
-        .classed('link matches', true)
-        .text(() => {
-            return (totalSatisfied + totalMissing) + ' matches'
-        })
-        .on("click", function () {
-            let parentNode = d3.select(this.parentNode).select('.quantifierList');
-            parentNode.classed('hidden', !parentNode.classed('hidden'));
-        });
-    quantifierDiv.append('div')
-        .classed('quantifierList hidden', true)
-        .node()
-        .appendChild(self.listRender(ruleI, 'quantifier').node());
+    let table = this.div.append('div');
 
-    // condition
-    let conditionDiv = ruleResultDiv.append('div')
-        .classed('conditionDiv', true);
-    conditionDiv.append('p')
-        .text(ruleI.conditionedTitle);
-    let p = conditionDiv.append('p');
-    p.append('em')
-        .classed('link satisfied', true)
-        .text(() => {
-            return totalSatisfied + ' satisfied ';
-        })
-        .on('click', function () {
-            let parentNode = d3.select(this.parentNode.parentNode).select('.conditionList');
-            parentNode.classed('hidden', !parentNode.classed('hidden'));
-        });
-    p.append('em')
-        .classed('missing', true)
-        .text(() => {
-            return totalMissing + ' missing';
-        });
-    conditionDiv.append('div')
-        .classed('conditionList hidden', true)
-        .node()
-        .appendChild(self.listRender(ruleI, 'conditioned').node());
+    // create a row for each object in the data
+    let rows = table.selectAll('.tableRow')
+        .data(tableData)
+        .enter()
+        .append('div')
+        .classed('tableRow', true);
 
+    // create a cell in each row for each column
+    let cells = rows.selectAll('.tableCell')
+        .data((d) => d)
+        .enter()
+        .append('div')
+        .classed('tableCell', true)
+        .classed('labelCell', (d, i) => i === 0)
+        .classed('infoCell', (d, i) => i === 1);
 
-    // fixing the float div heights and widths
-    ruleResultDiv.append('div')
-        .style('clear', 'both');
+    rows.selectAll('.tableCell')
+        .each(function (d) {
+            let element = d3.select(this);
+            if (d.type === 'label')
+                element
+                    .append('h4')
+                    .text(d.value);
+
+            if (d.type === 'ruleDescription' || d.type === 'ruleDetail')
+                element.append("textarea")
+                    .attr("spellcheck", false)
+                    .text(d.value)
+                    .attr("id", d.type)
+                    .on("change", () => self.updateRules(ruleI.index));
+
+            if (d.type === 'tags') {
+                let tagBoxes = element
+                    .append('div')
+                    .attr('name', 'tags')
+                    .selectAll('.tagBoundingBox')
+                    .data(ruleI.tags);
+
+                tagBoxes.enter()
+                    .append('div')
+                    .classed('tagBoundingBox', true)
+                    .append('div')
+                    .classed('tagBox', true)
+                    .html((d) => '<span class="link">' + d + '</span>')
+                    .on('click', (d) => {
+                        location.hash = `#/tag/${d}`;
+                    });
+            }
+
+            if (d.type === 'quantifierList') {
+                element.append('p')
+                    .text(d.value);
+                element.append('em')
+                    .classed('link matches', true)
+                    .text(() => (totalSatisfied + totalMissing) + ' matches')
+                    .on("click", function () {
+                        let parentNode = d3.select(this.parentNode).select('.quantifierList');
+                        parentNode.classed('hidden', !parentNode.classed('hidden'));
+                    });
+                element.append('div')
+                    .classed('quantifierList hidden', true)
+                    .node()
+                    .appendChild(self.listRender(ruleI, 'quantifier').node());
+            }
+
+            if (d.type === 'conditionedList') {
+                element.append('p')
+                    .text(d.value);
+                let p = element.append('p');
+                p.append('em')
+                    .classed('link satisfied', true)
+                    .text(() => totalSatisfied + ' satisfied ')
+                    .on('click', function () {
+                        let parentNode = d3.select(this.parentNode.parentNode).select('.conditionList');
+                        parentNode.classed('hidden', !parentNode.classed('hidden'));
+                    });
+                p.append('em')
+                    .classed('missing', true)
+                    .text(() => totalMissing + ' missing');
+                element.append('div')
+                    .classed('conditionList hidden', true)
+                    .node()
+                    .appendChild(self.listRender(ruleI, 'conditioned').node());
+            }
+        });
 
 };
 
@@ -188,7 +184,7 @@ IndividualRule.prototype.listRender = function (data, group) {
             .classed('link', true)
             .html((list[i]['snippet']))
             .on('click', () => {
-                self.sendToServer("xmlResult", list[i]['xml'])
+                sendToServer(self.ws, "XML_RESULT", list[i]['xml'])
             });
     }
 
@@ -201,16 +197,21 @@ IndividualRule.prototype.listRender = function (data, group) {
  * @param index
  */
 IndividualRule.prototype.updateRules = function (index) {
-    for (let i = 0; i < this.rules.length; i++) {
 
+    for (let i = 0; i < this.rules.length; i++) {
         if (this.rules[i].index === index) {
-            delete this.rules[i]['xPathQueryResult'];
-            this.rules[i].ruleDescription = document.getElementById(`rule_desc_${index}`).value;
-            this.rules[i].detail = document.getElementById(`rule_detail_${index}`).value;
-            // sendToServer(this.ws, "MODIFIED_RULE", `{\"index\":${index},\"ruleText\":${JSON.stringify(this.rules[i])}}`);
-            sendToServer(this.ws, "MODIFIED_RULE", this.rules[i]);
+
+            let newObj = cloneJSON(this.rules[i]);
+            delete newObj['xPathQueryResult'];
+
+            this.rules[i].ruleDescription = document.getElementById(`ruleDescription`).value;
+            this.rules[i].detail = document.getElementById(`ruleDetail`).value;
+            sendToServer(this.ws, "MODIFIED_RULE", newObj);
+
             return;
         }
     }
+
+    console.log('failed');
 
 };

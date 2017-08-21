@@ -188,7 +188,7 @@ input[type=text]:focus:not([readonly]), textarea:focus:not([readonly]) {
 
 textarea:focus {
     outline: none !important;
-    border:none;
+    border: none;
     box-shadow: none;
 }
 
@@ -243,7 +243,6 @@ select:focus {
 .paddedDiv {
     padding: 0 5px;
 }
-
 
 .darkThickBorderBottom {
     border-bottom: 3px solid #858484;
@@ -401,4 +400,51 @@ annotation, annotation * {
     min-width: 15em;
     display: inline-block;
     cursor: pointer;
+}
+
+/* Individual Rule */
+
+#individualRule textarea {
+    width: 100% !important;
+    max-width: 100%;
+    height: 120px;
+    box-sizing: border-box;
+    display: block;
+    line-height: 1.5;
+    border: 1px solid #9e9e9e;
+    font: 14px Tahoma, cursive;
+    background: transparent;
+    padding: 5px;
+}
+
+#individualRule label {
+    font-weight: bold;
+    padding: 10px 0;
+    display: block;
+    text-transform: uppercase;
+    color: #5d5c5c;
+}
+
+#individualRule .paddedDiv {
+    padding: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.tableRow {
+    width: 100%;
+    float: left;
+    padding: 20px 0px;
+    border-bottom: 1px solid #888;
+}
+
+.tableCell {
+    float: left;
+}
+
+.labelCell {
+    width: 20%;
+}
+
+.infoCell {
+    width: 80%;
 }

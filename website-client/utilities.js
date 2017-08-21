@@ -99,7 +99,12 @@ function cloneXML(xml) {
  * @returns {Document}
  */
 function cloneJSON(json) {
-    return JSON.parse(JSON.stringify(json));
+
+    let newObj = {};
+    for (let ky in json)
+        newObj[ky]=json[ky];
+
+    return newObj;
 }
 
 /**
@@ -142,26 +147,28 @@ function countMatchingInArray(container, arr) {
  * @param data
  */
 function sendToServer(ws, command, data) {
+    let messageJson = {"source": "WEB", "destination": "IDEA", "command": command};
+
     if (ws) {
-        let message = "{\"source\":\"WEB\",\"destination\":\"IDEA\",\"command\":\"" + command + "\",\"data\":";
         switch (command) {
             case 'MODIFIED_RULE':
-                message = message + `{\"index\":${data.index},\"ruleText\":${JSON.stringify(data)}}`;
+                messageJson['data'] = {
+                    "index": data.index,
+                    "ruleText": data
+                };
                 break;
             case 'MODIFIED_TAG':
-                message = message + `{\"tagName\":${data.tagName},\"tagText\":${JSON.stringify(data)}}`;
+                messageJson['data'] = {
+                    "tagName": data.tagName,
+                    "tagText": data
+                };
                 break;
             case 'XML_RESULT':
-                message = message + data;
+                messageJson['data'] = data;
                 break;
         }
-        message = message + '}';
 
-        // let message = "{\"source\":\"WEB\",\"destination\":\"IDEA\",\"command\":\"" + command + "\",\"data\":"
-        //     + data + "}";
-
-        //console.log(message);
-
-        ws.send(message.toString());
+        // console.log(messageJson);
+        ws.send(JSON.stringify(messageJson));
     }
 }

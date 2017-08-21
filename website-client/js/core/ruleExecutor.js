@@ -49,7 +49,7 @@ function runXPathQuery(xmlFile, ruleI) {
         quantifierResult.push({
             "filePath": xmlFile['filePath'],
             "result": new XMLSerializer().serializeToString(resultQNode),
-            "xml": xmlAndText.xml,
+            "xml": xmlAndText.xmlJson,
             "xmlText": xmlAndText.xmlText,
             "name": resultQNameNode ? new XMLSerializer().serializeToString(resultQNameNode) : "error in xpath",
             "snippet": xmlAndText.snippet
@@ -69,7 +69,7 @@ function runXPathQuery(xmlFile, ruleI) {
         conditionedResult.push({
             "filePath": xmlFile['filePath'],
             "result": new XMLSerializer().serializeToString(resultCNode),
-            "xml": xmlAndText.xml,
+            "xml": xmlAndText.xmlJson,
             "xmlText": xmlAndText.xmlText,
             "name": resultCNameNode ? new XMLSerializer().serializeToString(resultCNameNode) : "error in xpath",
             "snippet": xmlAndText.snippet
@@ -131,7 +131,7 @@ function checkRules(xmlFiles, ruleTable, filePath) {
         let prevConditionedResult = ruleResultI['conditionedResult'].slice(0);
         let prevSatisfied = ruleResultI['satisfied'];
         let prevMissing = ruleResultI['missing'];
-        
+
         // console.log(prevSatisfied, prevMissing);
 
         ruleTable[i] = runXPathQuery(targetXml, ruleTable[i]);
@@ -244,8 +244,10 @@ function getXmlData(mainXml, query, index) {
     let fileName = par.getAttribute("filename");
     let temp = new XMLSerializer().serializeToString(par);
     return {
-        'xml': "{\"fileName\":\"" + (fileName.replace(/['"]+/g, '\\"')) + "\" ,\"xml\":\""
-        + (temp.replace(/['"]+/g, '\\"')) + "\"}",
+        'xmlJson': {
+            'fileName': fileName,
+            'xml': temp
+        },
         'xmlText': new XMLSerializer().serializeToString(par),
         'snippet': resText
     };

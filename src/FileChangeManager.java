@@ -36,11 +36,10 @@ public class FileChangeManager implements ProjectComponent {
     private ChatServer s;
     private List<VirtualFile> ignoredFiles/* = new ArrayList<>()*/;
     private SRCMLxml srcml;
-    //    private String rules;
     private List<List<String>> ruleIndexText; // index - text
     private List<List<String>> tagNameText; // tagName - text
 
-    FileChangeManager(ChatServer server, SRCMLxml xmlP, /*String rule,*/ List<List<String>> ruleList, List<List<String>> tagList) {
+    FileChangeManager(ChatServer server, SRCMLxml xmlP, List<List<String>> ruleList, List<List<String>> tagList) {
         connection = ApplicationManager.getApplication().getMessageBus().connect();
         s = server;
 
@@ -124,18 +123,7 @@ public class FileChangeManager implements ProjectComponent {
     }
 
 
-    /**
-     * change the srcml and send some messages to clients if the srcml is updated
-     *
-     * @param filePath String
-     * @param newXml   String
-     */
-    private void updateSrcml(String filePath, String newXml) {
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_XML",
-                MessageProcessor.encodeNewXMLData(new Object[]{filePath, newXml})
-        }).toString());
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES", filePath}).toString());
-    }
+    //---------------------------
 
     public void initComponent() {
         s.start();
@@ -214,6 +202,7 @@ public class FileChangeManager implements ProjectComponent {
         System.out.println("(project Closed)");
     }
 
+    //-------------------------------
 
     /**
      * process the message received from the client
@@ -260,19 +249,23 @@ public class FileChangeManager implements ProjectComponent {
                 this.setRuleIndexText(ruleIndex, ruleText);
                 this.writeToFile("ruleJson.txt");
 
-                // TODO send message
+                // send message
+                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE",
+                        MessageProcessor.encodeModifiedRule(new Object[]{ruleIndex, ruleText})
+                }).toString());
 
                 break;
 
             case "MODIFIED_TAG":
 
-                String tagName = Integer.toString(messageAsJson.get("data").getAsJsonObject().get("tagName").getAsInt());
+                String tagName = messageAsJson.get("data").getAsJsonObject().get("tagName").getAsString();
                 String tagText = messageAsJson.get("data").getAsJsonObject().get("tagText").getAsJsonObject().toString();
 
                 this.setTagNameText(tagName, tagText);
                 this.writeToFile("tagJson.txt");
 
-                // TODO send message
+                // send message
+                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", tagText}).toString());
 
                 break;
 
@@ -287,24 +280,6 @@ public class FileChangeManager implements ProjectComponent {
     }
 
 
-    /** checks if we should ignore a file
-     * @param s virtual file
-     * @return true/false
-     */
-    private boolean shouldIgnoreFile(VirtualFile s) {
-        if (ignoredFiles == null) {
-            return false;
-        }
-        for (VirtualFile vfile : ignoredFiles) {
-            if (vfile.getCanonicalPath().equals(s.getCanonicalPath())) {
-                return true;
-            } else if (utilities.isFileAChildOf(s, vfile)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     //------------------ handle file events
 
     // when the text of a file changes
@@ -313,8 +288,12 @@ public class FileChangeManager implements ProjectComponent {
 
         // if we are dealing with ruleJson.txt
         if (file.getName().equals("ruleJson.txt")) {
-            //TODO
-//            this.setRules(MessageProcessor.getInitialRules().toString());
+            updateRules();
+            return;
+        }
+        // if we are dealing with tagJson.txt
+        if (file.getName().equals("tagJson.txt")) {
+            updateTags();
             return;
         }
 
@@ -336,8 +315,12 @@ public class FileChangeManager implements ProjectComponent {
 
         // if we are dealing with ruleJson.txt
         if (file.getName().equals("ruleJson.txt")) {
-            // TODO
-//            this.setRules(MessageProcessor.getInitialRules().toString());
+            updateRules();
+            return;
+        }
+        // if we are dealing with tagJson.txt
+        if (file.getName().equals("tagJson.txt")) {
+            updateTags();
             return;
         }
 
@@ -349,7 +332,6 @@ public class FileChangeManager implements ProjectComponent {
         System.out.println("CREATE");
         String newXml = SRCMLHandler.addXMLForProject(this.getSrcml(), file.getPath());
         this.updateSrcml(file.getPath(), newXml);
-        //this.setSrcml(SRCMLHandler.addXMLForProject(this.getSrcml(), file.getPath()));
 
     }
 
@@ -379,8 +361,12 @@ public class FileChangeManager implements ProjectComponent {
 
         // if we are dealing with ruleJson.txt
         if (file.getName().equals("ruleJson.txt")) {
-            // TODO
-//            this.setRules("");
+            updateRules();
+            return;
+        }
+        // if we are dealing with tagJson.txt
+        if (file.getName().equals("tagJson.txt")) {
+            updateTags();
             return;
         }
 
@@ -392,6 +378,27 @@ public class FileChangeManager implements ProjectComponent {
     }
 
     //----------------------------------
+
+    /**
+     * checks if we should ignore a file
+     *
+     * @param s virtual file
+     * @return true/false
+     */
+    private boolean shouldIgnoreFile(VirtualFile s) {
+        if (ignoredFiles == null) {
+            return false;
+        }
+        for (VirtualFile vfile : ignoredFiles) {
+            if (vfile.getCanonicalPath().equals(s.getCanonicalPath())) {
+                return true;
+            } else if (utilities.isFileAChildOf(s, vfile)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
      * check whether we should consider the file change
@@ -466,6 +473,7 @@ public class FileChangeManager implements ProjectComponent {
 
     /**
      * write in file
+     *
      * @param fileName either ruleJson.txt or tagJson.txt
      */
     private void writeToFile(String fileName) {
@@ -500,4 +508,41 @@ public class FileChangeManager implements ProjectComponent {
         }
 
     }
+
+
+    /**
+     * update the ruleIndexText and send messages to clients
+     */
+    private void updateRules() {
+        this.ruleIndexText = MessageProcessor.getInitialRulesAsList();
+
+        // send the message
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", this.getAllRules()}).toString());
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
+    }
+
+    /**
+     * update the tagNameText and send messages to clients
+     */
+    private void updateTags() {
+        this.tagNameText = MessageProcessor.getInitialTagsAsList();
+
+        // send the message
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", this.getAllTags()}).toString());
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
+    }
+
+    /**
+     * change the srcml and send some messages to clients if the srcml is updated
+     *
+     * @param filePath String
+     * @param newXml   String
+     */
+    private void updateSrcml(String filePath, String newXml) {
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_XML",
+                MessageProcessor.encodeNewXMLData(new Object[]{filePath, newXml})
+        }).toString());
+        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES_FOR_FILE", filePath}).toString());
+    }
+
 }

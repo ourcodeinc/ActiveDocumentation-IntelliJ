@@ -262,20 +262,19 @@ RuleTable.prototype.updateDisplayResult = function (ruleI, filePath) {
  * update the rule and send to server
  * @param index
  */
-RuleTable.prototype.updateRules = function (index) {
-
-    // let data = [];
+ RuleTable.prototype.updateRules = function (index) {
 
     for (let i = 0; i < this.rules.length; i++) {
-        delete this.rules[i]['xPathQueryResult'];
 
         if (this.rules[i].index === index) {
+            let newObj = cloneJSON(this.rules[i]);
+            delete newObj['xPathQueryResult'];
 
             this.rules[i].ruleDescription = document.getElementById(`rule_desc_${index}`).value;
             this.rules[i].detail = document.getElementById(`rule_detail_${index}`).value;
 
-            //sendToServer(this.ws, "MODIFIED_RULE", `{\"index\":${index},\"ruleText\":${JSON.stringify(this.rules[i])}}`);
-            sendToServer(this.ws, "MODIFIED_RULE", this.rules[i]);
+            sendToServer(this.ws, "MODIFIED_RULE", newObj);
+
             return;
         }
     }

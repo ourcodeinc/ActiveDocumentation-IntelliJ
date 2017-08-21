@@ -52,7 +52,6 @@ UrlChangingHandling.prototype.hashChangedHandler = function (hash) {
             d3.select("#header_2").classed("hidden", false);
             d3.select("#ruleResults").classed("hidden", false);
             d3.select("#tagInfo").classed("hidden", false);
-            document.getElementById(`page_title`).value = splittedHash[2].split('+').join(" ");
             this.tagInformationManager.displayTagInformation(splittedHash[2].split('+'));
             this.ruleTableManager.updateTagRules();
             break;

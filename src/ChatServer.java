@@ -76,7 +76,7 @@ public class ChatServer extends WebSocketServer {
         JsonParser parser = new JsonParser();
         final JsonObject messageAsJson = parser.parse(message).getAsJsonObject();
         System.out.println("(onMessage) " /*+ messageAsJson*/);
-
+        System.out.println(message);
         manager.processReceivedMessages(messageAsJson);
 
     }
