@@ -26,11 +26,9 @@
             alert("FATAL: WebSocket not natively supported. This demo will not work!");
         }
 
-        //NavBarHandler();
-
         let tableOfContentManager = new TableOfContent();
         let ruleTableManager = new RuleTable();
-        let ruleGenerator = new RuleGenerator();
+        // let ruleGenerator = new RuleGenerator();
         let tagInformationManager = new HeaderManager();
         let individualRuleManager = new IndividualRule();
 
@@ -41,7 +39,7 @@
 
         if ("onhashchange" in window) { // event supported?
             window.onhashchange = function () {
-                hashManager.hashChangedHandler(window.location.hash);
+                hashManager.hashManager(window.location.hash);
             }
         }
         else { // event not supported:
@@ -49,7 +47,7 @@
             window.setInterval(function () {
                 if (window.location.hash != storedHash) {
                     storedHash = window.location.hash;
-                    hashManager.hashChangedHandler(storedHash);
+                    hashManager.hashManager(storedHash);
                 }
             }, 100);
         }

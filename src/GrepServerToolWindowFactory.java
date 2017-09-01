@@ -95,72 +95,6 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
         JComponent component = toolWindow.getComponent();
         component.add(fxPanel);
 
-//        // test
-//        //String ruleFilePath = project.getBasePath() + "/ruleJson.txt";
-//
-//
-//        String JSON_ARR = "["
-//                + "{  \"geodata\": ["
-//                + "    {"
-//                + "      \"id\": \"1\","
-//                + "      \"name\": \"Julie Sherman\","
-//                + "      \"gender\" : \"female\","
-//                + "      \"latitude\" : \"37.33774833333334\","
-//                + "      \"longitude\" : \"-121.88670166666667\""
-//                + "    },"
-//                + "    {"
-//                + "      \"id\": \"2\","
-//                + "      \"name\": \"Johnny Depp\","
-//                + "      \"gender\" : \"male\","
-//                + "      \"latitude\" : \"37.336453\","
-//                + "      \"longitude\" : \"-121.884985\""
-//                + "    }"
-//                + "  ]"
-//                + "},"
-//                + "{   \"geodata\": ["
-//                + "    {"
-//                + "      \"id\": \"3\","
-//                + "      \"name\": \"Juman\","
-//                + "      \"gender\" : \"female\","
-//                + "      \"latitude\" : \"3334\","
-//                + "      \"longitude\" : \"-7\""
-//                + "    },"
-//                + "    {"
-//                + "      \"id\": \"4\","
-//                + "      \"name\": \"John\","
-//                + "      \"gender\" : \"male\","
-//                + "      \"latitude\" : \"353\","
-//                + "      \"longitude\" : \"-15\""
-//                + "    }"
-//                + "  ]"
-//                + "}]";
-//        try {
-//            JSONArray objArr = new JSONArray(JSON_ARR);
-//            int m = objArr.length();
-//            for (int j = 0; j < m; ++j) {
-//
-//                JSONObject obj = objArr.getJSONObject(j);
-//                JSONArray geodata = obj.getJSONArray("geodata");
-//                int n = geodata.length();
-//                for (int i = 0; i < n; ++i) {
-//                    JSONObject person = geodata.getJSONObject(i);
-//                    System.out.println(person.getInt("id"));
-//                    System.out.println(person.toString());
-//                    System.out.println("====");
-////                    System.out.println(person.getString("name"));
-////                    System.out.println(person.getString("gender"));
-////                    System.out.println(person.getDouble("latitude"));
-////                    System.out.println(person.getDouble("longitude"));
-//                }
-//
-//            }
-//            //System.out.println(objArr.toString());
-//
-//        } catch (JSONException e) {
-//            System.out.println("errrorrr");
-//            e.printStackTrace();
-//        }
-
 
     }
 
@@ -170,6 +104,7 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
             webEngine.setJavaScriptEnabled(true);
             File file = new File("/Users/saharmehrpour/Documents/Workspace/ActiveDocumentation/website-client/chat.html");
             webEngine.load(file.toURI().toURL().toString());
+//            webEngine.load("http://localhost:3000/");
         } catch (Exception ex) {
             System.err.print("error " + ex.getMessage());
             ex.printStackTrace();

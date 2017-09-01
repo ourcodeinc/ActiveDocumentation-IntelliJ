@@ -15,7 +15,7 @@ function WebSocketHandler(tableOfContentManager, ruleTableManager, individualRul
     tagInformationManager.setWS(ws);
 
     ws.onopen = function () {
-        ruleTableManager.resetRuleTable();
+        ruleTableManager.clearRuleTable();
     };
 
     function setAllRules(rules) {
@@ -26,6 +26,7 @@ function WebSocketHandler(tableOfContentManager, ruleTableManager, individualRul
 
     function setAllTags(tags) {
         tagInformationManager.setTags(tags);
+        tableOfContentManager.setTags(tags);
     }
 
     ws.onmessage = function (e) {
@@ -33,6 +34,12 @@ function WebSocketHandler(tableOfContentManager, ruleTableManager, individualRul
 
         switch (message.command) {
 
+            // send initially on open
+            case "XML":
+                xml.push(message.data);
+                break;
+
+            // send initially on open
             // when the ruleJson.txt is changed
             // followed by VERIFY_RULES
             case "RULE_TABLE":
@@ -40,6 +47,7 @@ function WebSocketHandler(tableOfContentManager, ruleTableManager, individualRul
                 setAllRules(ruleTable);
                 break;
 
+            // send initially on open
             // when the tagJson.txt is changed
             // followed by VERIFY_RULES
             case "TAG_TABLE":
@@ -48,13 +56,26 @@ function WebSocketHandler(tableOfContentManager, ruleTableManager, individualRul
                 break;
 
             case "VERIFY_RULES":
-                ruleTableManager.resetRuleTable();
+                ruleTableManager.clearRuleTable();
                 tableOfContentManager.clearTableOfContent();
+
                 tableOfContentManager.displayTableOfContent();
 
                 ruleTable = verifyRules(xml, ruleTable);
                 setAllRules(ruleTable);
                 ruleTableManager.displayRules();
+
+                break;
+
+
+            // followed by CHECK_RULES_FOR_FILE
+            case "UPDATE_XML":
+                filtered = xml.filter((d) => d.filePath === message.data['filePath']);
+
+                if (filtered.length === 0)
+                    xml.push({'filePath': message.data['filePath'], 'xml': message.data['xml']});
+                else
+                    filtered[0].xml = message.data['xml'];
 
                 break;
 
@@ -66,22 +87,6 @@ function WebSocketHandler(tableOfContentManager, ruleTableManager, individualRul
                 ruleTableManager.updateDisplayRules(message.data);
 
                 location.hash = "#/codeChanged";
-                break;
-
-            // send initially on open
-            case "XML":
-                xml.push(message.data);
-                break;
-
-            // followed by CHECK_RULES_FOR_FILE
-            case "UPDATE_XML":
-                filtered = xml.filter((d) => d.filePath === message.data['filePath']);
-
-                if (filtered.length === 0)
-                    xml.push({'filePath': message.data['filePath'], 'xml': message.data['xml']});
-                else
-                    filtered[0].xml = message.data['xml'];
-
                 break;
 
             // tagName and tag
@@ -96,7 +101,7 @@ function WebSocketHandler(tableOfContentManager, ruleTableManager, individualRul
                 setAllTags(tagTable);
                 tableOfContentManager.clearTableOfContent();
                 tableOfContentManager.displayTableOfContent();
-                ruleTableManager.resetRuleTable();
+                ruleTableManager.clearRuleTable();
                 ruleTableManager.displayRules();
                 location.hash = `#/tag/${newTag['tagName']}`;
                 break;
@@ -113,7 +118,7 @@ function WebSocketHandler(tableOfContentManager, ruleTableManager, individualRul
                 setAllRules(ruleTable);
                 tableOfContentManager.clearTableOfContent();
                 tableOfContentManager.displayTableOfContent();
-                ruleTableManager.resetRuleTable();
+                ruleTableManager.clearRuleTable();
                 ruleTableManager.displayRules();
                 break;
 

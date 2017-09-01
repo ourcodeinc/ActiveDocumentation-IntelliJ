@@ -79,6 +79,7 @@ about tags. Here is an example for this file:
 		"tagName": "constructor",
 		"detail": "detail about tag 'constructor'"
 	}
+]
 ```
 
 The format of this file is not final.

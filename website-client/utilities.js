@@ -102,7 +102,7 @@ function cloneJSON(json) {
 
     let newObj = {};
     for (let ky in json)
-        newObj[ky]=json[ky];
+        newObj[ky] = json[ky];
 
     return newObj;
 }
@@ -137,6 +137,22 @@ function countMatchingInArray(container, arr) {
         }
     }
     return matching;
+}
+
+/**
+ * find mismatches in an array
+ * @param container
+ * @param arr
+ * @returns {*}
+ */
+function findMismathesInArray(container, arr) {
+    let arrContainer = container.slice(0);
+    for (let i = arr.length; i--;) {
+        if (arrContainer.indexOf(arr[i]) !== -1) {
+            arrContainer.splice(arrContainer.indexOf(arr[i]), 1)
+        }
+    }
+    return arrContainer;
 }
 
 

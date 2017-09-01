@@ -18,7 +18,7 @@ function UrlChangingHandling(ruleTableManager, individualRuleManager, tagInforma
     this.individualRuleManager = individualRuleManager;
     this.tagInformationManager = tagInformationManager;
 
-    this.navBarHandler();
+    this.historyManager();
 
 }
 
@@ -26,7 +26,7 @@ function UrlChangingHandling(ruleTableManager, individualRuleManager, tagInforma
  * This class updates the view based on changes in Hash address
  * @param hash
  */
-UrlChangingHandling.prototype.hashChangedHandler = function (hash) {
+UrlChangingHandling.prototype.hashManager = function (hash) {
 
     let self = this;
 
@@ -36,15 +36,15 @@ UrlChangingHandling.prototype.hashChangedHandler = function (hash) {
     document.documentElement.scrollTop = 0;
 
     d3.selectAll(".main").classed("hidden", true);
-    d3.select("#model_nav").classed("hidden", true);
-    d3.select("#tagInfo").classed("hidden", true);
+    d3.select("#tagInfo").classed("hidden", true); // TODO edit this
 
     let splittedHash = hash.split("/");
 
+    d3.selectAll(".main").classed("hidden", true);
+    d3.select("#header_2").classed("hidden", true);
+
     switch (splittedHash[1]) {
         case 'index':
-            d3.selectAll(".main").classed("hidden", true);
-            d3.select("#header_2").classed("hidden", true);
             d3.select("#tableOfContent").classed("hidden", false);
             break;
 
@@ -52,31 +52,28 @@ UrlChangingHandling.prototype.hashChangedHandler = function (hash) {
             d3.select("#header_2").classed("hidden", false);
             d3.select("#ruleResults").classed("hidden", false);
             d3.select("#tagInfo").classed("hidden", false);
+
             this.tagInformationManager.displayTagInformation(splittedHash[2].split('+'));
-            this.ruleTableManager.updateTagRules();
+            this.ruleTableManager.filterByTag(splittedHash[2].split('+'));
             break;
 
         case 'ruleGenerating':
-            d3.selectAll(".main").classed("hidden", true);
-            d3.select("#header_2").classed("hidden", true);
             d3.select("#ruleGeneration").classed("hidden", false);
             break;
 
         case 'rules':
-            this.ruleTableManager.cleanRuleTable();
-            d3.selectAll(".main").classed("hidden", true);
+            d3.select("#page_title").text("All Rules");
             d3.select("#header_2").classed("hidden", false);
+            this.ruleTableManager.cleanRuleTable();
             d3.select("#ruleResults").classed("hidden", false);
             break;
 
         case 'codeChanged':
-            d3.selectAll(".main").classed("hidden", true);
             d3.select("#header_2").classed("hidden", false);
             d3.select("#ruleResults").classed("hidden", false);
             break;
 
         case 'rule':
-            d3.selectAll(".main").classed("hidden", true);
             d3.select("#header_2").classed("hidden", false);
             d3.select("#individualRule").classed("hidden", false);
             this.individualRuleManager.displayRule(+splittedHash[2]);
@@ -89,20 +86,8 @@ UrlChangingHandling.prototype.hashChangedHandler = function (hash) {
 /**
  * adding listeners to tabs on the nav bar
  */
-UrlChangingHandling.prototype.navBarHandler = function () {
+UrlChangingHandling.prototype.historyManager = function () {
     let self = this;
-
-    d3.select("#link_generate_rules").on("click", () => {
-        location.hash = '#/ruleGenerating';
-    });
-
-    d3.select("#link_rule_result").on("click", () => {
-        location.hash = '#/rules';
-    });
-
-    d3.select("#link_lists").on("click", () => {
-        location.hash = '#/index';
-    });
 
     d3.select("#back_button").on("click", () => {
         if (self.activeHash > 0) {

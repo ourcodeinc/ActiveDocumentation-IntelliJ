@@ -35,7 +35,7 @@ HeaderManager.prototype.setWS = function (webSocket) {
 HeaderManager.prototype.displayTagInformation = function (tagNames) {
 
     this.div.selectAll('div').remove();
-    document.getElementById(`page_title`).value = tagNames.join(" ");
+    d3.select("#page_title").html("Tag <br><small>" + tagNames.join(", ") + "</small>");
 
     for (let i = 0; i < tagNames.length; i++) {
         let tag = this.tags.filter((d) => {
@@ -43,20 +43,21 @@ HeaderManager.prototype.displayTagInformation = function (tagNames) {
         })[0];
 
         let tagDivDiv = this.div
-            .append('div')
-            .classed('largePaddedDiv', true)
             .datum(tag)
             .append('div');
 
         let span = tagDivDiv.append('div')
-            .classed('paddedDiv darkThickBorderBottom', true)
             .append('span');
 
         span.append("textarea")
             .attr("spellcheck", false)
+            .classed('form-control', true)
+            .attr('rows', "5")
             .attr('id', `tag_${tag['tagName']}`)
             .on("change", () => this.updateTags(tag['tagName']))
             .text(tag.detail);
+
+        tagDivDiv.append('hr');
     }
 };
 

@@ -4,27 +4,29 @@
 
 /**
  * verify the rules for all xml files
- * @param xmlFiles
- * @param ruleTable
+ * @param xmlFiles : object of `filePath` and `xml`
+ * @param ruleTable retrieved from ruleJson.txt
  */
 function verifyRules(xmlFiles, ruleTable) {
     for (let i = 0; i < ruleTable.length; i++) {
         for (let j = 0; j < xmlFiles.length; j++)
             ruleTable[i] = runXPathQuery(xmlFiles[j], ruleTable[i]);
     }
+    // console.log(ruleTable);
+
     return ruleTable;
 }
 
 
 /**
- * runs the XPath query and then call the function to display them
+ * runs the XPath query
  * @param xmlFile
  * @param ruleI
  */
 function runXPathQuery(xmlFile, ruleI) {
     let parser = new DOMParser();
     let quantifierResult = [];
-    let conditionedResult = [];
+    let satisfiedResult = [];
 
     function nsResolver(prefix) {
         let ns = {'src': 'http://www.srcML.org/srcML/src'};
@@ -48,9 +50,9 @@ function runXPathQuery(xmlFile, ruleI) {
         let xmlAndText = getXmlData(xml, ruleI.quantifierXpath, index);
         quantifierResult.push({
             "filePath": xmlFile['filePath'],
-            "result": new XMLSerializer().serializeToString(resultQNode),
+            // "result": new XMLSerializer().serializeToString(resultQNode),
             "xml": xmlAndText.xmlJson,
-            "xmlText": xmlAndText.xmlText,
+            // "xmlText": xmlAndText.xmlText,
             "name": resultQNameNode ? new XMLSerializer().serializeToString(resultQNameNode) : "error in xpath",
             "snippet": xmlAndText.snippet
         });
@@ -59,33 +61,34 @@ function runXPathQuery(xmlFile, ruleI) {
         index += 1;
     }
 
-    let conditionedNodes = xml.evaluate(ruleI.conditionedXpath, xml, nsResolver, XPathResult.ANY_TYPE, null);
-    let conditionedNameNodes = xml.evaluate(ruleI.conditionedXpathName, xml, nsResolver, XPathResult.ANY_TYPE, null);
-    let resultCNode = conditionedNodes.iterateNext();
-    let resultCNameNode = conditionedNameNodes.iterateNext();
+    let satisfiedNodes = xml.evaluate(ruleI.conditionedXpath, xml, nsResolver, XPathResult.ANY_TYPE, null);
+    let satisfiedNameNodes = xml.evaluate(ruleI.conditionedXpathName, xml, nsResolver, XPathResult.ANY_TYPE, null);
+    let resultCNode = satisfiedNodes.iterateNext();
+    let resultCNameNode = satisfiedNameNodes.iterateNext();
     index = 0;
     while (resultCNode) {
         let xmlAndText = getXmlData(xml, ruleI.conditionedXpath, index);
-        conditionedResult.push({
+        satisfiedResult.push({
             "filePath": xmlFile['filePath'],
-            "result": new XMLSerializer().serializeToString(resultCNode),
+            // "result": new XMLSerializer().serializeToString(resultCNode),
             "xml": xmlAndText.xmlJson,
-            "xmlText": xmlAndText.xmlText,
+            // "xmlText": xmlAndText.xmlText,
             "name": resultCNameNode ? new XMLSerializer().serializeToString(resultCNameNode) : "error in xpath",
             "snippet": xmlAndText.snippet
         });
-        resultCNode = conditionedNodes.iterateNext();
-        resultCNameNode = conditionedNameNodes.iterateNext();
+        resultCNode = satisfiedNodes.iterateNext();
+        resultCNameNode = satisfiedNameNodes.iterateNext();
         index += 1;
     }
 
-    let matching = compareResults(quantifierResult, conditionedResult);
+    let violatedResult = violatedResults(quantifierResult, satisfiedResult);
 
     let resultData = {
         'quantifierResult': quantifierResult,
-        'conditionedResult': conditionedResult,
-        'satisfied': matching,
-        'missing': quantifierResult.length - matching
+        'satisfiedResult': satisfiedResult,
+        'violatedResult': violatedResult,
+        'satisfied': quantifierResult.length - violatedResult.length,
+        'violated': violatedResult.length
     };
 
     if (!ruleI.hasOwnProperty('xPathQueryResult'))
@@ -104,6 +107,35 @@ function runXPathQuery(xmlFile, ruleI) {
 
     return ruleI;
 
+}
+
+/**
+ * compare the quantifier and the result
+ * @param quantifierResult
+ * @param satisfiedResult
+ */
+function violatedResults(quantifierResult, satisfiedResult) {
+
+    let matches = [];
+    let mismatches = [];
+
+    let sliceArr = satisfiedResult.slice(0);
+    for (let i = 0; i < quantifierResult.length; i++) {
+        let found = false;
+        for (let j = 0; j < sliceArr.length; j++) {
+            if (quantifierResult[i]['snippet'] === sliceArr[j]['snippet']) {
+                matches.push(quantifierResult[i]);
+                sliceArr.splice(j, 1);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            mismatches.push(quantifierResult[i]);
+        }
+    }
+
+    return mismatches;
 }
 
 
@@ -128,9 +160,9 @@ function checkRules(xmlFiles, ruleTable, filePath) {
         // console.log(ruleResultI);
 
         let prevQuantifierResult = ruleResultI['quantifierResult'].slice(0);
-        let prevConditionedResult = ruleResultI['conditionedResult'].slice(0);
+        let prevSatisfiedResult = ruleResultI['satisfiedResult'].slice(0);
         let prevSatisfied = ruleResultI['satisfied'];
-        let prevMissing = ruleResultI['missing'];
+        let prevViolated = ruleResultI['violated'];
 
         // console.log(prevSatisfied, prevMissing);
 
@@ -143,13 +175,16 @@ function checkRules(xmlFiles, ruleTable, filePath) {
         // console.log(ruleResultI);
 
         ruleResultI['changed'] = (!ResultArraysEqual(prevQuantifierResult, ruleResultI['quantifierResult']) ||
-        !ResultArraysEqual(prevConditionedResult, ruleResultI['conditionedResult']) ||
+        !ResultArraysEqual(prevSatisfiedResult, ruleResultI['satisfiedResult']) ||
         prevSatisfied !== ruleResultI['satisfied'] ||
-        prevMissing !== ruleResultI['missing']);
+        prevViolated !== ruleResultI['violated']);
 
-        ruleResultI['missingChanged'] = prevMissing !== ruleResultI['missing'];
-        ruleResultI['satisfiedChanged'] = prevSatisfied !== ruleResultI['satisfied'];
-        ruleResultI['allChanged'] = (prevSatisfied + prevMissing) !== (ruleResultI['missing'] + ruleResultI['satisfied']);
+        ruleResultI['violatedChanged'] = (prevViolated < ruleResultI['violated'] ? 'greater' :
+            prevViolated > ruleResultI['violated'] ? 'smaller' : 'none');
+        ruleResultI['satisfiedChanged'] = (prevSatisfied < ruleResultI['satisfied'] ? 'greater' :
+            prevSatisfied > ruleResultI['satisfied'] ? 'smaller' : 'none');
+        ruleResultI['allChanged'] = ((prevSatisfied + prevViolated) < (ruleResultI['violated'] + ruleResultI['satisfied']) ? 'greater' :
+            (prevSatisfied + prevViolated) > (ruleResultI['violated'] + ruleResultI['satisfied']) ? 'smaller' : 'none');
 
         // if (ruleResultI['changed']) {
         //     console.log("changed", ruleTable[i])
@@ -158,24 +193,6 @@ function checkRules(xmlFiles, ruleTable, filePath) {
         // console.log("========");
     }
     return ruleTable;
-}
-
-
-/**
- * compare the quantifier and the result
- * @param quantifierResult
- * @param conditionedResult
- */
-function compareResults(quantifierResult, conditionedResult) {
-
-    let quantifierNames = quantifierResult.map(function (d) {
-        return d["name"];
-    });
-    let conditionedNames = conditionedResult.map(function (d) {
-        return d["name"];
-    });
-
-    return countMatchingInArray(quantifierNames, conditionedNames);
 }
 
 
