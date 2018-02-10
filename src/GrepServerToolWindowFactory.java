@@ -8,24 +8,18 @@ import core.model.SRCMLHandler;
 
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
-import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import org.java_websocket.WebSocketImpl;
 import org.jetbrains.annotations.NotNull;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 
 import javax.swing.*;
-import java.io.File;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -79,17 +73,16 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
         Platform.setImplicitExit(false);
         Platform.runLater(() -> {
 
-            Scene scene = new Scene(new Group());
-            VBox root = new VBox();
+            StackPane root = new StackPane();
+            Scene scene = new Scene(root);
+
             browser = new WebView();
             webEngine = browser.getEngine();
-
             publishServices();
 
-            root.getChildren().addAll(browser);
-            scene.setRoot(root);
-
+            root.getChildren().add(browser);
             fxPanel.setScene(scene);
+
         });
 
         JComponent component = toolWindow.getComponent();
@@ -102,9 +95,9 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
     private synchronized void publishServices() {
         try {
             webEngine.setJavaScriptEnabled(true);
-            File file = new File("/Users/saharmehrpour/Documents/Workspace/ActiveDocumentation/website-client/chat.html");
-            webEngine.load(file.toURI().toURL().toString());
-//            webEngine.load("http://localhost:3000/");
+//            File file = new File("/Users/saharmehrpour/Documents/Workspace/ActiveDocumentation/website-client/chat.html");
+//            webEngine.load(file.toURI().toURL().toString());
+            webEngine.load("http://localhost:3000/");
         } catch (Exception ex) {
             System.err.print("error " + ex.getMessage());
             ex.printStackTrace();

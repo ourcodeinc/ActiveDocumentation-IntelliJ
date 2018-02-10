@@ -22,9 +22,11 @@ public class SRCMLHandler {
 //        String[] str = new String[]{"srcml", "--verbose", srcml.projectPath + "/src", "-o", srcml.projectPath + "/source_xml.xml"};
 //        runShellCommand(str); // to save the xml
 
-        for (int index = 0; index < Math.min(100, srcml.fileNumber); index++) {
+//        for (int index = 0; index < Math.min(100, srcml.fileNumber); index++) {
+        for (int index = 0; index < srcml.fileNumber; index++) {
             srcml.xmls.add(createXMLForFile(srcml.paths.get(index)));
         }
+
     }
 
 

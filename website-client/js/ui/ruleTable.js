@@ -273,7 +273,7 @@ RuleTable.prototype.updateDisplayResult = function (ruleI, filePath) {
         .appendChild(self.listRender(ruleIfile, 'satisfiedChanged').node());
 
 
-    //*** satisfied
+    //*** violated
     let violatedDiv = ruleDiv.select(`#Violated_${ruleI['index']}`);
 
     partResultDiv = violatedDiv

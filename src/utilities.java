@@ -32,7 +32,8 @@ public class utilities {
 
     static List<VirtualFile> createIgnoredFileList() {
         List<VirtualFile> ignoredFiles = new ArrayList<>();
-        List<String> files = new ArrayList<>(Arrays.asList(".idea", "out", "source_xml.xml", "tempResultXmlFile.xml", "testProject.iml"));
+        List<String> files = new ArrayList<>(Arrays.asList(".idea", "out", "source_xml.xml", "tempResultXmlFile.xml",
+                "testProject.iml", ".DS_Store", "bin"));
         for (String f : files) {
             VirtualFile vfile = ProjectManager.getInstance().getOpenProjects()[0].getBaseDir().findFileByRelativePath(f);
             if (vfile != null) {

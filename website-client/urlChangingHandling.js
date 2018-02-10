@@ -94,11 +94,11 @@ UrlChangingHandling.prototype.historyManager = function () {
             self.activeHash = self.activeHash - 1;
             self.clicked = true;
 
-            location.hash = self.history[self.activeHash];
-            d3.select('#forward_button').classed('inactive', false);
+            window.location.hash = self.history[self.activeHash];
+            d3.select(d3.select('#forward_button').node().parentNode).classed('disabled', false);
         }
         if (self.activeHash === 0) {
-            d3.select('#back_button').classed('inactive', true);
+            d3.select(d3.select('#back_button').node().parentNode).classed('disabled', true);
         }
     });
 
@@ -107,11 +107,11 @@ UrlChangingHandling.prototype.historyManager = function () {
             self.activeHash = self.activeHash + 1;
             self.clicked = true;
 
-            location.hash = self.history[self.activeHash];
-            d3.select('#back_button').classed('inactive', false);
+            window.location.hash = self.history[self.activeHash];
+            d3.select(d3.select('#back_button').node().parentNode).classed('disabled', false);
         }
         if (self.activeHash === self.history.length - 1) {
-            d3.select('#forward_button').classed('inactive', true);
+            d3.select(d3.select('#forward_button').node().parentNode).classed('disabled', true);
         }
     });
 };
@@ -131,8 +131,8 @@ UrlChangingHandling.prototype.updateHistory = function (hash) {
         }
         self.history.push(hash);
         self.activeHash += 1;
-        d3.select('#back_button').classed('inactive', self.activeHash === 0);
-        d3.select('#forward_button').classed('inactive', true);
+        d3.select(d3.select('#back_button').node().parentNode).classed('disabled', self.activeHash === 0);
+        d3.select(d3.select('#forward_button').node().parentNode).classed('disabled', true);
     }
     self.clicked = false;
 
