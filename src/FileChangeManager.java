@@ -1,9 +1,7 @@
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
-import com.intellij.openapi.project.ProjectManager;
 import com.intellij.util.messages.MessageBusConnection;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.newvfs.BulkFileListener;
@@ -17,16 +15,15 @@ import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import org.jetbrains.annotations.NotNull;
 
 import core.model.SRCMLHandler;
-
 import core.model.SRCMLxml;
-import org.jetbrains.annotations.NotNull;
+
 
 import java.awt.*;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -40,14 +37,19 @@ public class FileChangeManager implements ProjectComponent {
     private SRCMLxml srcml;
     private List<List<String>> ruleIndexText; // index - text
     private List<List<String>> tagNameText; // tagName - text
+    private Project currentProject;
+    private String projectPath;
 
-    FileChangeManager(ChatServer server, SRCMLxml xmlP, List<List<String>> ruleList, List<List<String>> tagList) {
+    FileChangeManager(Project project, ChatServer server, SRCMLxml xmlP, List<List<String>> ruleList, List<List<String>> tagList) {
         connection = ApplicationManager.getApplication().getMessageBus().connect();
         s = server;
 
         srcml = xmlP;
         ruleIndexText = ruleList;
         tagNameText = tagList;
+
+        currentProject = project;
+        projectPath = project.getBasePath();
     }
 
 
@@ -131,7 +133,7 @@ public class FileChangeManager implements ProjectComponent {
 
         System.out.println("(initComponent) ChatServer started on port: " + s.getPort());
 
-        ignoredFiles = utilities.createIgnoredFileList();
+        ignoredFiles = utilities.createIgnoredFileList(currentProject);
 
         connection.subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener.Adapter() {
             @Override
@@ -213,7 +215,7 @@ public class FileChangeManager implements ProjectComponent {
     void processReceivedMessages(JsonObject messageAsJson) {
 
         String command = messageAsJson.get("command").getAsString();
-        String projectPath = ProjectManager.getInstance().getOpenProjects()[0].getBasePath();
+//        String projectPath = ProjectManager.getInstance().getOpenProjects()[0].getBasePath();
 
         switch (command) {
             case "XML_RESULT":
@@ -233,7 +235,7 @@ public class FileChangeManager implements ProjectComponent {
                     String[] filePath = messageAsJson.get("data").getAsJsonObject().get("fileName").getAsString().split("/");
                     String fileToFocusOn = filePath[filePath.length - 1];
                     int indexToFocusOn = SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml");
-                    Project currentProject = ProjectManager.getInstance().getOpenProjects()[0];
+//                    Project currentProject = ProjectManager.getInstance().getOpenProjects()[0];
                     VirtualFile theVFile = FilenameIndex.getVirtualFilesByName(currentProject, fileToFocusOn, GlobalSearchScope.projectScope(currentProject)).iterator().next();
                     FileEditorManager.getInstance(currentProject).openFile(theVFile, true);
                     Editor theEditor = FileEditorManager.getInstance(currentProject).getSelectedTextEditor();
@@ -343,8 +345,8 @@ public class FileChangeManager implements ProjectComponent {
     private void handleVFilePropertyChangeEvent(VFileEvent event) {
         VirtualFile file = event.getFile();
 
-        Project project = ProjectManager.getInstance().getOpenProjects()[0];
-        List<String> newPaths = getFilePaths(project);
+//        Project project = ProjectManager.getInstance().getOpenProjects()[0];
+        List<String> newPaths = getFilePaths(currentProject);
 
         System.out.println("PROP_CHANGE");
         for (String path : srcml.getPaths()) {
@@ -417,10 +419,10 @@ public class FileChangeManager implements ProjectComponent {
         else if (!file.getCanonicalPath().endsWith(".java")) {
             return false;
         }
-        Project project = ProjectManager.getInstance().getOpenProjects()[0];
-        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+//        Project project = ProjectManager.getInstance().getOpenProjects()[0];
+        PsiFile psiFile = PsiManager.getInstance(currentProject).findFile(file);
 
-        return PsiManager.getInstance(project).isInProject(psiFile);
+        return PsiManager.getInstance(currentProject).isInProject(psiFile);
 
     }
 
@@ -461,11 +463,11 @@ public class FileChangeManager implements ProjectComponent {
      * srcml is created. It updates the srcml and project path accordingly.
      */
     void checkChangedProject() {
-        Project activeProject = ProjectManager.getInstance().getOpenProjects()[0];
-        String projectPath = activeProject.getBasePath();
+//        Project activeProject = ProjectManager.getInstance().getOpenProjects()[0];
+//        String projectPath = activeProject.getBasePath();
 
         if (!this.srcml.getProjectPath().equals(projectPath)) {
-            SRCMLxml srcml = new SRCMLxml(FileChangeManager.getFilePaths(activeProject), projectPath);
+            SRCMLxml srcml = new SRCMLxml(FileChangeManager.getFilePaths(currentProject), projectPath);
             SRCMLHandler.createXMLForProject(srcml);
             System.out.println("XML data is created.");
 
@@ -483,7 +485,7 @@ public class FileChangeManager implements ProjectComponent {
     private void writeToFile(String fileName) {
 
         try {
-            String projectPath = ProjectManager.getInstance().getOpenProjects()[0].getBasePath();
+//            String projectPath = ProjectManager.getInstance().getOpenProjects()[0].getBasePath();
 
             PrintWriter writer = new PrintWriter(projectPath + "/" + fileName, "UTF-8");
             switch (fileName) {
@@ -518,7 +520,7 @@ public class FileChangeManager implements ProjectComponent {
      * update the ruleIndexText and send messages to clients
      */
     private void updateRules() {
-        this.ruleIndexText = MessageProcessor.getInitialRulesAsList();
+        this.ruleIndexText = MessageProcessor.getInitialRulesAsList(currentProject);
 
         // send the message
         s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", this.getAllRules()}).toString());
@@ -530,7 +532,7 @@ public class FileChangeManager implements ProjectComponent {
      * update the tagNameText and send messages to clients
      */
     private void updateTags() {
-        this.tagNameText = MessageProcessor.getInitialTagsAsList();
+        this.tagNameText = MessageProcessor.getInitialTagsAsList(currentProject);
 
         // send the message
         s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", this.getAllTags()}).toString());
@@ -558,79 +560,87 @@ public class FileChangeManager implements ProjectComponent {
      */
     JsonObject generateProjectHierarchyAsJSON() {
 
-        // start off with root
-        Project project = ProjectManager.getInstance().getOpenProjects()[0];
-        VirtualFile rootDirectoryVirtualFile = project.getBaseDir();
+        return null;
 
-        // json version of root
-        JsonObject jsonRootDirectory = new JsonObject();
-        JsonObject properties = new JsonObject();
-        properties.addProperty("canonicalPath", rootDirectoryVirtualFile.getCanonicalPath());
-        properties.addProperty("parent", "");
-        properties.addProperty("name", rootDirectoryVirtualFile.getNameWithoutExtension());
-        properties.addProperty("isDirectory", true);
-        jsonRootDirectory.add("children", new JsonArray());
-        jsonRootDirectory.add("properties", properties);
-
-        // set up a hashmap for the traversal
-        HashMap<String, JsonObject> canonicalToJsonMap = new HashMap<String, JsonObject>();
-        canonicalToJsonMap.put(rootDirectoryVirtualFile.getCanonicalPath(), jsonRootDirectory);
-
-        // set up queue
-        java.util.List<VirtualFile> q = new ArrayList<VirtualFile>();
-        q.add(rootDirectoryVirtualFile);
-
-        // traverse the queue
-        while (!q.isEmpty()) {
-            java.util.List<VirtualFile> new_q = new ArrayList<VirtualFile>();
-            for (VirtualFile item : q) {
-                // System.out.println(item.getName());
-                if (shouldIgnoreFile(item)) {
-                    continue;
-                }
-//                System.out.println("Included: " + item.getCanonicalPath());
-                for (VirtualFile childOfItem : item.getChildren()) {
-                    if (shouldIgnoreFile(childOfItem)) {
-                        continue;
-                    }
-                    new_q.add(childOfItem);
-                    JsonObject jsonChildOfItem = new JsonObject();
-                    JsonObject propertiesOfChild = new JsonObject();
-                    if (childOfItem.isDirectory()) {
-                        propertiesOfChild.addProperty("canonicalPath", childOfItem.getCanonicalPath());
-                        propertiesOfChild.addProperty("parent", item.getCanonicalPath());
-                        propertiesOfChild.addProperty("name", childOfItem.getNameWithoutExtension());
-                        propertiesOfChild.addProperty("isDirectory", true);
-                        jsonChildOfItem.add("children", new JsonArray());
-                        jsonChildOfItem.add("properties", propertiesOfChild);
-                    } else {
-                        propertiesOfChild.addProperty("canonicalPath", childOfItem.getCanonicalPath());
-                        propertiesOfChild.addProperty("parent", item.getCanonicalPath());
-                        propertiesOfChild.addProperty("name", childOfItem.getNameWithoutExtension());
-                        propertiesOfChild.addProperty("isDirectory", false);
-                        propertiesOfChild.addProperty("fileType", childOfItem.getFileType().getName());
-                        jsonChildOfItem.add("properties", propertiesOfChild);
-                        PsiFile psiFile = PsiManager.getInstance(project).findFile(childOfItem);
-//                        propertiesOfChild.addProperty("text", psiFile.getText());
-//                        propertiesOfChild.add("ast", generateASTAsJSON(psiFile));
-
-                        try {
-                            propertiesOfChild.addProperty("fileName", psiFile.getName());
-                        }
-                        catch (NullPointerException e) {
-//                            System.out.println("error! null pointer exception");
-                        }
-                    }
-                    canonicalToJsonMap.get(item.getCanonicalPath()).get("children").getAsJsonArray().add(jsonChildOfItem);
-                    canonicalToJsonMap.put(childOfItem.getCanonicalPath(), jsonChildOfItem);
-                }
-            }
-            q = new_q;
-        }
-
-//        System.out.println(jsonRootDirectory);
-        return jsonRootDirectory;
+//        // start off with root
+////        Project project = ProjectManager.getInstance().getOpenProjects()[0];
+//        Project project = getProject();
+//        VirtualFile rootDirectoryVirtualFile = project.getBaseDir();
+//
+//        // json version of root
+//        JsonObject jsonRootDirectory = new JsonObject();
+//        JsonObject properties = new JsonObject();
+//        properties.addProperty("canonicalPath", rootDirectoryVirtualFile.getCanonicalPath());
+//        properties.addProperty("parent", "");
+//        properties.addProperty("name", rootDirectoryVirtualFile.getNameWithoutExtension());
+//        properties.addProperty("isDirectory", true);
+//        jsonRootDirectory.add("children", new JsonArray());
+//        jsonRootDirectory.add("properties", properties);
+//
+//        // set up a hashmap for the traversal
+//        HashMap<String, JsonObject> canonicalToJsonMap = new HashMap<String, JsonObject>();
+//        canonicalToJsonMap.put(rootDirectoryVirtualFile.getCanonicalPath(), jsonRootDirectory);
+//
+//        // set up queue
+//        java.util.List<VirtualFile> q = new ArrayList<VirtualFile>();
+//        q.add(rootDirectoryVirtualFile);
+//
+//        // traverse the queue
+//        while (!q.isEmpty()) {
+//            java.util.List<VirtualFile> new_q = new ArrayList<VirtualFile>();
+//            for (VirtualFile item : q) {
+//                // System.out.println(item.getName());
+//                if (shouldIgnoreFile(item)) {
+//                    continue;
+//                }
+////                System.out.println("Included: " + item.getCanonicalPath());
+//                for (VirtualFile childOfItem : item.getChildren()) {
+//                    if (shouldIgnoreFile(childOfItem)) {
+//                        continue;
+//                    }
+//                    new_q.add(childOfItem);
+//                    JsonObject jsonChildOfItem = new JsonObject();
+//                    JsonObject propertiesOfChild = new JsonObject();
+//                    if (childOfItem.isDirectory()) {
+//                        propertiesOfChild.addProperty("canonicalPath", childOfItem.getCanonicalPath());
+//                        propertiesOfChild.addProperty("parent", item.getCanonicalPath());
+//                        propertiesOfChild.addProperty("name", childOfItem.getNameWithoutExtension());
+//                        propertiesOfChild.addProperty("isDirectory", true);
+//                        jsonChildOfItem.add("children", new JsonArray());
+//                        jsonChildOfItem.add("properties", propertiesOfChild);
+//                    } else {
+//                        propertiesOfChild.addProperty("canonicalPath", childOfItem.getCanonicalPath());
+//                        propertiesOfChild.addProperty("parent", item.getCanonicalPath());
+//                        propertiesOfChild.addProperty("name", childOfItem.getNameWithoutExtension());
+//                        propertiesOfChild.addProperty("isDirectory", false);
+//                        propertiesOfChild.addProperty("fileType", childOfItem.getFileType().getName());
+//                        jsonChildOfItem.add("properties", propertiesOfChild);
+//                        PsiFile psiFile = PsiManager.getInstance(project).findFile(childOfItem);
+////                        propertiesOfChild.addProperty("text", psiFile.getText());
+////                        propertiesOfChild.add("ast", generateASTAsJSON(psiFile));
+//
+//                        try {
+//                            propertiesOfChild.addProperty("fileName", psiFile.getName());
+//                        }
+//                        catch (NullPointerException e) {
+////                            System.out.println("error! null pointer exception");
+//                        }
+//                    }
+//                    canonicalToJsonMap.get(item.getCanonicalPath()).get("children").getAsJsonArray().add(jsonChildOfItem);
+//                    canonicalToJsonMap.put(childOfItem.getCanonicalPath(), jsonChildOfItem);
+//                }
+//            }
+//            q = new_q;
+//        }
+//
+////        System.out.println(jsonRootDirectory);
+//        return jsonRootDirectory;
 
     }
+
+//    static Project getProject() {
+//        DataContext dataContext = DataManager.getInstance().getDataContextFromFocus().getResult();
+//        return DataKeys.PROJECT.getData(dataContext);
+//    }
 
 }

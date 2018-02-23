@@ -1,17 +1,15 @@
 <idea-plugin>
-  <id>test_plugin</id>
-  <name>Test Plugin</name>
+  <id>active_doc_plugin</id>
+  <name>ActiveDoc Plugin</name>
   <version>1.0</version>
-  <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+  <vendor email="smehrpou@gmu.edu" url="http://mason.gmu.edu/~smehrpou/">GMU DevUXD</vendor>
 
   <description><![CDATA[
-      Enter short description for your plugin here.<br>
-      <em>most HTML tags may be used</em>
+  ActiveDocumentation Tool
     ]]></description>
 
   <change-notes><![CDATA[
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>
+  initial release
     ]]>
   </change-notes>
 

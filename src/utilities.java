@@ -1,5 +1,5 @@
-import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.project.Project;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,12 +30,13 @@ public class utilities {
         return false;
     }
 
-    static List<VirtualFile> createIgnoredFileList() {
+    static List<VirtualFile> createIgnoredFileList(Project project) {
         List<VirtualFile> ignoredFiles = new ArrayList<>();
         List<String> files = new ArrayList<>(Arrays.asList(".idea", "out", "source_xml.xml", "tempResultXmlFile.xml",
-                "testProject.iml", ".DS_Store", "bin"));
+                "testProject.iml", ".DS_Store", "bin", "build", "node_modules", ".setting", ".git", "war"));
         for (String f : files) {
-            VirtualFile vfile = ProjectManager.getInstance().getOpenProjects()[0].getBaseDir().findFileByRelativePath(f);
+            VirtualFile vfile = project.getBaseDir().findFileByRelativePath(f);
+
             if (vfile != null) {
                 ignoredFiles.add(vfile);
             }

@@ -26,7 +26,7 @@ import java.net.ServerSocket;
 
 public class GrepServerToolWindowFactory implements ToolWindowFactory {
 
-    private ChatServer s;
+    private ChatServer chatServer;
     private WebEngine webEngine;
     private WebView browser;
 
@@ -39,9 +39,9 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
         // start the connection when the project is loaded and indexing is done
         try {
             WebSocketImpl.DEBUG = false;
-            int port = findAvailablePort(new int[]{8887, 8888, 8889, 8885, 8886}); // 843 flash policy port
-            s = new ChatServer(port);
-            System.out.println("-> started on port: " + port);
+//            int port = findAvailablePort(new int[]{8887, 8888, 8889, 8885, 8886}); // 843 flash policy port
+            chatServer = new ChatServer(8887);
+//            System.out.println("-> started on port: " + port);
 
         } catch (Exception e) {
             System.out.println("Error in creating a Chat server.");
@@ -56,10 +56,10 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
         SRCMLHandler.createXMLForProject(srcml);
         System.out.println("XML data is created.");
 
-        FileChangeManager fcm = new FileChangeManager(s, srcml/*, MessageProcessor.getInitialRules().toString()*/
-                , MessageProcessor.getInitialRulesAsList()
-                , MessageProcessor.getInitialTagsAsList());
-        s.setManager(fcm);
+        FileChangeManager fcm = new FileChangeManager(project, chatServer, srcml/*, MessageProcessor.getInitialRules().toString()*/
+                , MessageProcessor.getInitialRulesAsList(project)
+                , MessageProcessor.getInitialTagsAsList(project));
+        chatServer.setManager(fcm);
 
         fcm.initComponent();
 

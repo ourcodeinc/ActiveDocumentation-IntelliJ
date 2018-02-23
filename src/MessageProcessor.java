@@ -1,6 +1,5 @@
 import com.google.gson.JsonObject;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -88,28 +87,30 @@ public class MessageProcessor {
      *
      * @return a list of the initial rules <index, rule text>
      */
-    static List<List<String>> getInitialRulesAsList() {
-        return getList("index");
+    static List<List<String>> getInitialRulesAsList(Project project) {
+        return getList("index", project);
     }
 
     /**
      * read rules from ruleJson.txt (the file where users modify rules)
      *
+     * @param project
      * @return a list of the initial rules <index, rule text>
      */
-    static List<List<String>> getInitialTagsAsList() {
-        return getList("tagName");
+    static List<List<String>> getInitialTagsAsList(Project project) {
+        return getList("tagName", project);
     }
 
     /**
      * read from json file
      * @param variable 'index' (rules) or 'fileName' (tags)
+     * @param project
      * @return List<List<String>>
      */
-    private static List<List<String>> getList(String variable) {
+    private static List<List<String>> getList(String variable, Project project) {
         List<List<String>> itemList = new ArrayList<>();
 
-        Project project = ProjectManager.getInstance().getOpenProjects()[0];
+//        Project project = FileChangeManager.getProject();
         File file = new File(project.getBasePath());
         String ruleFilePath = "";
         switch (variable) {
