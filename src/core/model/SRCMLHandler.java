@@ -7,6 +7,7 @@ package core.model;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 
 public class SRCMLHandler {
 
@@ -144,4 +145,26 @@ public class SRCMLHandler {
     }
 
 
+    /**
+     * create an xml string for a given piece of code
+     *
+     * @param exprText a piece of code
+     * @param filePath the path of the temp file
+     * @return xml string
+     */
+    public static String createXMLForText(String exprText, String filePath) {
+
+        // create a file and write the string into that
+        try {
+            PrintWriter writer = new PrintWriter(filePath, "UTF-8");
+            writer.println(exprText);
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("error in writing the result xml");
+            return "";
+        }
+
+        // create the srcml xml string and return the string
+        return createXMLForFile(filePath);
+    }
 }

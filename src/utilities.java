@@ -33,7 +33,7 @@ public class utilities {
     static List<VirtualFile> createIgnoredFileList(Project project) {
         List<VirtualFile> ignoredFiles = new ArrayList<>();
         List<String> files = new ArrayList<>(Arrays.asList(".idea", "out", "source_xml.xml", "tempResultXmlFile.xml",
-                "testProject.iml", ".DS_Store", "bin", "build", "node_modules", ".setting", ".git", "war"));
+                "testProject.iml", ".DS_Store", "bin", "build", "node_modules", ".setting", ".git", "war", "tempExprDeclFile.java"));
         for (String f : files) {
             VirtualFile vfile = project.getBaseDir().findFileByRelativePath(f);
 

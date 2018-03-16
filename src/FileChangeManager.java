@@ -272,6 +272,21 @@ public class FileChangeManager implements ProjectComponent {
 
                 break;
 
+
+            case "EXPR_STMT":
+                String exprText = messageAsJson.get("data").getAsString();
+                String resultExprXml = SRCMLHandler.createXMLForText(exprText, projectPath + "/tempExprDeclFile.java");
+                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "EXPR_STMT_XML", resultExprXml}).toString());
+
+                break;
+
+            case "DECL_STMT":
+                String declText = messageAsJson.get("data").getAsString();
+                String resultDeclXml = SRCMLHandler.createXMLForText(declText, projectPath + "/tempExprDeclFile.java");
+                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "DECL_STMT_XML", resultDeclXml}).toString());
+
+                break;
+
             case "NEW_RULE":
 
                 //TODO first add the rule, then write it in the file
