@@ -66,6 +66,10 @@ public class FileChangeManager implements ProjectComponent {
                 return;
             }
         }
+
+        // new Rule
+        this.ruleIndexText.add(new ArrayList<>(Arrays.asList(ruleIndex, ruleText)));
+
     }
 
 
@@ -290,6 +294,17 @@ public class FileChangeManager implements ProjectComponent {
             case "NEW_RULE":
 
                 //TODO first add the rule, then write it in the file
+
+                String newRuleIndex = Integer.toString(messageAsJson.get("data").getAsJsonObject().get("index").getAsInt());
+                String newRuleText = messageAsJson.get("data").getAsJsonObject().get("ruleText").getAsJsonObject().toString();
+
+                this.setRuleIndexText(newRuleIndex, newRuleText);
+                this.writeToFile("ruleJson.txt");
+
+                // send message
+                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE",
+                        MessageProcessor.encodeModifiedRule(new Object[]{newRuleIndex, newRuleText})
+                }).toString());
 
                 break;
 
