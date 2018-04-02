@@ -38,7 +38,7 @@ public class FileChangeManager implements ProjectComponent {
     private List<List<String>> ruleIndexText; // index - text
     private List<List<String>> tagNameText; // tagName - text
     private Project currentProject;
-    private String projectPath;
+    public String projectPath;
 
     FileChangeManager(Project project, ChatServer server, SRCMLxml xmlP, List<List<String>> ruleList, List<List<String>> tagList) {
         connection = ApplicationManager.getApplication().getMessageBus().connect();

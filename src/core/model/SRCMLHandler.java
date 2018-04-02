@@ -4,10 +4,14 @@
 
 package core.model;
 
-import java.io.BufferedReader;
+import com.intellij.execution.ExecutionException;
+import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.process.ProcessOutput;
+import com.intellij.execution.util.ExecUtil;
+
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 
 public class SRCMLHandler {
 
@@ -91,7 +95,7 @@ public class SRCMLHandler {
      * @return xml String
      */
     private static String createXMLForFile(String path) {
-        return runShellCommand(new String[]{"srcml", path})[0];
+        return runShellCommand(new String[]{"/usr/local/bin/srcml", path});
     }
 
 
@@ -99,29 +103,19 @@ public class SRCMLHandler {
      * run the shell command
      *
      * @param command (terminal command)
-     * @return output and errors
+     * @return output
      */
-    private static String[] runShellCommand(String[] command) {
+    private static String runShellCommand(String[] command) {
+        GeneralCommandLine generalCommandLine = new GeneralCommandLine(command);
+        generalCommandLine.setCharset(Charset.forName("UTF-8"));
+
         try {
-            Process p = Runtime.getRuntime().exec(command);
+            ProcessOutput processOutput = ExecUtil.execAndGetOutput(generalCommandLine);
+            return String.join("\n", processOutput.getStdoutLines());
 
-            BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-
-            String line, resultInput = "", resultError = "";
-            while ((line = stdInput.readLine()) != null) {
-                resultInput = resultInput + line + '\n';
-            }
-
-            while ((line = stdError.readLine()) != null) {
-                resultError = resultError + line + '\n';
-            }
-            return new String[]{resultInput, resultError};
-
-        } catch (IOException e) {
-            System.out.println("Exception: ");
+        } catch (ExecutionException e) {
             e.printStackTrace();
-            return new String[]{"", ""};
+            return e.toString();
         }
 
     }
@@ -135,13 +129,13 @@ public class SRCMLHandler {
      */
     public static int findLineNumber(String fullPath) {
 
-        String[] str = new String[]{"srcml", "--unit", "1", fullPath};
-        String[] src = runShellCommand(str);
+        String[] str = new String[]{"/usr/local/bin/srcml", "--unit", "1", fullPath};
+        String src = runShellCommand(str);
 
         //File filePath = new File(fullPath);
         //filePath.delete();
 
-        return src[0].length();
+        return src.length();
     }
 
 
