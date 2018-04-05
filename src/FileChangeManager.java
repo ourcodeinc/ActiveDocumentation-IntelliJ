@@ -15,6 +15,8 @@ import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
+import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import org.jetbrains.annotations.NotNull;
 
 import core.model.SRCMLHandler;
@@ -164,6 +166,14 @@ public class FileChangeManager implements ProjectComponent {
                 }
             }
         });
+
+        connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new FileEditorManagerListener() {
+            @Override
+            public void selectionChanged(@NotNull FileEditorManagerEvent event) {
+                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "SHOW_RULES_FOR_FILE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
+            }
+
+        });
     }
 
     /**
@@ -279,21 +289,12 @@ public class FileChangeManager implements ProjectComponent {
 
             case "EXPR_STMT":
                 String exprText = messageAsJson.get("data").getAsString();
-                String resultExprXml = SRCMLHandler.createXMLForText(exprText, projectPath + "/tempExprDeclFile.java");
+                String resultExprXml = SRCMLHandler.createXMLForText(exprText, projectPath + "/tempExprFile.java");
                 s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "EXPR_STMT_XML", resultExprXml}).toString());
 
                 break;
 
-            case "DECL_STMT":
-                String declText = messageAsJson.get("data").getAsString();
-                String resultDeclXml = SRCMLHandler.createXMLForText(declText, projectPath + "/tempExprDeclFile.java");
-                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "DECL_STMT_XML", resultDeclXml}).toString());
-
-                break;
-
             case "NEW_RULE":
-
-                //TODO first add the rule, then write it in the file
 
                 String newRuleIndex = Integer.toString(messageAsJson.get("data").getAsJsonObject().get("index").getAsInt());
                 String newRuleText = messageAsJson.get("data").getAsJsonObject().get("ruleText").getAsJsonObject().toString();
