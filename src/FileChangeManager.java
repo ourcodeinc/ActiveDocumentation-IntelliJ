@@ -2,6 +2,7 @@
 import com.google.gson.JsonObject;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.util.messages.MessageBusConnection;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.newvfs.BulkFileListener;
@@ -246,16 +247,16 @@ public class FileChangeManager implements ProjectComponent {
                 //System.out.println(SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml"));
 
                 EventQueue.invokeLater(() -> {
-                    String[] filePath = messageAsJson.get("data").getAsJsonObject().get("fileName").getAsString().split("/");
-                    String fileToFocusOn = filePath[filePath.length - 1];
-                    int indexToFocusOn = SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml");
-//                    Project currentProject = ProjectManager.getInstance().getOpenProjects()[0];
-                    VirtualFile theVFile = FilenameIndex.getVirtualFilesByName(currentProject, fileToFocusOn, GlobalSearchScope.projectScope(currentProject)).iterator().next();
-                    FileEditorManager.getInstance(currentProject).openFile(theVFile, true);
+                    String fileRelativePath = messageAsJson.get("data").getAsJsonObject().get("fileName").getAsString();
+                    String relativePath = fileRelativePath.startsWith("/") ? fileRelativePath : "/" + fileRelativePath;
+                    VirtualFile fileByPath = LocalFileSystem.getInstance().findFileByPath(relativePath);
+                    FileEditorManager.getInstance(currentProject).openFile(fileByPath, true);
                     Editor theEditor = FileEditorManager.getInstance(currentProject).getSelectedTextEditor();
+                    int indexToFocusOn = SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml");
                     theEditor.getCaretModel().moveToOffset(indexToFocusOn);
                     theEditor.getScrollingModel().scrollToCaret(ScrollType.RELATIVE);
                 });
+
                 break;
 
             case "MODIFIED_RULE":
