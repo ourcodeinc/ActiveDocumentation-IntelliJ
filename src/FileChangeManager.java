@@ -89,6 +89,7 @@ public class FileChangeManager implements ProjectComponent {
                 return;
             }
         }
+        this.tagNameText.add(new ArrayList<>(Arrays.asList(tagName, tagText)));
     }
 
 
@@ -309,6 +310,18 @@ public class FileChangeManager implements ProjectComponent {
                 }).toString());
 
                 break;
+
+            case "NEW_TAG":
+                String newTagName = messageAsJson.get("data").getAsJsonObject().get("tagName").getAsString();
+                String newTagText = messageAsJson.get("data").getAsJsonObject().get("tagText").getAsJsonObject().toString();
+
+                this.setTagNameText(newTagName, newTagText);
+                this.writeToFile("tagJson.txt");
+
+                // send message
+                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG",
+                        MessageProcessor.encodeModifiedTag(new Object[]{newTagName, newTagText})
+                }).toString());
 
         }
 

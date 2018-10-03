@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>active_doc_plugin</id>
   <name>ActiveDoc Plugin</name>
-  <version>1.0</version>
+  <version>2.0</version>
   <vendor email="smehrpou@gmu.edu" url="http://mason.gmu.edu/~smehrpou/">GMU DevUXD</vendor>
 
   <description><![CDATA[
