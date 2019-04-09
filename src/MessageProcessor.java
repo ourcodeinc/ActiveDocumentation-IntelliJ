@@ -17,6 +17,7 @@ public class MessageProcessor {
     private static final String[] newXmlKeys = {"filePath", "xml"};
     private static final String[] modifiedRuleKeys = {"ruleIndex", "rule"};
     private static final String[] modifiedTagKeys = {"tagName", "tag"};
+    private static final String[] textXML = {"xmlText", "messageID"};
 
 
     static JsonObject encodeData(Object[] source_Destination_Protocol_Data_Array) {
@@ -33,6 +34,10 @@ public class MessageProcessor {
 
     static JsonObject encodeModifiedRule(Object[] ruleIndex_rule) {
         return createJsonObject(ruleIndex_rule, modifiedRuleKeys);
+    }
+
+    static JsonObject encodeXMLandText(Object[] xml_text) {
+        return createJsonObject(xml_text, textXML);
     }
 
     static JsonObject encodeModifiedTag(Object[] tagName_tag) {
