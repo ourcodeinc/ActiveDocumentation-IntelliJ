@@ -21,6 +21,7 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 
 import javax.swing.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 
@@ -94,10 +95,10 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
 
     private synchronized void publishServices() {
         try {
-            webEngine.setJavaScriptEnabled(true);
-//            File file = new File("/Users/saharmehrpour/Documents/Workspace/ActiveDocumentation/website-client/chat.html");
-//            webEngine.load(file.toURI().toURL().toString());
-            webEngine.load("http://localhost:3000/");
+//          webEngine.setJavaScriptEnabled(true);
+//          webEngine.load("http://localhost:3000/");
+            File file = new File(this.getClass().getClassLoader().getResource("").getPath() + "index.html");
+            webEngine.load(file.toURI().toURL().toString());
         } catch (Exception ex) {
             System.err.print("error " + ex.getMessage());
             ex.printStackTrace();
