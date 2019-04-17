@@ -95,10 +95,48 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
 
     private synchronized void publishServices() {
         try {
-//          webEngine.setJavaScriptEnabled(true);
-//          webEngine.load("http://localhost:3000/");
-            File file = new File(this.getClass().getClassLoader().getResource("").getPath() + "index.html");
-            webEngine.load(file.toURI().toURL().toString());
+
+            String content = "<!doctype html>\n" +
+                    "<html lang=\"en\">\n" +
+                    "<head>\n" +
+                    "    <meta charset=\"utf-8\">\n" +
+                    "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">\n" +
+                    "    <meta name=\"theme-color\" content=\"#000000\">\n" +
+                    "\n" +
+                    "    <title>Active Documentation</title>\n" +
+                    "\n" +
+                    "</head>\n" +
+                    "<body style='font-family: \"Helvetica Neue\",Helvetica,Arial,sans-serif;font-size: 14px;line-height: 1.42857143;'>\n" +
+                    "<div style=\"margin: 20%\">Connected to the server.<br>\n" +
+                    "    <ol>\n" +
+                    "        <li>Open the Terminal.</li>\n" +
+                    "        <li>Direct to the <strong>active-doc-client</strong> directory.</li>\n" +
+                    "        <li>Run command <span style=\"font-family: monospace; background-color: antiquewhite;\">npm run start</span> to\n" +
+                    "            start the application.\n" +
+                    "        </li>\n" +
+                    "        <li>The <em>npm</em> prints the address in which the tool is served in form of: <span\n" +
+                    "                style=\"color: #337ab7;text-decoration: none;background-color: transparent;\">http://localhost:&lt;PORT&gt;</span>\n" +
+                    "        </li>\n" +
+                    "        <li>Open the URL in Chrome.</li>\n" +
+                    "    </ol>\n" +
+                    "    If the tool is running slow:\n" +
+                    "    <ol>\n" +
+                    "        <li>Stop the application using <kbd>ctrl</kbd>+<kbd>C</kbd>.</li>\n" +
+                    "        <li>Change the port number in <strong>package.json</strong> in <strong>active-doc-client</strong> directory.</li>\n" +
+                    "        <li>Restart the app using <span style=\"font-family: monospace; background-color: antiquewhite;\">npm run start</span>.</li>\n" +
+                    "        <li>Open the new given URL in Chrome.</li>\n" +
+                    "    </ol>\n" +
+                    "\n" +
+                    "</div>\n" +
+                    "</body>\n" +
+                    "</html>";
+            webEngine.loadContent(content, "text/html");
+
+
+//            webEngine.setJavaScriptEnabled(true);
+//            webEngine.load("http://localhost:3000/");
+//            File file = new File(this.getClass().getClassLoader().getResource("").getPath() + "index.html");
+//            webEngine.load(file.toURI().toURL().toString());
         } catch (Exception ex) {
             System.err.print("error " + ex.getMessage());
             ex.printStackTrace();
