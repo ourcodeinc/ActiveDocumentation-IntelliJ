@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
+/*
  * edited by saharmehrpour
  */
 
@@ -28,7 +28,6 @@ public class ChatServer extends WebSocketServer {
     private FileChangeManager manager; // to process received messages
 
     /**
-     * only used in GrepServerToolWindowFactory.run()
      *
      * @param port = 8887
      * @throws UnknownHostException

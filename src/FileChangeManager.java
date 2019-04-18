@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.util.messages.MessageBusConnection;
 import com.intellij.openapi.vfs.VirtualFileManager;
@@ -14,16 +15,16 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ScrollType;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.search.FilenameIndex;
-import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
+import org.java_websocket.WebSocketImpl;
 import org.jetbrains.annotations.NotNull;
 
 import core.model.SRCMLHandler;
 import core.model.SRCMLxml;
+import org.jetbrains.annotations.Nullable;
 
 
 import java.util.*;
@@ -44,18 +45,20 @@ public class FileChangeManager implements ProjectComponent {
     private List<List<String>> ruleIndexText; // index - text
     private List<List<String>> tagNameText; // tagName - text
     private Project currentProject;
-    public String projectPath;
+    String projectPath;
 
-    FileChangeManager(Project project, ChatServer server, SRCMLxml xmlP, List<List<String>> ruleList, List<List<String>> tagList) {
+    FileChangeManager(Project project) {
+
         connection = ApplicationManager.getApplication().getMessageBus().connect();
-        s = server;
-
-        srcml = xmlP;
-        ruleIndexText = ruleList;
-        tagNameText = tagList;
-
         currentProject = project;
         projectPath = project.getBasePath();
+
+        srcml = new SRCMLxml(FileChangeManager.getFilePaths(project), project.getBasePath());
+        SRCMLHandler.createXMLForProject(srcml);
+
+        ruleIndexText = MessageProcessor.getInitialRulesAsList(project);
+        tagNameText = MessageProcessor.getInitialTagsAsList(project);
+
     }
 
 
@@ -140,31 +143,21 @@ public class FileChangeManager implements ProjectComponent {
     //---------------------------
 
     public void initComponent() {
-        s.start();
-
-        System.out.println("(initComponent) ChatServer started on port: " + s.getPort());
-
         ignoredFiles = utilities.createIgnoredFileList(currentProject);
-
         connection.subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener.Adapter() {
             @Override
             public void after(@NotNull List<? extends VFileEvent> events) {
-
                 // update rules in ChatServer
-
                 for (VFileEvent event : events) {
                     if (shouldIgnoreFile(event.getFile()))
                         continue;
-
                     if (event instanceof VFileCreateEvent) { // Create files
                         handleVFileCreateEvent(event);
-
                     } else if (event instanceof VFileContentChangeEvent) { // Text Change
                         handleVFileChangeEvent(event);
 
                     } else if (event instanceof VFileDeleteEvent) { // Delete files
                         handleVFileDeleteEvent(event);
-
                     } else if (event instanceof VFilePropertyChangeEvent) { // Property Change
                         handleVFilePropertyChangeEvent(event);
                     }
@@ -183,24 +176,26 @@ public class FileChangeManager implements ProjectComponent {
 
     /**
      * Overridden method
-     * Not working
      */
     public void disposeComponent() {
-        System.out.println("(disposeComponent)");
-        connection.disconnect();
-        try {
-            s.stop();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        ruleIndexText = new ArrayList<>();
+        tagNameText = new ArrayList<>();
+
+        Project[] AllProjects = ProjectManager.getInstance().getOpenProjects();
+        if (AllProjects.length == 0) {
+            try {
+                s.stop();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     @NotNull
     @Override
     public String getComponentName() {
-        System.out.println("(Component Name)");
         return "";
     }
 
@@ -208,21 +203,28 @@ public class FileChangeManager implements ProjectComponent {
 
     /**
      * Overridden method
-     * Not working
      */
     @Override
     public void projectOpened() {
-        System.out.println("(project Opened)");
+        Project[] AllProjects = ProjectManager.getInstance().getOpenProjects();
+        if (AllProjects.length == 1) {
+            try {
+                WebSocketImpl.DEBUG = false;
+                s = new ChatServer(8887);
+                s.setManager(this);
+                s.start();
+            } catch (Exception e) {
+                System.out.println("Error in creating a Chat server.");
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
      * Overridden method
-     * Not working
      */
     @Override
-    public void projectClosed() {
-        System.out.println("(project Closed)");
-    }
+    public void projectClosed() { }
 
     //-------------------------------
 
@@ -665,16 +667,21 @@ public class FileChangeManager implements ProjectComponent {
                         propertiesOfChild.addProperty("isDirectory", false);
                         propertiesOfChild.addProperty("fileType", childOfItem.getFileType().getName());
                         jsonChildOfItem.add("properties", propertiesOfChild);
-                        PsiFile psiFile = PsiManager.getInstance(project).findFile(childOfItem);
+
+                        if (!ApplicationManager.getApplication().isReadAccessAllowed()) {
+                            PsiFile psiFile = ApplicationManager.getApplication().runReadAction(new Computable<PsiFile>() {
+                                @Nullable
+                                @Override
+                                public PsiFile compute() {
+                                    return PsiManager.getInstance(project).findFile(childOfItem);
+                                }
+                            });
+                            if (psiFile != null)
+                                propertiesOfChild.addProperty("fileName", psiFile.getName());
+                        }
+
 //                        propertiesOfChild.addProperty("text", psiFile.getText());
 //                        propertiesOfChild.add("ast", generateASTAsJSON(psiFile));
-
-                        try {
-                            propertiesOfChild.addProperty("fileName", psiFile.getName());
-                        }
-                        catch (NullPointerException e) {
-//                            System.out.println("error! null pointer exception");
-                        }
                     }
                     canonicalToJsonMap.get(item.getCanonicalPath()).get("children").getAsJsonArray().add(jsonChildOfItem);
                     canonicalToJsonMap.put(childOfItem.getCanonicalPath(), jsonChildOfItem);
@@ -687,10 +694,5 @@ public class FileChangeManager implements ProjectComponent {
         return jsonRootDirectory;
 
     }
-
-//    static Project getProject() {
-//        DataContext dataContext = DataManager.getInstance().getDataContextFromFocus().getResult();
-//        return DataKeys.PROJECT.getData(dataContext);
-//    }
 
 }

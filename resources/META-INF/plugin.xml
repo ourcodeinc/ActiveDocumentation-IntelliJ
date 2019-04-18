@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>active_doc_plugin</id>
   <name>ActiveDoc Plugin</name>
-  <version>2.0</version>
+  <version>3.0</version>
   <vendor email="smehrpou@gmu.edu" url="http://mason.gmu.edu/~smehrpou/">GMU DevUXD</vendor>
 
   <description><![CDATA[
@@ -9,7 +9,7 @@
     ]]></description>
 
   <change-notes><![CDATA[
-  initial release
+  The tool window in the plugin is not functional. Instead the plugin runs in background and is accessible in the browser immediately.
     ]]>
   </change-notes>
 
@@ -22,9 +22,14 @@
   <depends>com.intellij.modules.lang</depends>
   -->
 
+  <project-components>
+    <component>
+      <implementation-class>FileChangeManager</implementation-class>
+    </component>
+  </project-components>
+
   <extensions defaultExtensionNs="com.intellij">
-    <!-- Add your extensions here -->
-    <toolWindow id="ActiveDocs" anchor="right" factoryClass="GrepServerToolWindowFactory"/>
+    <toolWindow id="ActiveDocs" anchor="right" factoryClass="CustomToolWindowFactory"/>
   </extensions>
 
   <actions>
