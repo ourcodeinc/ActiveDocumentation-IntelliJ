@@ -107,29 +107,11 @@ public class GrepServerToolWindowFactory implements ToolWindowFactory {
                     "\n" +
                     "</head>\n" +
                     "<body style='font-family: \"Helvetica Neue\",Helvetica,Arial,sans-serif;font-size: 14px;line-height: 1.42857143;'>\n" +
-                    "<div style=\"margin: 20%\">Connected to the server.<br>\n" +
-                    "    <ol>\n" +
-                    "        <li>Open the Terminal.</li>\n" +
-                    "        <li>Direct to the <strong>active-doc-client</strong> directory.</li>\n" +
-                    "        <li>Run command <span style=\"font-family: monospace; background-color: antiquewhite;\">npm run start</span> to\n" +
-                    "            start the application.\n" +
-                    "        </li>\n" +
-                    "        <li>The <em>npm</em> prints the address in which the tool is served in form of: <span\n" +
-                    "                style=\"color: #337ab7;text-decoration: none;background-color: transparent;\">http://localhost:&lt;PORT&gt;</span>\n" +
-                    "        </li>\n" +
-                    "        <li>Open the URL in Chrome.</li>\n" +
-                    "    </ol>\n" +
-                    "    If the tool is running slow:\n" +
-                    "    <ol>\n" +
-                    "        <li>Stop the application using <kbd>ctrl</kbd>+<kbd>C</kbd>.</li>\n" +
-                    "        <li>Change the port number in <strong>package.json</strong> in <strong>active-doc-client</strong> directory.</li>\n" +
-                    "        <li>Restart the app using <span style=\"font-family: monospace; background-color: antiquewhite;\">npm run start</span>.</li>\n" +
-                    "        <li>Open the new given URL in Chrome.</li>\n" +
-                    "    </ol>\n" +
-                    "\n" +
+                    "<div style=\"margin: 20%\">Connected to the WebSocket.<br>\n" +
+                    "    Open <span style=\"color: #337ab7;text-decoration: none;background-color: transparent;\">index.html</span> in Chrome.\n" +
                     "</div>\n" +
                     "</body>\n" +
-                    "</html>";
+                    "</html>\n";
             webEngine.loadContent(content, "text/html");
 
 
