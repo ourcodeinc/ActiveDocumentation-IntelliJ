@@ -168,7 +168,8 @@ public class FileChangeManager implements ProjectComponent {
         connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new FileEditorManagerListener() {
             @Override
             public void selectionChanged(@NotNull FileEditorManagerEvent event) {
-                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "SHOW_RULES_FOR_FILE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
+                if(event.getManager().getSelectedFiles().length > 0)
+                    s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "SHOW_RULES_FOR_FILE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
             }
 
         });
