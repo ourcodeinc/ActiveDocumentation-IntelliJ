@@ -19,6 +19,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
+import core.model.FPMaxHandler;
 import org.java_websocket.WebSocketImpl;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,6 +28,7 @@ import core.model.SRCMLxml;
 import org.jetbrains.annotations.Nullable;
 
 
+import java.io.File;
 import java.util.*;
 import java.awt.*;
 import java.io.IOException;
@@ -330,6 +332,30 @@ public class FileChangeManager implements ProjectComponent {
                 s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG",
                         MessageProcessor.encodeModifiedTag(new Object[]{newTagName, newTagText})
                 }).toString());
+                break;
+
+            case "LEARN_RULES_META_DATA":
+                // "attribute_META_data.txt"
+
+            case "LEARN_RULES_FILE_LOCATIONS":
+                // "fileLocations.txt"
+
+            case "LEARN_RULES_DATABASES":
+                // analysisFileName + "_subClassOf_" + parentClass + ".txt"
+                // analysisFileName = "AttributeEncoding"
+
+                JsonArray filePathData = messageAsJson.get("data").getAsJsonArray();
+                for (int i=0; i < filePathData.size(); i++) {
+                    writeDataToFileLearningDR(filePathData.get(i).getAsJsonArray().get(0).getAsString(),
+                            filePathData.get(i).getAsJsonArray().get(1).getAsString());
+                }
+
+                break;
+
+            case "EXECUTE_FP_MAX":
+                int support = messageAsJson.get("data").getAsInt();
+                FPMaxHandler.analyzeDatabases(projectPath, support);
+                break;
 
         }
 
@@ -561,6 +587,31 @@ public class FileChangeManager implements ProjectComponent {
                     writer.println(']');
                     break;
             }
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("error in writing " + fileName);
+        }
+
+    }
+
+    /**
+     * write in file
+     *
+     * @param fileName name of files
+     * @param content content of the file
+     */
+    private void writeDataToFileLearningDR(String fileName, String content) {
+
+        String directoryName = projectPath.concat("/LearningDR");
+
+        File directory = new File(directoryName);
+        if (! directory.exists()){
+            directory.mkdir();
+        }
+
+        try {
+            PrintWriter writer = new PrintWriter(projectPath + "/LearningDR" + fileName, "UTF-8");
+            writer.print(content);
             writer.close();
         } catch (IOException e) {
             System.out.println("error in writing " + fileName);

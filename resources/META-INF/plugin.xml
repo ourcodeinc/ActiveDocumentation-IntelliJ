@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>active_doc_plugin</id>
   <name>ActiveDoc Plugin</name>
-  <version>3.0</version>
+  <version>4.0 Beta</version>
   <vendor email="smehrpou@gmu.edu" url="http://mason.gmu.edu/~smehrpou/">GMU DevUXD</vendor>
 
   <description><![CDATA[
@@ -10,6 +10,7 @@
 
   <change-notes><![CDATA[
   The tool window in the plugin is not functional. Instead the plugin runs in background and is accessible in the browser immediately.
+  The logic for mining rules is added.
     ]]>
   </change-notes>
 
