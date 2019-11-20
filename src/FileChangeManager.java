@@ -610,7 +610,7 @@ public class FileChangeManager implements ProjectComponent {
         }
 
         try {
-            PrintWriter writer = new PrintWriter(projectPath + "/LearningDR" + fileName, "UTF-8");
+            PrintWriter writer = new PrintWriter(projectPath + "/LearningDR/" + fileName, "UTF-8");
             writer.print(content);
             writer.close();
         } catch (IOException e) {

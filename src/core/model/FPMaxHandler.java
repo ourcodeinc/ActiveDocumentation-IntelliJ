@@ -38,7 +38,7 @@ public class FPMaxHandler {
 
     public static void analyzeDatabases (String projectPath, int support) {
 
-        String path = projectPath + "/LearningDR";
+        String path = projectPath.concat("/LearningDR");
         File directory = new File(path);
         if (! directory.exists()){
             directory.mkdir();
@@ -119,17 +119,16 @@ public class FPMaxHandler {
         // We want to analyze each of the files in this list
         for (int i = 0; i < fileList.size(); i++) {
 
-            String prompt = "java -jar spmf.jar run FPMax " + path + "/" + fileList.get(i)
-                    + " " + path + "/output" + i + ".txt " + support + "%";
+            String[] command = new String[]{"java", "-jar",
+                    projectPath + "/spmf.jar", "run", "FPMax",
+                    path + "/" + fileList.get(i),
+                    path + "/output" + i + ".txt", support + "%"};
 
-            // Execute analysis
-
-            GeneralCommandLine generalCommandLine = new GeneralCommandLine(prompt);
+            GeneralCommandLine generalCommandLine = new GeneralCommandLine(command);
             generalCommandLine.setCharset(Charset.forName("UTF-8"));
 
             try {
                 ExecUtil.execAndGetOutput(generalCommandLine);
-
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
@@ -141,19 +140,26 @@ public class FPMaxHandler {
 
             // Add list of xml files to bottom of analysis file
             String f = path + "/output" + i + ".txt";
+            PrintWriter pw = null;
             try {
-                PrintWriter writer = new PrintWriter(projectPath + "/LearningDR" + f, "UTF-8");
-
                 List<String> arr = fileLocMap.get(fileList.get(i));
                 StringBuilder data = new StringBuilder();
 
                 for (int j = 0; j < arr.size(); j++) {
                     data.append(arr.get(j)).append("\n");
                 }
-                writer.write(data.toString());
-                writer.close();
+
+                pw = new PrintWriter(new FileOutputStream(new File(f), true ));
+                pw.println(data.toString());
+                pw.flush();
+                pw.close();
+
             } catch (IOException e) {
                 System.out.println("error in writing " + f);
+            } finally {
+                if (pw != null) {
+                    pw.close();
+                }
             }
 
 
