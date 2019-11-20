@@ -354,7 +354,11 @@ public class FileChangeManager implements ProjectComponent {
 
             case "EXECUTE_FP_MAX":
                 int support = messageAsJson.get("data").getAsInt();
-                FPMaxHandler.analyzeDatabases(projectPath, support);
+                JsonObject outputContent = FPMaxHandler.analyzeDatabases(projectPath, support);
+                // send message
+                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FP_MAX_OUTPUT",
+                        MessageProcessor.encodeFPMaxOutput(new Object[]{outputContent})
+                }).toString());
                 break;
 
         }

@@ -18,6 +18,7 @@ public class MessageProcessor {
     private static final String[] modifiedRuleKeys = {"ruleIndex", "rule"};
     private static final String[] modifiedTagKeys = {"tagName", "tag"};
     private static final String[] textXML = {"xmlText", "messageID"};
+    private static final String[] fpMaxOutputKeys = {"fpMaxOutput"};
 
 
     static JsonObject encodeData(Object[] source_Destination_Protocol_Data_Array) {
@@ -42,6 +43,10 @@ public class MessageProcessor {
 
     static JsonObject encodeModifiedTag(Object[] tagName_tag) {
         return createJsonObject(tagName_tag, modifiedTagKeys);
+    }
+
+    static JsonObject encodeFPMaxOutput(Object[] fpMax_output) {
+        return createJsonObject(fpMax_output, fpMaxOutputKeys);
     }
 
     private static JsonObject createJsonObject(Object[] data_Array, String[] keys) {

@@ -30,13 +30,15 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.util.ExecUtil;
 
+import com.google.gson.JsonObject;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
 
 public class FPMaxHandler {
 
-    public static void analyzeDatabases (String projectPath, int support) {
+    public static JsonObject analyzeDatabases (String projectPath, int support) {
 
         String path = projectPath.concat("/LearningDR");
         File directory = new File(path);
@@ -135,6 +137,8 @@ public class FPMaxHandler {
 
         }
 
+        JsonObject jsonObject = new JsonObject();
+
         // Add xml files that FI's apply to, to bottom of output file
         for (int i = 0; i < fileList.size(); i++) {
 
@@ -162,8 +166,20 @@ public class FPMaxHandler {
                 }
             }
 
+            StringBuilder fpMaxOutput = new StringBuilder();
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(path + "/output" + i + ".txt"));
+                while (br.ready()) {
+                    fpMaxOutput.append(br.readLine()).append("\n");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            jsonObject.addProperty(Integer.toString(i), fpMaxOutput.toString());
 
         }
 
+        return jsonObject;
     }
 }
