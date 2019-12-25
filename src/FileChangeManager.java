@@ -1,41 +1,39 @@
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
-import com.intellij.openapi.project.ProjectManager;
-import com.intellij.openapi.util.Computable;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.util.messages.MessageBusConnection;
-import com.intellij.openapi.vfs.VirtualFileManager;
-import com.intellij.openapi.vfs.newvfs.BulkFileListener;
-import com.intellij.openapi.vfs.newvfs.events.*;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ScrollType;
 import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.openapi.vfs.newvfs.BulkFileListener;
+import com.intellij.openapi.vfs.newvfs.events.*;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
+import com.intellij.util.messages.MessageBusConnection;
 import core.model.FPMaxHandler;
-import org.java_websocket.WebSocketImpl;
-import org.jetbrains.annotations.NotNull;
-
 import core.model.SRCMLHandler;
 import core.model.SRCMLxml;
+import org.java_websocket.WebSocketImpl;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-
-import java.io.File;
-import java.util.*;
 import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 
 public class FileChangeManager implements ProjectComponent {
@@ -347,9 +345,18 @@ public class FileChangeManager implements ProjectComponent {
                 JsonArray filePathData = messageAsJson.get("data").getAsJsonArray();
                 for (int i=0; i < filePathData.size(); i++) {
                     writeDataToFileLearningDR(filePathData.get(i).getAsJsonArray().get(0).getAsString(),
-                            filePathData.get(i).getAsJsonArray().get(1).getAsString());
+                            filePathData.get(i).getAsJsonArray().get(1).getAsString(), false);
                 }
+                break;
 
+            case "LEARN_RULES_META_DATA_APPEND":
+            case "LEARN_RULES_FILE_LOCATIONS_APPEND":
+            case "LEARN_RULES_DATABASES_APPEND":
+                JsonArray filePathDataAppend = messageAsJson.get("data").getAsJsonArray();
+                for (int i=0; i < filePathDataAppend.size(); i++) {
+                    writeDataToFileLearningDR(filePathDataAppend.get(i).getAsJsonArray().get(0).getAsString(),
+                            filePathDataAppend.get(i).getAsJsonArray().get(1).getAsString(), true);
+                }
                 break;
 
             case "EXECUTE_FP_MAX":
@@ -604,7 +611,7 @@ public class FileChangeManager implements ProjectComponent {
      * @param fileName name of files
      * @param content content of the file
      */
-    private void writeDataToFileLearningDR(String fileName, String content) {
+    private void writeDataToFileLearningDR(String fileName, String content, boolean append) {
 
         String directoryName = projectPath.concat("/LearningDR");
 
@@ -614,7 +621,14 @@ public class FileChangeManager implements ProjectComponent {
         }
 
         try {
-            PrintWriter writer = new PrintWriter(projectPath + "/LearningDR/" + fileName, "UTF-8");
+            PrintWriter writer;
+            if (append) {
+                writer = new PrintWriter(new FileOutputStream(
+                        new File(projectPath + "/LearningDR/" + fileName), true /* append = true */));
+            }
+            else {
+                writer = new PrintWriter(projectPath + "/LearningDR/" + fileName, "UTF-8");
+            }
             writer.print(content);
             writer.close();
         } catch (IOException e) {
