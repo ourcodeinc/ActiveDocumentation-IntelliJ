@@ -95,6 +95,7 @@ public class SRCMLHandler {
      * @return xml String
      */
     private static String createXMLForFile(String path) {
+        // windows: "C:\Program Files\srcML 0.9.5\bin\srcml"
         return runShellCommand(new String[]{"/usr/local/bin/srcml", path});
     }
 
@@ -129,6 +130,7 @@ public class SRCMLHandler {
      */
     public static int findLineNumber(String fullPath) {
 
+        // windows: "C:\Program Files\srcML 0.9.5\bin\srcml"
         String[] str = new String[]{"/usr/local/bin/srcml", "--unit", "1", fullPath};
         String src = runShellCommand(str);
 
