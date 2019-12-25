@@ -39,7 +39,7 @@ import java.util.List;
 public class FileChangeManager implements ProjectComponent {
 
     private final MessageBusConnection connection;
-    private ChatServer s;
+    private ChatServer ws;
     private List<VirtualFile> ignoredFiles/* = new ArrayList<>()*/;
     private SRCMLxml srcml;
     private List<List<String>> ruleIndexText; // index - text
@@ -169,7 +169,7 @@ public class FileChangeManager implements ProjectComponent {
             @Override
             public void selectionChanged(@NotNull FileEditorManagerEvent event) {
                 if(event.getManager().getSelectedFiles().length > 0)
-                    s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "SHOW_RULES_FOR_FILE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "SHOW_RULES_FOR_FILE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
             }
 
         });
@@ -185,7 +185,7 @@ public class FileChangeManager implements ProjectComponent {
         Project[] AllProjects = ProjectManager.getInstance().getOpenProjects();
         if (AllProjects.length == 0) {
             try {
-                s.stop();
+                ws.stop();
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
@@ -211,9 +211,9 @@ public class FileChangeManager implements ProjectComponent {
         if (AllProjects.length == 1) {
             try {
                 WebSocketImpl.DEBUG = false;
-                s = new ChatServer(8887);
-                s.setManager(this);
-                s.start();
+                ws = new ChatServer(8887);
+                ws.setManager(this);
+                ws.start();
             } catch (Exception e) {
                 System.out.println("Error in creating a Chat server.");
                 e.printStackTrace();
@@ -275,7 +275,7 @@ public class FileChangeManager implements ProjectComponent {
                 this.writeToFile("ruleJson.txt");
 
                 // send message
-                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE",
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE",
                         MessageProcessor.encodeModifiedRule(new Object[]{ruleIndex, ruleText})
                 }).toString());
 
@@ -290,7 +290,7 @@ public class FileChangeManager implements ProjectComponent {
                 this.writeToFile("tagJson.txt");
 
                 // send message
-                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", tagText}).toString());
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", tagText}).toString());
 
                 break;
 
@@ -298,7 +298,7 @@ public class FileChangeManager implements ProjectComponent {
             case "EXPR_STMT":
                 String exprText = messageAsJson.get("data").getAsJsonObject().get("codeText").getAsString();
                 String resultExprXml = SRCMLHandler.createXMLForText(exprText, projectPath + "/tempExprFile.java");
-                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "EXPR_STMT_XML",
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "EXPR_STMT_XML",
                         MessageProcessor.encodeXMLandText(new Object[]{resultExprXml, messageAsJson.get("data").getAsJsonObject().get("messageID").getAsString()})
                 }).toString());
 
@@ -313,7 +313,7 @@ public class FileChangeManager implements ProjectComponent {
                 this.writeToFile("ruleJson.txt");
 
                 // send message
-                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE",
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE",
                         MessageProcessor.encodeModifiedRule(new Object[]{newRuleIndex, newRuleText})
                 }).toString());
 
@@ -327,7 +327,7 @@ public class FileChangeManager implements ProjectComponent {
                 this.writeToFile("tagJson.txt");
 
                 // send message
-                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG",
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG",
                         MessageProcessor.encodeModifiedTag(new Object[]{newTagName, newTagText})
                 }).toString());
                 break;
@@ -363,7 +363,7 @@ public class FileChangeManager implements ProjectComponent {
                 int support = messageAsJson.get("data").getAsInt();
                 JsonObject outputContent = FPMaxHandler.analyzeDatabases(projectPath, support);
                 // send message
-                s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FP_MAX_OUTPUT",
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FP_MAX_OUTPUT",
                         MessageProcessor.encodeFPMaxOutput(new Object[]{outputContent})
                 }).toString());
                 break;
@@ -427,7 +427,7 @@ public class FileChangeManager implements ProjectComponent {
         System.out.println("CREATE");
         String newXml = SRCMLHandler.addXMLForProject(this.getSrcml(), file.getPath());
         this.updateSrcml(file.getPath(), newXml);
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATED_PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATED_PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
 
     }
 
@@ -448,7 +448,7 @@ public class FileChangeManager implements ProjectComponent {
                 break;
             }
         }
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATED_PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATED_PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
     }
 
     // when a file is deleted
@@ -470,7 +470,7 @@ public class FileChangeManager implements ProjectComponent {
 
         SRCMLHandler.removeXMLForProject(srcml, file.getPath());
         this.updateSrcml(file.getPath(), "");
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATED_PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATED_PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
     }
 
     //----------------------------------
@@ -645,9 +645,9 @@ public class FileChangeManager implements ProjectComponent {
         this.ruleIndexText = MessageProcessor.getInitialRulesAsList(currentProject);
 
         // send the message
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", this.getAllRules()}).toString());
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE", ""}).toString());
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", this.getAllRules()}).toString());
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE", ""}).toString());
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
     }
 
     /**
@@ -657,8 +657,8 @@ public class FileChangeManager implements ProjectComponent {
         this.tagNameText = MessageProcessor.getInitialTagsAsList(currentProject);
 
         // send the message
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", this.getAllTags()}).toString());
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG_TABLE", ""}).toString());
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", this.getAllTags()}).toString());
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG_TABLE", ""}).toString());
     }
 
     /**
@@ -668,10 +668,10 @@ public class FileChangeManager implements ProjectComponent {
      * @param newXml   String
      */
     private void updateSrcml(String filePath, String newXml) {
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_XML",
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_XML",
                 MessageProcessor.encodeNewXMLData(new Object[]{filePath, newXml})
         }).toString());
-        s.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES_FOR_FILE", filePath}).toString());
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES_FOR_FILE", filePath}).toString());
     }
 
 

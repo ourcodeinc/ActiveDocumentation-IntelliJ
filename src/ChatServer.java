@@ -48,9 +48,9 @@ public class ChatServer extends WebSocketServer {
         // check whether the project is changed
         manager.checkChangedProject();
 
+        // this message is not processed
         this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "ENTER", (conn + " has entered the room!")}).toString());
 
-//        for (int i = 0; i < Math.min(5, manager.getSrcml().fileNumber); i++) {
         for (int i = 0; i < manager.getSrcml().fileNumber; i++) {
             this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML",
                     MessageProcessor.encodeXMLData(new Object[]{manager.getSrcml().getPaths().get(i), manager.getSrcml().getXmls().get(i)})
@@ -68,6 +68,7 @@ public class ChatServer extends WebSocketServer {
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
+        // this message is not processed
         this.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "LEFT", (conn + " has left the room!")}).toString());
         System.out.println("(onClose) " + conn + " has left the room!");
     }
