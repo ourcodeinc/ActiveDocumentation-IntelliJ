@@ -26,14 +26,13 @@ frequent itemsets */
 
 package core.model;
 
+import com.google.gson.JsonObject;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.util.ExecUtil;
 
-import com.google.gson.JsonObject;
-
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class FPMaxHandler {
@@ -45,6 +44,9 @@ public class FPMaxHandler {
         if (! directory.exists()){
             directory.mkdir();
         }
+
+
+
         // Path to directory with xml files we wish to iterate through
         // Currenlty, the directory is the directory main.js is running in
         File folder = new File(path);
@@ -55,9 +57,11 @@ public class FPMaxHandler {
         // analysisFileName + "_subClassOf_" + parentClass + ".txt"
         // analysisFileName = "AttributeEncoding"
         File[] listOfFiles = folder.listFiles();
-        for (int i = 0; i < listOfFiles.length; i++) {
-            if (listOfFiles[i].isFile() && listOfFiles[i].getName().startsWith("AttributeEncoding")) {
-                fileList.add(listOfFiles[i].getName());
+        if (listOfFiles != null) {
+            for (File lof : listOfFiles) {
+                if (lof.isFile() && lof.getName().startsWith("AttributeEncoding")) {
+                    fileList.add(lof.getName());
+                }
             }
         }
 
@@ -84,13 +88,13 @@ public class FPMaxHandler {
 
 
         String aeFile = null;
-        for (int i = 0; i < array.size(); i++) {
+        for (String value : array) {
 
             // If it is the name of a database, then we want to keep it in this
             // local variable, and use it as the key in the map as we make a list
             // of the xml files that follow it
-            if (array.get(i).endsWith(".txt")) {
-                aeFile = array.get(i);
+            if (value.endsWith(".txt")) {
+                aeFile = value;
             }
             // If it is not a database name, then it is an xml file used to create
             // that database. Either (1) We have already recorded an xml file name
@@ -100,9 +104,9 @@ public class FPMaxHandler {
             // (1) If a list of xml files already exists for this
             // datbase, then we just append this file name to the end of the list
             else if (fileLocMap.containsKey(aeFile)) {
-                if (!Objects.equals(array.get(i), "")) {
+                if (!Objects.equals(value, "")) {
                     List<String> entry = fileLocMap.get(aeFile);
-                    entry.add(array.get(i));
+                    entry.add(value);
                     fileLocMap.put(aeFile, entry);
                 }
             }
@@ -110,9 +114,9 @@ public class FPMaxHandler {
             // then we need to add this key to the map with a value that is a list
             // that contains this first xml file name.
             else {
-                if (!Objects.equals(array.get(i), "")) {
+                if (!Objects.equals(value, "")) {
                     List<String> str = new ArrayList<>();
-                    str.add(array.get(i));
+                    str.add(value);
                     fileLocMap.put(aeFile, str);
                 }
             }
@@ -127,7 +131,7 @@ public class FPMaxHandler {
                     path + "/output" + i + ".txt", support + "%"};
 
             GeneralCommandLine generalCommandLine = new GeneralCommandLine(command);
-            generalCommandLine.setCharset(Charset.forName("UTF-8"));
+            generalCommandLine.setCharset(StandardCharsets.UTF_8);
 
             try {
                 ExecUtil.execAndGetOutput(generalCommandLine);

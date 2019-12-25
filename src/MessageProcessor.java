@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.io.*;
 
 // A quick class to format some data as a JSONObject message that the web-client can process
-public class MessageProcessor {
+class MessageProcessor {
 
     private static final String[] dataKeys = {"source", "destination", "command", "data"};
     private static final String[] xmlKeys = {"filePath", "xml"};
@@ -104,7 +104,7 @@ public class MessageProcessor {
     /**
      * read rules from ruleJson.txt (the file where users modify rules)
      *
-     * @param project
+     * @param project open project in the IDE
      * @return a list of the initial rules <index, rule text>
      */
     static List<List<String>> getInitialTagsAsList(Project project) {
@@ -114,13 +114,15 @@ public class MessageProcessor {
     /**
      * read from json file
      * @param variable 'index' (rules) or 'fileName' (tags)
-     * @param project
+     * @param project open project in the IDE
      * @return List<List<String>>
      */
     private static List<List<String>> getList(String variable, Project project) {
         List<List<String>> itemList = new ArrayList<>();
 
-//        Project project = FileChangeManager.getProject();
+        if (project.getBasePath() == null)
+            return itemList;
+
         File file = new File(project.getBasePath());
         String ruleFilePath = "";
         switch (variable) {
@@ -134,12 +136,13 @@ public class MessageProcessor {
 
         try (BufferedReader br = new BufferedReader(new FileReader(ruleFilePath))) {
 
-            String sCurrentLine, result = "";
+            String sCurrentLine;
+            StringBuilder result = new StringBuilder();
             while ((sCurrentLine = br.readLine()) != null) {
-                result = result + sCurrentLine + '\n';
+                result.append(sCurrentLine).append('\n');
             }
             try {
-                JSONArray allRules = new JSONArray(result);
+                JSONArray allRules = new JSONArray(result.toString());
                 for (int j = 0; j < allRules.length(); ++j) {
                     JSONObject itemI = allRules.getJSONObject(j);
                     switch (variable) {

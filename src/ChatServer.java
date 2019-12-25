@@ -49,21 +49,21 @@ public class ChatServer extends WebSocketServer {
         manager.checkChangedProject();
 
         // this message is not processed
-        this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "ENTER", (conn + " has entered the room!")}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "ENTER", (conn + " has entered the room!")}).toString());
 
         for (int i = 0; i < manager.getSrcml().fileNumber; i++) {
-            this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML",
+            this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML",
                     MessageProcessor.encodeXMLData(new Object[]{manager.getSrcml().getPaths().get(i), manager.getSrcml().getXmls().get(i)})
             }).toString());
         }
 
-        this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", manager.getAllRules()}).toString());
-        this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", manager.getAllTags()}).toString());
-        this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
-        this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", manager.generateProjectHierarchyAsJSON()}).toString());
-        this.sendInitialMessages(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT", manager.projectPath}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", manager.getAllRules()}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", manager.getAllTags()}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", manager.generateProjectHierarchyAsJSON()}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT", manager.projectPath}).toString());
 
-        sendBackedUpMessages();
+//        sendBackedUpMessages();
     }
 
     @Override
@@ -105,7 +105,7 @@ public class ChatServer extends WebSocketServer {
         if (con.size() == 0) {
             System.out.println("(sendToAll) " + "Putting message on hold since there's no connection.");
         } else {
-            sendMessage(con);
+            sendAllMessages(con);
         }
     }
 
@@ -117,7 +117,7 @@ public class ChatServer extends WebSocketServer {
                 System.out.println("(sendBackedUpMessages) " + "Can't clear out backlog since there's no connection right now.");
             }
         } else {
-            sendMessage(con);
+            sendAllMessages(con);
         }
     }
 
@@ -128,7 +128,7 @@ public class ChatServer extends WebSocketServer {
      *
      * @param con list of connections
      */
-    private void sendMessage(Collection<WebSocket> con) {
+    private void sendAllMessages(Collection<WebSocket> con) {
         while (con.size() != 0 && !backedUpMessages.isEmpty()) {
             String itemToSend = backedUpMessages.get(0);
             synchronized (con) {
@@ -142,7 +142,7 @@ public class ChatServer extends WebSocketServer {
     }
 
 
-    private void sendInitialMessages(WebSocket con, String message) {
+    private void sendAMessage(WebSocket con, String message) {
         con.send(message);
     }
 }

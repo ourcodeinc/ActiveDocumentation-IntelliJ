@@ -1,4 +1,4 @@
-/**
+/*
  * edited by saharmehrpour
  * This module creates the GUI for the plugin
  */

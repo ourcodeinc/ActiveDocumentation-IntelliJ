@@ -1,4 +1,4 @@
-/**
+/*
  * Created by saharmehrpour on 6/6/17.
  */
 
@@ -11,9 +11,12 @@ import com.intellij.execution.util.ExecUtil;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class SRCMLHandler {
+
+    final private static String srcmlPathMac = "/usr/local/bin/srcml";
+    final private static String srcmlPathWindows = "C:\\Program Files\\srcML 0.9.5\\bin\\srcml";
 
     /**
      * Create a srcML xml file initially
@@ -56,11 +59,8 @@ public class SRCMLHandler {
 
     /**
      * remove an xml file
-     *
-     * @param srcml
-     * @param filePath
      */
-    public static void/*SRCMLxml*/ removeXMLForProject(SRCMLxml srcml, String filePath) {
+    public static void removeXMLForProject(SRCMLxml srcml, String filePath) {
         for (int index = 0; index < srcml.fileNumber; index++) {
             if (srcml.paths.get(index).equals(filePath)) {
                 srcml.paths.remove(index);
@@ -75,9 +75,6 @@ public class SRCMLHandler {
 
     /**
      * add an xml file
-     *
-     * @param srcml
-     * @param filePath
      */
     public static String addXMLForProject(SRCMLxml srcml, String filePath) {
         srcml.paths.add(filePath);
@@ -95,8 +92,13 @@ public class SRCMLHandler {
      * @return xml String
      */
     private static String createXMLForFile(String path) {
-        // windows: "C:\Program Files\srcML 0.9.5\bin\srcml"
-        return runShellCommand(new String[]{"/usr/local/bin/srcml", path});
+
+        if (System.getProperty("os.name").startsWith("Mac"))
+            return runShellCommand(new String[]{srcmlPathMac, path});
+        else if(System.getProperty("os.name").startsWith("Windows"))
+            return runShellCommand(new String[]{srcmlPathWindows, path});
+        System.out.println(System.getProperty("os.name") + " not supported");
+        return "";
     }
 
 
@@ -108,7 +110,7 @@ public class SRCMLHandler {
      */
     private static String runShellCommand(String[] command) {
         GeneralCommandLine generalCommandLine = new GeneralCommandLine(command);
-        generalCommandLine.setCharset(Charset.forName("UTF-8"));
+        generalCommandLine.setCharset(StandardCharsets.UTF_8);
 
         try {
             ProcessOutput processOutput = ExecUtil.execAndGetOutput(generalCommandLine);
@@ -130,10 +132,13 @@ public class SRCMLHandler {
      */
     public static int findLineNumber(String fullPath) {
 
-        // windows: "C:\Program Files\srcML 0.9.5\bin\srcml"
-        String[] str = new String[]{"/usr/local/bin/srcml", "--unit", "1", fullPath};
-        String src = runShellCommand(str);
-
+        String src = "";
+        if (System.getProperty("os.name").startsWith("Mac"))
+            src = runShellCommand(new String[]{srcmlPathMac, "--unit", "1", fullPath});
+        else if (System.getProperty("os.name").startsWith("Windows"))
+            src = runShellCommand(new String[]{srcmlPathWindows, "--unit", "1", fullPath});
+        else
+            System.out.println(System.getProperty("os.name") + " not supported");
         //File filePath = new File(fullPath);
         //filePath.delete();
 
