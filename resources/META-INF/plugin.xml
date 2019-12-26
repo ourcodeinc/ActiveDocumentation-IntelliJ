@@ -1,11 +1,13 @@
 <idea-plugin>
   <id>active_doc_plugin</id>
-  <name>ActiveDoc Plugin</name>
+  <name>ActiveDoc</name>
   <version>4.0 Beta</version>
   <vendor email="smehrpou@gmu.edu" url="http://mason.gmu.edu/~smehrpou/">GMU DevUXD</vendor>
 
   <description><![CDATA[
   ActiveDocumentation Tool
+  <br>
+  This tool helps in validating code against design rules.
     ]]></description>
 
   <change-notes><![CDATA[
@@ -28,10 +30,6 @@
       <implementation-class>FileChangeManager</implementation-class>
     </component>
   </project-components>
-
-  <extensions defaultExtensionNs="com.intellij">
-    <toolWindow id="ActiveDocs" anchor="right" factoryClass="CustomToolWindowFactory"/>
-  </extensions>
 
   <actions>
     <!-- Add your actions here -->
