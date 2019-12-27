@@ -721,4 +721,17 @@ public class FileChangeManager implements ProjectComponent {
 
     }
 
+    /**
+     * sending the data for feature selection to the client
+     * @param path of the file from which a code snippet is selected
+     * @param startIndex start of the selection
+     * @param endIndex end of the selection
+     * @param lineNumber of the javaFile
+     * @param text text of the selection
+     */
+    void sendFeatureSelectionData(String path, String startIndex, String endIndex, String lineNumber, String text) {
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FEATURE_SELECTION",
+                MessageProcessor.encodeSelectedFragment(new Object[]{path, startIndex, endIndex, lineNumber, text})
+        }).toString());
+    }
 }

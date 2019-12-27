@@ -33,5 +33,12 @@
 
   <actions>
     <!-- Add your actions here -->
+    <group id="actionGroup">
+      <action id="FileChangeManager.contextMenuActions" class="contextMenuActions"
+              text="ActiveDocumentation Feature Selection"
+              description="ActiveDocumentation feature selection"/>
+      <separator/>
+      <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+    </group>
   </actions>
 </idea-plugin>

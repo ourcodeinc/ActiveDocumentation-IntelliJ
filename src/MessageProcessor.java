@@ -19,6 +19,7 @@ class MessageProcessor {
     private static final String[] modifiedTagKeys = {"tagName", "tag"};
     private static final String[] textXML = {"xmlText", "messageID"};
     private static final String[] fpMaxOutputKeys = {"fpMaxOutput"};
+    private static final String[] selectedFragmentKeys = {"path", "start", "end", "line", "text"};
 
 
     static JsonObject encodeData(Object[] source_Destination_Protocol_Data_Array) {
@@ -49,6 +50,10 @@ class MessageProcessor {
         return createJsonObject(fpMax_output, fpMaxOutputKeys);
     }
 
+    static JsonObject encodeSelectedFragment(Object[] selected_frag_data) {
+        return createJsonObject(selected_frag_data, selectedFragmentKeys);
+    }
+
     private static JsonObject createJsonObject(Object[] data_Array, String[] keys) {
         JsonObject jsonObject = new JsonObject();
         for (int i = 0; i < keys.length; i++) {
@@ -60,36 +65,6 @@ class MessageProcessor {
         }
         return jsonObject;
     }
-
-//    // returns a JSONObject with the initial rules from ruleJson.txt (the file where users modify rules)
-//    static JsonObject getInitialRules() {
-//        System.out.println("(sendRulesInitially)");
-//        JsonObject data = new JsonObject();
-//
-//        Project project = ProjectManager.getInstance().getOpenProjects()[0];
-//        File file = new File(project.getBasePath());
-//        String ruleFilePath = findRuleJsonFile(file);
-//
-//        try (BufferedReader br = new BufferedReader(new FileReader(ruleFilePath))) {
-//
-//            String sCurrentLine, result = "ruleTable=";
-//
-//            while ((sCurrentLine = br.readLine()) != null) {
-//                result = result + sCurrentLine + '\n';
-//            }
-//            data.addProperty("text", result);
-//
-//        } catch (IOException e) {
-//            System.out.println("No ruleJson file / error in reading the ruleJson file");
-//            e.printStackTrace();
-//        }
-//
-//        if (!data.has("text")) {
-//            data.addProperty("text", "");
-//        }
-//        System.out.println(data);
-//        return data;
-//    }
 
 
     /**
