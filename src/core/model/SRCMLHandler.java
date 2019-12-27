@@ -114,7 +114,7 @@ public class SRCMLHandler {
 
         try {
             ProcessOutput processOutput = ExecUtil.execAndGetOutput(generalCommandLine);
-            return String.join("\n", processOutput.getStdoutLines());
+            return processOutput.getStdout();
 
         } catch (ExecutionException e) {
             e.printStackTrace();
