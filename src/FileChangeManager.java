@@ -42,6 +42,7 @@ public class FileChangeManager implements ProjectComponent {
     private List<List<String>> tagNameText; // tagName - text
     private Project currentProject;
     String projectPath;
+    private List<VirtualFile> ignoredFiles;
 
     FileChangeManager(Project project) {
 
@@ -137,6 +138,7 @@ public class FileChangeManager implements ProjectComponent {
 
 
     public void initComponent() {
+        ignoredFiles = createIgnoredFileList(currentProject);
         connection.subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
             @Override
             public void after(@NotNull List<? extends VFileEvent> events) {
@@ -453,6 +455,73 @@ public class FileChangeManager implements ProjectComponent {
         return !(s.getName().endsWith(".java") || s.getName().endsWith("ruleJson.txt") || s.getName().endsWith("tagJson.txt"));
     }
 
+    /**
+     * verify if a file should be ignored, useful for project hierarchy
+     * @param s virtual file
+     * @return boolean
+     */
+    private boolean shouldIgnoreFileForProjectHierarchy(VirtualFile s) {
+        if (ignoredFiles == null) {
+            return false;
+        }
+        for (VirtualFile vfile : ignoredFiles) {
+            if (Objects.equals(vfile.getCanonicalPath(), s.getCanonicalPath())) {
+                return true;
+            } else if (isFileAChildOf(s, vfile)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * check whether a file is a child of another file
+     * formerly this method was in utilities
+     * @param maybeChild first file
+     * @param possibleParent second file
+     * @return boolean
+     */
+    private static boolean isFileAChildOf(VirtualFile maybeChild, VirtualFile possibleParent) {
+        final VirtualFile parent = possibleParent.getCanonicalFile();
+        if (parent != null && (!parent.exists() || !parent.isDirectory())) {
+            // this cannot possibly be the parent
+            return false;
+        }
+
+        VirtualFile child = maybeChild.getCanonicalFile();
+        while (child != null) {
+            if (child.equals(parent)) {
+                return true;
+            }
+            child = child.getParent();
+        }
+        // No match found, and we've hit the root directory
+        return false;
+    }
+
+    /**
+     * creating ignore list
+     * formerly this method was in utilities
+     * @param project for a given project
+     * @return list of files
+     */
+    private static List<VirtualFile> createIgnoredFileList(Project project) {
+        List<VirtualFile> ignoredFiles = new ArrayList<>();
+        List<String> files = new ArrayList<>(Arrays.asList(".idea", "out", "source_xml.xml", "tempResultXmlFile.xml", "LearningDR", "test",
+                "testProject.iml", ".DS_Store", "bin", "build", "node_modules", ".setting", ".git", "war", "tempExprDeclFile.java"));
+        if (project.getBasePath() == null)
+            return ignoredFiles;
+        VirtualFile rootDirectoryVirtualFile = LocalFileSystem.getInstance().findFileByPath(project.getBasePath());
+        if (rootDirectoryVirtualFile == null)
+            return ignoredFiles;
+        for (String f : files) {
+            VirtualFile vfile = rootDirectoryVirtualFile.findFileByRelativePath(f);
+            if (vfile != null) {
+                ignoredFiles.add(vfile);
+            }
+        }
+        return ignoredFiles;
+    }
 
     /**
      * check whether we should consider the file change
@@ -674,12 +743,12 @@ public class FileChangeManager implements ProjectComponent {
             java.util.List<VirtualFile> new_q = new ArrayList<>();
             for (VirtualFile item : q) {
 
-                if (shouldIgnoreFile(item)) {
+                if (shouldIgnoreFileForProjectHierarchy(item)) {
                     continue;
                 }
 
                 for (VirtualFile childOfItem : item.getChildren()) {
-                    if (shouldIgnoreFile(childOfItem)) {
+                    if (shouldIgnoreFileForProjectHierarchy(childOfItem)) {
                         continue;
                     }
                     new_q.add(childOfItem);
