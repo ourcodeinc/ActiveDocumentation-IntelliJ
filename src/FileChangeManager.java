@@ -21,7 +21,6 @@ import com.intellij.util.messages.MessageBusConnection;
 import core.model.FPMaxHandler;
 import core.model.SRCMLHandler;
 import core.model.SRCMLxml;
-import org.java_websocket.WebSocketImpl;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -208,7 +207,6 @@ public class FileChangeManager implements ProjectComponent {
         Project[] AllProjects = ProjectManager.getInstance().getOpenProjects();
         if (AllProjects.length == 1) {
             try {
-                WebSocketImpl.DEBUG = false;
                 ws = new ChatServer(8887);
                 ws.setManager(this);
                 ws.start();
@@ -352,6 +350,7 @@ public class FileChangeManager implements ProjectComponent {
             case "LEARN_RULES_FILE_LOCATIONS_APPEND":
             case "LEARN_RULES_DATABASES_APPEND":
                 JsonArray filePathDataAppend = messageAsJson.get("data").getAsJsonArray();
+//                String cnt = messageAsJson.get("part").getAsString();
                 for (int i=0; i < filePathDataAppend.size(); i++) {
                     writeDataToFileLearningDR(filePathDataAppend.get(i).getAsJsonArray().get(0).getAsString(),
                             filePathDataAppend.get(i).getAsJsonArray().get(1).getAsString(), true);

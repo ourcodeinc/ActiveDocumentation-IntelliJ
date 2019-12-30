@@ -1,8 +1,6 @@
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
-import org.java_websocket.*;
-import org.java_websocket.framing.Framedata;
+import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
@@ -13,7 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /*
- * edited by saharmehrpour
+ * written by saharmehrpour
  */
 
 /**
@@ -79,14 +77,8 @@ public class ChatServer extends WebSocketServer {
         JsonParser parser = new JsonParser();
         final JsonObject messageAsJson = parser.parse(message).getAsJsonObject();
         System.out.println("(onMessage) " /*+ messageAsJson*/);
-        System.out.println(message);
         manager.processReceivedMessages(messageAsJson);
 
-    }
-
-    @Override
-    public void onFragment(WebSocket conn, Framedata fragment) {
-        System.out.println("(onFragment) " /*+ "received fragment: " + fragment*/);
     }
 
 
@@ -96,11 +88,16 @@ public class ChatServer extends WebSocketServer {
         ex.printStackTrace();
     }
 
+    @Override
+    public void onStart() {
+        System.out.println("(Started) ");
+    }
+
     /**
      * @param text The String to send across the network.
      */
     void sendToAll(String text) {
-        Collection<WebSocket> con = connections();
+        Collection<WebSocket> con = getConnections();
         backedUpMessages.add(text);
         if (con.size() == 0) {
             System.out.println("(sendToAll) " + "Putting message on hold since there's no connection.");
@@ -110,8 +107,7 @@ public class ChatServer extends WebSocketServer {
     }
 
     private void sendBackedUpMessages() {
-
-        Collection<WebSocket> con = connections();
+        Collection<WebSocket> con = getConnections();
         if (con.size() == 0) {
             if (backedUpMessages.size() > 0) {
                 System.out.println("(sendBackedUpMessages) " + "Can't clear out backlog since there's no connection right now.");
