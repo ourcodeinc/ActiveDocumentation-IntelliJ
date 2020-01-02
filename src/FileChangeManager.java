@@ -364,6 +364,10 @@ public class FileChangeManager implements ProjectComponent {
                 ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FP_MAX_OUTPUT",
                         MessageProcessor.encodeFPMaxOutput(new Object[]{outputContent})
                 }).toString());
+
+                String path = projectPath.concat("/LearningDR");
+                File directory = new File(path);
+                this.deleteDirectory(directory);
                 break;
 
         }
@@ -801,5 +805,20 @@ public class FileChangeManager implements ProjectComponent {
         ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FEATURE_SELECTION",
                 MessageProcessor.encodeSelectedFragment(new Object[]{path, startIndex, endIndex, lineNumber, text})
         }).toString());
+    }
+
+    /**
+     * delete a directory recursively for deleting learningDR
+     * @param directoryToBeDeleted File
+     * @return boolean
+     */
+    boolean deleteDirectory(File directoryToBeDeleted) {
+        File[] allContents = directoryToBeDeleted.listFiles();
+        if (allContents != null) {
+            for (File file : allContents) {
+                deleteDirectory(file);
+            }
+        }
+        return directoryToBeDeleted.delete();
     }
 }
