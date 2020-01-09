@@ -41,9 +41,9 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class FPMaxHandler {
+public class TNRHandler {
 
-    public static JsonObject analyzeDatabases (String projectPath, int k, double confidence, int delta) {
+    public static JsonObject analyzeDatabases_tnr (String projectPath, int k, double confidence, int delta) {
 
         String path = projectPath.concat("/LearningDR");
         File directory = new File(path);
