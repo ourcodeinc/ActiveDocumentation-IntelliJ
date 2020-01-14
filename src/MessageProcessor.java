@@ -19,6 +19,7 @@ class MessageProcessor {
     private static final String[] modifiedTagKeys = {"tagName", "tag"};
     private static final String[] textXML = {"xmlText", "messageID"};
     private static final String[] fpMaxOutputKeys = {"fpMaxOutput"};
+    private static final String[] tnrOutputKeys = {"tnrOutputKeys"};
     private static final String[] selectedFragmentKeys = {"path", "start", "end", "line", "text"};
 
 
@@ -48,6 +49,10 @@ class MessageProcessor {
 
     static JsonObject encodeFPMaxOutput(Object[] fpMax_output) {
         return createJsonObject(fpMax_output, fpMaxOutputKeys);
+    }
+
+    static JsonObject encodeTNROutput(Object[] tnr_output) {
+        return createJsonObject(tnr_output, tnrOutputKeys);
     }
 
     static JsonObject encodeSelectedFragment(Object[] selected_frag_data) {

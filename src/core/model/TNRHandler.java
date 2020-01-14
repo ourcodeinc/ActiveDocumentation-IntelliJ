@@ -134,7 +134,7 @@ public class TNRHandler {
             String[] command = new String[]{"java", "-jar",
                     projectPath + "/spmf.jar", "run", "TNR",
                     path + "/" + fileList.get(i),
-                    path + "/TNR_output" + i + ".txt", k, confidence, delta};
+                    path + "/TNR_output" + i + ".txt", String.valueOf(k), String.valueOf(confidence), String.valueOf(delta)};
 
             GeneralCommandLine generalCommandLine = new GeneralCommandLine(command);
             generalCommandLine.setCharset(StandardCharsets.UTF_8);

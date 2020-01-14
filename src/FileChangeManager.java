@@ -21,6 +21,7 @@ import com.intellij.util.messages.MessageBusConnection;
 import core.model.FPMaxHandler;
 import core.model.SRCMLHandler;
 import core.model.SRCMLxml;
+import core.model.TNRHandler;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -376,6 +377,17 @@ public class FileChangeManager implements ProjectComponent {
                 // send message
                 ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FP_MAX_OUTPUT",
                         MessageProcessor.encodeFPMaxOutput(new Object[]{outputContent})
+                }).toString());
+                break;
+
+            case "EXECUTE_TNR":
+                int k = messageAsJson.get("k").getAsInt();
+                double confidence = messageAsJson.get("confidence").getAsDouble();
+                int delta = messageAsJson.get("delta").getAsInt();
+                JsonObject outputContentTNR = TNRHandler.analyzeDatabases_tnr(projectPath, k, confidence, delta);
+                // send message
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TNR_OUTPUT",
+                        MessageProcessor.encodeTNROutput(new Object[]{outputContentTNR})
                 }).toString());
                 break;
 
