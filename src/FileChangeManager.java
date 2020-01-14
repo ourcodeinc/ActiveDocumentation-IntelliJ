@@ -184,9 +184,10 @@ public class FileChangeManager implements ProjectComponent {
         Project[] AllProjects = ProjectManager.getInstance().getOpenProjects();
         if (AllProjects.length == 0) {
             try {
-                ws.stop();
+                if (ws != null)
+                    ws.stop();
             } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
+//                e.printStackTrace();
             }
         }
     }
