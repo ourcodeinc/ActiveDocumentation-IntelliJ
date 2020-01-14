@@ -332,6 +332,11 @@ public class FileChangeManager implements ProjectComponent {
             case "LEARN_RULES_META_DATA":
                 // "attribute_META_data.txt"
 
+                // assumption: the first received data is the meta data
+                String path = projectPath.concat("/LearningDR");
+                File directory = new File(path);
+                this.deleteDirectory(directory);
+
             case "LEARN_RULES_FILE_LOCATIONS":
                 // "fileLocations.txt"
 
@@ -347,10 +352,17 @@ public class FileChangeManager implements ProjectComponent {
                 break;
 
             case "LEARN_RULES_META_DATA_APPEND":
+                // assumption: the first received data is the meta data
+                int cnt = messageAsJson.get("part").getAsInt();
+                if (cnt == 0) {
+                    String dirPath = projectPath.concat("/LearningDR");
+                    File directoryFile = new File(dirPath);
+                    this.deleteDirectory(directoryFile);
+                }
+
             case "LEARN_RULES_FILE_LOCATIONS_APPEND":
             case "LEARN_RULES_DATABASES_APPEND":
                 JsonArray filePathDataAppend = messageAsJson.get("data").getAsJsonArray();
-//                String cnt = messageAsJson.get("part").getAsString();
                 for (int i=0; i < filePathDataAppend.size(); i++) {
                     writeDataToFileLearningDR(filePathDataAppend.get(i).getAsJsonArray().get(0).getAsString(),
                             filePathDataAppend.get(i).getAsJsonArray().get(1).getAsString(), true);
@@ -364,10 +376,6 @@ public class FileChangeManager implements ProjectComponent {
                 ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FP_MAX_OUTPUT",
                         MessageProcessor.encodeFPMaxOutput(new Object[]{outputContent})
                 }).toString());
-
-                String path = projectPath.concat("/LearningDR");
-                File directory = new File(path);
-                this.deleteDirectory(directory);
                 break;
 
         }
