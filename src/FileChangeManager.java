@@ -18,10 +18,7 @@ import com.intellij.openapi.vfs.newvfs.events.*;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.messages.MessageBusConnection;
-import core.model.FPMaxHandler;
-import core.model.SRCMLHandler;
-import core.model.SRCMLxml;
-import core.model.TNRHandler;
+import core.model.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -389,6 +386,18 @@ public class FileChangeManager implements ProjectComponent {
                 ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TNR_OUTPUT",
                         MessageProcessor.encodeTNROutput(new Object[]{outputContentTNR})
                 }).toString());
+                break;
+
+            case "DANGEROUS_READ_MINED_RULES":
+                JsonObject outputContentMinedData = MiningRulesUtilities.readMinedRulesFile(projectPath);
+                if (outputContentMinedData == null) {
+                    System.out.println("Error happened in reading files.");
+                    break;
+                }
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "DANGEROUS_READ_MINED_RULES",
+                        MessageProcessor.encodeDangerousMinedData(
+                                new Object[]{outputContentMinedData.get("output").toString(), outputContentMinedData.get("metaData").toString()}
+                        )}).toString());
                 break;
 
         }

@@ -21,6 +21,7 @@ class MessageProcessor {
     private static final String[] fpMaxOutputKeys = {"fpMaxOutput"};
     private static final String[] tnrOutputKeys = {"tnrOutputKeys"};
     private static final String[] selectedFragmentKeys = {"path", "start", "end", "line", "text"};
+    private static final String[] dangerousReadMinedRules = {"outputFiles", "metaData"};
 
 
     static JsonObject encodeData(Object[] source_Destination_Protocol_Data_Array) {
@@ -57,6 +58,10 @@ class MessageProcessor {
 
     static JsonObject encodeSelectedFragment(Object[] selected_frag_data) {
         return createJsonObject(selected_frag_data, selectedFragmentKeys);
+    }
+
+    static JsonObject encodeDangerousMinedData(Object[] minedData) {
+        return createJsonObject(minedData, dangerousReadMinedRules);
     }
 
     private static JsonObject createJsonObject(Object[] data_Array, String[] keys) {
