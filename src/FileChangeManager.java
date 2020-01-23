@@ -378,9 +378,9 @@ public class FileChangeManager implements ProjectComponent {
                 break;
 
             case "EXECUTE_TNR":
-                int k = messageAsJson.get("k").getAsInt();
-                double confidence = messageAsJson.get("confidence").getAsDouble();
-                int delta = messageAsJson.get("delta").getAsInt();
+                int k = messageAsJson.get("data").getAsJsonObject().get("k").getAsInt();
+                double confidence = messageAsJson.get("data").getAsJsonObject().get("confidence").getAsDouble();
+                int delta = messageAsJson.get("data").getAsJsonObject().get("delta").getAsInt();
                 JsonObject outputContentTNR = TNRHandler.analyzeDatabases_tnr(projectPath, k, confidence, delta);
                 // send message
                 ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TNR_OUTPUT",
