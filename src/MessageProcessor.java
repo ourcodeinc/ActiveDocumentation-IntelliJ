@@ -20,7 +20,7 @@ class MessageProcessor {
     private static final String[] textXML = {"xmlText", "messageID"};
     private static final String[] fpMaxOutputKeys = {"fpMaxOutput"};
     private static final String[] tnrOutputKeys = {"tnrOutputKeys"};
-    private static final String[] selectedFragmentKeys = {"path", "start", "end", "line", "text"};
+    private static final String[] selectedFragmentKeys = {"path", "startOffset", "endOffset", "startLineOffset", "line", "lineText", "text"};
     private static final String[] dangerousReadMinedRules = {"outputFiles", "metaData"};
 
 

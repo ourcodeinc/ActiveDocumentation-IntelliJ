@@ -828,12 +828,14 @@ public class FileChangeManager implements ProjectComponent {
      * @param path of the file from which a code snippet is selected
      * @param startIndex start of the selection
      * @param endIndex end of the selection
+     * @param startLineOffset offset of the start of the selection w.r.t. start of the line
      * @param lineNumber of the javaFile
+     * @param lineText code at line of the selection
      * @param text text of the selection
      */
-    void sendFeatureSelectionData(String path, String startIndex, String endIndex, String lineNumber, String text) {
+    void sendFeatureSelectionData(String path, String startIndex, String endIndex, String startLineOffset, String lineNumber, String lineText, String text) {
         ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FEATURE_SELECTION",
-                MessageProcessor.encodeSelectedFragment(new Object[]{path, startIndex, endIndex, lineNumber, text})
+                MessageProcessor.encodeSelectedFragment(new Object[]{path, startIndex, endIndex, startLineOffset, lineNumber, lineText, text})
         }).toString());
     }
 

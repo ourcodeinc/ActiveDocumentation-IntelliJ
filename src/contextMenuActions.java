@@ -10,6 +10,7 @@ import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.TextRange;
 import org.jetbrains.annotations.NotNull;
 
 public class contextMenuActions extends AnAction {
@@ -20,14 +21,22 @@ public class contextMenuActions extends AnAction {
         final Document document = editor.getDocument();
 
         Caret primaryCaret = editor.getCaretModel().getPrimaryCaret();
-        int start = primaryCaret.getSelectionStart();
-        int end = primaryCaret.getSelectionEnd();
+        int startOffset = primaryCaret.getSelectionStart();
+        int endOffset = primaryCaret.getSelectionEnd();
+        int startOffsetLineSelection = document.getLineStartOffset(document.getLineNumber(startOffset));
+        int endOffsetLineSelection = document.getLineEndOffset(document.getLineNumber(endOffset));
+
         String path = event.getRequiredData(CommonDataKeys.PSI_FILE).getVirtualFile().getCanonicalPath();
 
         Project project = event.getData(CommonDataKeys.PROJECT);
         if (project != null) {
-            project.getComponent(FileChangeManager.class).sendFeatureSelectionData(path, Integer.toString(start),
-                    Integer.toString(end), Integer.toString(document.getLineNumber(start)), primaryCaret.getSelectedText());
+            project.getComponent(FileChangeManager.class).sendFeatureSelectionData(path,
+                    Integer.toString(startOffset),
+                    Integer.toString(endOffset),
+                    Integer.toString(startOffset - startOffsetLineSelection),
+                    Integer.toString(document.getLineNumber(startOffset)),
+                    document.getText(new TextRange(startOffsetLineSelection, endOffsetLineSelection)),
+                    primaryCaret.getSelectedText());
         }
 
     }
