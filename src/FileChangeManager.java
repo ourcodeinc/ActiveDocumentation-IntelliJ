@@ -185,6 +185,7 @@ public class FileChangeManager implements ProjectComponent {
     public void disposeComponent() {
         ruleTable = new HashMap<>();
         tagTable = new HashMap<>();
+        currentProject = null;
 
         Project[] AllProjects = ProjectManager.getInstance().getOpenProjects();
         if (AllProjects.length == 0) {
@@ -228,6 +229,7 @@ public class FileChangeManager implements ProjectComponent {
     void processReceivedMessages(JsonObject messageAsJson) {
 
         String command = messageAsJson.get("command").getAsString();
+        if (currentProject == null) return;
 
         switch (command) {
             case "XML_RESULT":
@@ -245,7 +247,7 @@ public class FileChangeManager implements ProjectComponent {
                     String fileRelativePath = messageAsJson.get("data").getAsJsonObject().get("fileName").getAsString();
                     String relativePath = fileRelativePath.startsWith("/") ? fileRelativePath : "/" + fileRelativePath;
                     VirtualFile fileByPath = LocalFileSystem.getInstance().findFileByPath(relativePath);
-                    if (fileByPath != null) {
+                    if (fileByPath != null && currentProject != null) {
                         FileEditorManager.getInstance(currentProject).openFile(fileByPath, true);
                         Editor theEditor = FileEditorManager.getInstance(currentProject).getSelectedTextEditor();
                         int indexToFocusOn = SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml");
@@ -406,7 +408,7 @@ public class FileChangeManager implements ProjectComponent {
      */
     private void handleEvents(VFileEvent event, String eventType) {
         VirtualFile file = event.getFile();
-        if (file == null) return;
+        if (file == null || currentProject == null) return;
 
         switch (eventType) {
             case "CREATE":
