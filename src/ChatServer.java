@@ -1,3 +1,8 @@
+/*
+ * written by saharmehrpour
+ * This class creates the chat server using websockets.
+ */
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.java_websocket.WebSocket;
@@ -9,10 +14,6 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-
-/*
- * written by saharmehrpour
- */
 
 /**
  * A simple WebSocketServer implementation. Keeps track of a "chatroom".
