@@ -20,29 +20,27 @@ import com.intellij.psi.PsiManager;
 import com.intellij.util.messages.MessageBusConnection;
 import core.model.*;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.awt.*;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.List;
 import java.util.*;
-
 
 public class FileChangeManager implements ProjectComponent {
 
     private final MessageBusConnection connection;
     private ChatServer ws;
     private SRCMLxml srcml;
-    private List<List<String>> ruleIndexText; // index - text
-    private List<List<String>> tagNameText; // tagName - text
+    private HashMap<Long,String> ruleTable; // ruleID, {ID: longNumber, ...}
+    private HashMap<Long,String> tagTable; // tagID, {ID: longNumber, ...}
     private Project currentProject;
     String projectPath;
     private List<VirtualFile> ignoredFiles;
 
     FileChangeManager(Project project) {
-
         connection = ApplicationManager.getApplication().getMessageBus().connect();
         currentProject = project;
         projectPath = project.getBasePath();
@@ -50,89 +48,170 @@ public class FileChangeManager implements ProjectComponent {
         srcml = new SRCMLxml(FileChangeManager.getFilePaths(project), project.getBasePath());
         SRCMLHandler.createXMLForProject(srcml);
 
-        ruleIndexText = MessageProcessor.getInitialRulesAsList(project);
-        tagNameText = MessageProcessor.getInitialTagsAsList(project);
-
+        tagTable = getInitialTagTable(project);
+        ruleTable = getInitialRuleTable(project);
     }
-
 
     /**
-     * find the corresponding rule for ruleIndex and update it
-     *
-     * @param ruleIndex String received from client
-     * @param ruleText  String received from client
+     * update a tag in tagTable
+     * @param ruleID the ID of an existing rule
+     * @param updatedRuleInfo the tag information that is stored in ruleTable.json
+     * @return false if no ID is found
      */
-    private void setRuleIndexText(String ruleIndex, String ruleText) {
-        for (int i = 0; i < this.ruleIndexText.size(); i++) {
-            if (this.ruleIndexText.get(i).get(0).equals(ruleIndex)) {
-                this.ruleIndexText.set(i, new ArrayList<>(Arrays.asList(ruleIndex, ruleText)));
-                return;
-            }
-        }
-
-        // new Rule
-        this.ruleIndexText.add(new ArrayList<>(Arrays.asList(ruleIndex, ruleText)));
-
+    private boolean updateRule (long ruleID, String updatedRuleInfo) {
+        if (this.ruleTable.get(ruleID) == null) return false;
+        this.ruleTable.put(ruleID, updatedRuleInfo);
+        return true;
     }
-
 
     /**
-     * find the corresponding tag for tagName and update it
-     *
-     * @param tagName String received from client
-     * @param tagText String received from client
+     * add a new tag in tagTable
+     * @param newRuleID the new and unique ID
+     * @param newRuleInfo the tag information that is stored in ruleTable.json
+     * @return false if the ID exists in the table
      */
-    private void setTagNameText(String tagName, String tagText) {
-        for (int i = 0; i < this.tagNameText.size(); i++) {
-            if (this.tagNameText.get(i).get(0).equals(tagName)) {
-                this.tagNameText.set(i, new ArrayList<>(Arrays.asList(tagName, tagText)));
-                return;
-            }
-        }
-        this.tagNameText.add(new ArrayList<>(Arrays.asList(tagName, tagText)));
+    private boolean addNewRule(long newRuleID, String newRuleInfo) {
+        if (this.tagTable.get(newRuleID) != null) return false;
+        this.tagTable.put(newRuleID, newRuleInfo);
+        return true;
     }
 
+    /**
+     * update a tag in tagTable
+     * @param tagID the ID of an existing tag
+     * @param updatedTagInfo the tag information that is stored in tagTable.json
+     * @return false if no ID is found
+     */
+    private boolean updateTag (long tagID, String updatedTagInfo) {
+        if (this.tagTable.get(tagID) == null) return false;
+        this.tagTable.put(tagID, updatedTagInfo);
+        return true;
+    }
+
+    /**
+     * add a new tag in tagTable
+     * @param newTagID the new and unique ID
+     * @param newTagInfo the tag information that is stored in tagTable.json
+     * @return false if the ID exists in the table
+     */
+    private boolean addNewTag(long newTagID, String newTagInfo) {
+        if (this.tagTable.get(newTagID) != null) return false;
+        this.tagTable.put(newTagID, newTagInfo);
+        return true;
+    }
 
     /**
      * get the string of all rules to send to the client
-     *
      * @return string
      */
-    String getAllRules() {
-        StringBuilder allRules = new StringBuilder("[");
-        for (int i = 0; i < this.ruleIndexText.size(); i++) {
-            allRules.append(this.ruleIndexText.get(i).get(1));
-            if (i != this.ruleIndexText.size() - 1)
-                allRules.append(',');
+    String getRuleTable() {
+        StringBuilder ruleTableString = new StringBuilder("[");
+        String prefix = "";
+        for (String tag : this.ruleTable.values()) {
+            ruleTableString.append(prefix);
+            ruleTableString.append(tag);
+            prefix = ",";
         }
-        return allRules + "]";
+        return ruleTableString + "]";
     }
-
 
     /**
      * get the string of all tags to send to the client
-     *
      * @return string
      */
-    String getAllTags() {
-        StringBuilder allTags = new StringBuilder("[");
-        for (int i = 0; i < this.tagNameText.size(); i++) {
-            allTags.append(this.tagNameText.get(i).get(1));
-            if (i != this.tagNameText.size() - 1)
-                allTags.append(',');
+    String getTagTable() {
+        StringBuilder tagTableString = new StringBuilder("[");
+        String prefix = "";
+        for (String tag : this.tagTable.values()) {
+            tagTableString.append(prefix);
+            tagTableString.append(tag);
+            prefix = ",";
         }
-        return allTags + "]";
+        return tagTableString + "]";
     }
 
     /**
-     * getter
-     *
      * @return srcml object
      */
     SRCMLxml getSrcml() {
         return srcml;
     }
 
+
+    /**
+     * read rules from ruleJson.txt (the file where users modify rules)
+     * @param project open project in the IDE
+     * @return a list of the initial rules <index, rule text>
+     */
+    static HashMap<Long,String> getInitialRuleTable(Project project) {
+        return getHashMap("ruleTable.json", project);
+    }
+
+    /**
+     * read rules from ruleJson.txt (the file where users modify rules)
+     * @param project open project in the IDE
+     * @return a hashMap of the initial rules <ruleID, rule text>
+     */
+    static HashMap<Long,String> getInitialTagTable(Project project) {
+        return getHashMap("tagTable.json", project);
+    }
+
+    /**
+     *
+     * @param jsonFilePath relative path of tagTable.json or ruleTable.json
+     * @param project open project in the IDE
+     * @return HashMap
+     */
+    private static HashMap<Long,String> getHashMap(String jsonFilePath, Project project) {
+        HashMap<Long,String> items = new HashMap<>();
+
+        if (project.getBasePath() == null)
+            return items;
+
+        File file = new File(project.getBasePath());
+        String filePath = findJsonFile(file, jsonFilePath);
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+
+            String sCurrentLine;
+            StringBuilder result = new StringBuilder();
+            while ((sCurrentLine = br.readLine()) != null) {
+                result.append(sCurrentLine).append('\n');
+            }
+            try {
+                JSONArray allItems = new JSONArray(result.toString());
+                for (int j = 0; j < allItems.length(); ++j) {
+                    JSONObject itemI = allItems.getJSONObject(j);
+                    long itemIndex = itemI.getInt("ID");
+                    items.put(itemIndex, itemI.toString());
+                }
+            } catch (JSONException e) {
+                System.out.println("error in parsing the json File");
+            }
+
+        } catch (IOException e) {
+            System.out.println("No json file / error in reading the json file: " + filePath);
+        }
+        return items;
+    }
+
+    /**
+     * @param directory of the project
+     * @param fileName target json file
+     * @return file path
+     */
+    private static String findJsonFile(File directory, String fileName) {
+        File[] list = directory.listFiles();
+        if (list != null)
+            for (File file : list) {
+                if (file.isDirectory()) {
+                    findJsonFile(file, fileName);
+                } else if (fileName.equalsIgnoreCase(file.getName())) {
+                    return file.getPath();
+                }
+            }
+        return "";
+    }
 
     public void initComponent() {
         ignoredFiles = createIgnoredFileList(currentProject);
@@ -163,10 +242,12 @@ public class FileChangeManager implements ProjectComponent {
         connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new FileEditorManagerListener() {
             @Override
             public void selectionChanged(@NotNull FileEditorManagerEvent event) {
-                if(event.getManager().getSelectedFiles().length > 0)
-                    if(Objects.requireNonNull(event.getManager().getSelectedFiles()[0].getCanonicalFile()).getName().endsWith(".java")) {
-                        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "SHOW_RULES_FOR_FILE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
-                    }
+                try {
+                    if (event.getManager().getSelectedFiles().length > 0)
+                        if (Objects.requireNonNull(event.getManager().getSelectedFiles()[0].getCanonicalFile()).getName().endsWith(".java")) {
+                            ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FILE_CHANGE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
+                        }
+                } catch (NullPointerException e){ System.out.println("error happened in finding the changed file.");}
             }
 
         });
@@ -176,8 +257,8 @@ public class FileChangeManager implements ProjectComponent {
      * Overridden method
      */
     public void disposeComponent() {
-        ruleIndexText = new ArrayList<>();
-        tagNameText = new ArrayList<>();
+        ruleTable = new HashMap<>();
+        tagTable = new HashMap<>();
 
         Project[] AllProjects = ProjectManager.getInstance().getOpenProjects();
         if (AllProjects.length == 0) {
@@ -185,7 +266,7 @@ public class FileChangeManager implements ProjectComponent {
                 if (ws != null)
                     ws.stop();
             } catch (IOException | InterruptedException e) {
-//                e.printStackTrace();
+                System.out.println(e);
             }
         }
     }
@@ -196,11 +277,6 @@ public class FileChangeManager implements ProjectComponent {
         return "";
     }
 
-    // ProjectComponent
-
-    /**
-     * Overridden method
-     */
     @Override
     public void projectOpened() {
         Project[] AllProjects = ProjectManager.getInstance().getOpenProjects();
@@ -216,15 +292,11 @@ public class FileChangeManager implements ProjectComponent {
         }
     }
 
-    /**
-     * Overridden method
-     */
     @Override
     public void projectClosed() { }
 
     /**
      * process the message received from the client
-     *
      * @param messageAsJson JsonObject
      */
     void processReceivedMessages(JsonObject messageAsJson) {
@@ -243,8 +315,6 @@ public class FileChangeManager implements ProjectComponent {
                     return;
                 }
 
-                //System.out.println(SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml"));
-
                 EventQueue.invokeLater(() -> {
                     String fileRelativePath = messageAsJson.get("data").getAsJsonObject().get("fileName").getAsString();
                     String relativePath = fileRelativePath.startsWith("/") ? fileRelativePath : "/" + fileRelativePath;
@@ -260,33 +330,31 @@ public class FileChangeManager implements ProjectComponent {
                     }
                 });
 
-                break;
-
             case "MODIFIED_RULE":
+                // data: {ruleID: longNumber, ruleInfo: {...}}
+                long ruleID = messageAsJson.get("data").getAsJsonObject().get("ruleID").getAsLong();
+                String ruleInfo = messageAsJson.get("data").getAsJsonObject().get("ruleInfo").getAsJsonObject().toString();
 
-                String ruleIndex = Integer.toString(messageAsJson.get("data").getAsJsonObject().get("index").getAsInt());
-                String ruleText = messageAsJson.get("data").getAsJsonObject().get("ruleText").getAsJsonObject().toString();
+                boolean ruleResult = this.updateRule(ruleID, ruleInfo);
+                if (!ruleResult)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_RULE", messageAsJson.get("data")}).toString());
 
-                this.setRuleIndexText(ruleIndex, ruleText);
-                this.writeRuleOrTagJsonFile("ruleJson.txt");
-
-                // send message
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE",
-                        MessageProcessor.encodeModifiedRule(new Object[]{ruleIndex, ruleText})
-                }).toString());
+                this.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.tagTable);
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE", messageAsJson.get("data")}).toString());
 
                 break;
 
             case "MODIFIED_TAG":
+                // data: {tagID: longNumber, tagInfo: {...}}
+                long tagID = messageAsJson.get("data").getAsJsonObject().get("tagID").getAsLong();
+                String tagInfo = messageAsJson.get("data").getAsJsonObject().get("tagInfo").getAsJsonObject().toString();
 
-                String tagName = messageAsJson.get("data").getAsJsonObject().get("tagName").getAsString();
-                String tagText = messageAsJson.get("data").getAsJsonObject().get("tagText").getAsJsonObject().toString();
+                boolean result = this.updateTag(tagID, tagInfo);
+                if (!result)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_TAG", messageAsJson.get("data")}).toString());
 
-                this.setTagNameText(tagName, tagText);
-                this.writeRuleOrTagJsonFile("tagJson.txt");
-
-                // send message
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", tagText}).toString());
+                this.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", messageAsJson.get("data")}).toString());
 
                 break;
 
@@ -301,32 +369,34 @@ public class FileChangeManager implements ProjectComponent {
                 break;
 
             case "NEW_RULE":
+                // data: {ruleID: longNumber, ruleInfo: {...}}
+                long newRuleID = messageAsJson.get("data").getAsJsonObject().get("ruleID").getAsLong();
+                String newRuleInfo = messageAsJson.get("data").getAsJsonObject().get("ruleInfo").getAsJsonObject().toString();
 
-                String newRuleIndex = Integer.toString(messageAsJson.get("data").getAsJsonObject().get("index").getAsInt());
-                String newRuleText = messageAsJson.get("data").getAsJsonObject().get("ruleText").getAsJsonObject().toString();
+                boolean newRuleResult = this.addNewRule(newRuleID, newRuleInfo);
+                if (!newRuleResult)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_RULE", messageAsJson.get("data")}).toString());
 
-                this.setRuleIndexText(newRuleIndex, newRuleText);
-                this.writeRuleOrTagJsonFile("ruleJson.txt");
-
-                // send message
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE",
-                        MessageProcessor.encodeModifiedRule(new Object[]{newRuleIndex, newRuleText})
-                }).toString());
+                this.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.tagTable);
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE", messageAsJson.get("data")}).toString());
 
                 break;
 
             case "NEW_TAG":
-                String newTagName = messageAsJson.get("data").getAsJsonObject().get("tagName").getAsString();
-                String newTagText = messageAsJson.get("data").getAsJsonObject().get("tagText").getAsJsonObject().toString();
+                // data: {tagID: longNumber, tagInfo: {...}}
+                long newTagID = messageAsJson.get("data").getAsJsonObject().get("tagID").getAsLong();
+                String newTagInfo = messageAsJson.get("data").getAsJsonObject().get("tagInfo").getAsJsonObject().toString();
 
-                this.setTagNameText(newTagName, newTagText);
-                this.writeRuleOrTagJsonFile("tagJson.txt");
+                boolean newResult = this.addNewTag(newTagID, newTagInfo);
+                if (!newResult)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_TAG", messageAsJson.get("data")}).toString());
 
-                // send message
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG",
-                        MessageProcessor.encodeModifiedTag(new Object[]{newTagName, newTagText})
-                }).toString());
+                this.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG", messageAsJson.get("data")}).toString());
+
                 break;
+
+                /*  mining rules  */
 
             case "LEARN_RULES_META_DATA":
                 // "attribute_META_data.txt"
@@ -404,7 +474,6 @@ public class FileChangeManager implements ProjectComponent {
 
     }
 
-
     /**
      * handle events based on event types.
      * @param event VFileEvent
@@ -417,11 +486,11 @@ public class FileChangeManager implements ProjectComponent {
         switch (eventType) {
             case "CREATE":
             case "DELETE":
-                if (file.getName().equals("ruleJson.txt")) {
+                if (file.getName().equals("ruleTable.json")) {
                     updateRules();
                     return;
                 }
-                if (file.getName().equals("tagJson.txt")) {
+                if (file.getName().equals("tagTable.json")) {
                     updateTags();
                     return;
                 }
@@ -434,20 +503,19 @@ public class FileChangeManager implements ProjectComponent {
                 if (eventType.equals("DELETE"))
                     SRCMLHandler.removeXMLForProject(srcml, file.getPath());
 
-                this.updateSrcml(file.getPath(), newXml);
+                this.updateXML(file.getPath(), newXml);
 
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATED_PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
                 break;
 
             case "TEXT_CHANGE":
-
-                if (file.getName().equals("ruleJson.txt")) {
-                    System.out.println("ruleJson.txt modified.");
+                if (file.getName().equals("ruleTable.json")) {
+                    System.out.println("ruleTable.json modified.");
                     updateRules();
                     return;
                 }
-                if (file.getName().equals("tagJson.txt")) {
-                    System.out.println("tagJson.txt modified.");
+                if (file.getName().equals("tagTable.json")) {
+                    System.out.println("tagTable.json modified.");
                     updateTags();
                     return;
                 }
@@ -457,7 +525,7 @@ public class FileChangeManager implements ProjectComponent {
                     return;
 
                 String updatedXml = SRCMLHandler.updateXMLForProject(this.getSrcml(), file.getPath());
-                this.updateSrcml(file.getPath(), updatedXml);
+                this.updateXML(file.getPath(), updatedXml);
                 break;
 
             case "PROPERTY_CHANGE":
@@ -469,11 +537,11 @@ public class FileChangeManager implements ProjectComponent {
 
                         SRCMLHandler.removeXMLForProject(srcml, path);
                         String changedXml = SRCMLHandler.addXMLForProject(srcml, file.getPath());
-                        this.updateSrcml(file.getPath(), changedXml);
+                        this.updateXML(file.getPath(), changedXml);
                         break;
                     }
                 }
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATED_PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
                 break;
         }
     }
@@ -485,26 +553,7 @@ public class FileChangeManager implements ProjectComponent {
      * @return true/false
      */
     private boolean shouldIgnoreFile(VirtualFile s) {
-        return !(s.getName().endsWith(".java") || s.getName().endsWith("ruleJson.txt") || s.getName().endsWith("tagJson.txt"));
-    }
-
-    /**
-     * verify if a file should be ignored, useful for project hierarchy
-     * @param s virtual file
-     * @return boolean
-     */
-    private boolean shouldIgnoreFileForProjectHierarchy(VirtualFile s) {
-        if (ignoredFiles == null) {
-            return false;
-        }
-        for (VirtualFile vfile : ignoredFiles) {
-            if (Objects.equals(vfile.getCanonicalPath(), s.getCanonicalPath())) {
-                return true;
-            } else if (isFileAChildOf(s, vfile)) {
-                return true;
-            }
-        }
-        return false;
+        return !(s.getName().endsWith(".java") || s.getName().endsWith("ruleTable.json") || s.getName().endsWith("tagTable.json"));
     }
 
     /**
@@ -582,9 +631,6 @@ public class FileChangeManager implements ProjectComponent {
     private static List<String> getFilePaths(Project project) {
         List<String> paths = new ArrayList<>();
 
-        // start off with root
-//        VirtualFile rootDirectoryVirtualFile = project.getBaseDir();
-
         if (project.getBasePath() == null)
             return paths;
         VirtualFile rootDirectoryVirtualFile = LocalFileSystem.getInstance().findFileByPath(project.getBasePath());
@@ -625,84 +671,15 @@ public class FileChangeManager implements ProjectComponent {
         }
     }
 
-    /**
-     * write in file
-     *
-     * @param fileName either ruleJson.txt or tagJson.txt
-     */
-    private void writeRuleOrTagJsonFile(String fileName) {
-
-        try {
-            PrintWriter writer = new PrintWriter(projectPath + "/" + fileName, "UTF-8");
-            switch (fileName) {
-                case "ruleJson.txt":
-                    writer.println('[');
-                    for (int i = 0; i < this.ruleIndexText.size(); i++) {
-                        writer.println(this.ruleIndexText.get(i).get(1));
-                        if (i != this.ruleIndexText.size() - 1)
-                            writer.println(',');
-                    }
-                    writer.println(']');
-                    break;
-                case "tagJson.txt":
-                    writer.println('[');
-                    for (int i = 0; i < this.tagNameText.size(); i++) {
-                        writer.println(this.tagNameText.get(i).get(1));
-                        if (i != this.tagNameText.size() - 1)
-                            writer.println(',');
-                    }
-                    writer.println(']');
-                    break;
-            }
-            writer.close();
-        } catch (IOException e) {
-            System.out.println("error in writing " + fileName);
-        }
-
-    }
-
-    /**
-     * write in file
-     *
-     * @param fileName name of files
-     * @param content content of the file
-     */
-    private void writeDataToFileLearningDR(String fileName, String content, boolean append) {
-
-        String directoryName = projectPath.concat("/LearningDR");
-
-        File directory = new File(directoryName);
-        if (! directory.exists()){
-            directory.mkdir();
-        }
-
-        try {
-            PrintWriter writer;
-            if (append) {
-                writer = new PrintWriter(new FileOutputStream(
-                        new File(projectPath + "/LearningDR/" + fileName), true /* append = true */));
-            }
-            else {
-                writer = new PrintWriter(projectPath + "/LearningDR/" + fileName, "UTF-8");
-            }
-            writer.print(content);
-            writer.close();
-        } catch (IOException e) {
-            System.out.println("error in writing " + fileName);
-        }
-
-    }
-
 
     /**
      * update the ruleIndexText and send messages to clients
      */
     private void updateRules() {
-        this.ruleIndexText = MessageProcessor.getInitialRulesAsList(currentProject);
+        this.ruleTable = getInitialRuleTable(currentProject);
 
         // send the message
-        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", this.getAllRules()}).toString());
-        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE", ""}).toString());
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", this.getRuleTable()}).toString());
         ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
     }
 
@@ -710,26 +687,23 @@ public class FileChangeManager implements ProjectComponent {
      * update the tagNameText and send messages to clients
      */
     private void updateTags() {
-        this.tagNameText = MessageProcessor.getInitialTagsAsList(currentProject);
+        this.tagTable = getInitialTagTable(currentProject);
 
         // send the message
-        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", this.getAllTags()}).toString());
-        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG_TABLE", ""}).toString());
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", this.getTagTable()}).toString());
     }
 
     /**
-     * change the srcml and send some messages to clients if the srcml is updated
-     *
+     * change the xml data and inform clients
      * @param filePath String
      * @param newXml   String
      */
-    private void updateSrcml(String filePath, String newXml) {
+    private void updateXML(String filePath, String newXml) {
         ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_XML",
                 MessageProcessor.encodeNewXMLData(new Object[]{filePath, newXml})
         }).toString());
         ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES_FOR_FILE", filePath}).toString());
     }
-
 
     /**
      * Copied from master branch
@@ -738,10 +712,7 @@ public class FileChangeManager implements ProjectComponent {
      */
     JsonObject generateProjectHierarchyAsJSON() {
 
-
-        // start off with root
         Project project = ProjectManager.getInstance().getOpenProjects()[0];
-//        VirtualFile rootDirectoryVirtualFile = project.getBaseDir();
 
         if (project.getBasePath() == null)
             return new JsonObject();
@@ -776,14 +747,11 @@ public class FileChangeManager implements ProjectComponent {
             java.util.List<VirtualFile> new_q = new ArrayList<>();
             for (VirtualFile item : q) {
 
-                if (shouldIgnoreFileForProjectHierarchy(item)) {
-                    continue;
-                }
+                if (shouldIgnoreFileForProjectHierarchy(item)) continue;
 
                 for (VirtualFile childOfItem : item.getChildren()) {
-                    if (shouldIgnoreFileForProjectHierarchy(childOfItem)) {
-                        continue;
-                    }
+                    if (shouldIgnoreFileForProjectHierarchy(childOfItem)) continue;
+
                     new_q.add(childOfItem);
                     JsonObject jsonChildOfItem = new JsonObject();
                     JsonObject propertiesOfChild = new JsonObject();
@@ -808,9 +776,6 @@ public class FileChangeManager implements ProjectComponent {
                             if (psiFile != null)
                                 propertiesOfChild.addProperty("fileName", psiFile.getName());
                         }
-
-//                        propertiesOfChild.addProperty("text", psiFile.getText());
-//                        propertiesOfChild.add("ast", generateASTAsJSON(psiFile));
                     }
                     canonicalToJsonMap.get(item.getCanonicalPath()).get("children").getAsJsonArray().add(jsonChildOfItem);
                     canonicalToJsonMap.put(childOfItem.getCanonicalPath(), jsonChildOfItem);
@@ -818,8 +783,79 @@ public class FileChangeManager implements ProjectComponent {
             }
             q = new_q;
         }
-
         return jsonRootDirectory;
+    }
+
+    /**
+     * verify if a file should be ignored, useful for project hierarchy
+     * @param s virtual file
+     * @return boolean
+     */
+    private boolean shouldIgnoreFileForProjectHierarchy(VirtualFile s) {
+        if (ignoredFiles == null) {
+            return false;
+        }
+        for (VirtualFile vfile : ignoredFiles) {
+            if (Objects.equals(vfile.getCanonicalPath(), s.getCanonicalPath())) {
+                return true;
+            } else if (isFileAChildOf(s, vfile)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * write in file
+     * @param filePath either projectPath / tagTable.json
+     */
+    static void writeTableFile(String filePath, HashMap<Long, String> hashObject) {
+
+        try {
+            PrintWriter writer = new PrintWriter(filePath, "UTF-8");
+            writer.println('[');
+            String prefix = "";
+            for (String obj : hashObject.values()) {
+                writer.println(prefix);
+                writer.print(obj);
+                prefix = ",";
+            }
+            writer.println(']');
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("error in writing " + filePath);
+        }
+
+    }
+
+    /**
+     * write in file
+     * @param fileName name of files
+     * @param content content of the file
+     */
+    void writeDataToFileLearningDR(String fileName, String content, boolean append) {
+
+        String directoryName = projectPath.concat("/LearningDR");
+
+        File directory = new File(directoryName);
+        if (! directory.exists()){
+            directory.mkdir();
+        }
+
+        try {
+            PrintWriter writer;
+            if (append) {
+                writer = new PrintWriter(new FileOutputStream(
+                        new File(projectPath + "/LearningDR/" + fileName), true /* append = true */));
+            }
+            else {
+                writer = new PrintWriter(projectPath + "/LearningDR/" + fileName, "UTF-8");
+            }
+            writer.print(content);
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("error in writing " + fileName);
+        }
 
     }
 
@@ -844,7 +880,7 @@ public class FileChangeManager implements ProjectComponent {
      * @param directoryToBeDeleted File
      * @return boolean
      */
-    boolean deleteDirectory(File directoryToBeDeleted) {
+    static boolean deleteDirectory(File directoryToBeDeleted) {
         File[] allContents = directoryToBeDeleted.listFiles();
         if (allContents != null) {
             for (File file : allContents) {
