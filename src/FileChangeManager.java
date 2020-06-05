@@ -39,8 +39,8 @@ public class FileChangeManager implements ProjectComponent {
     private final MessageBusConnection connection;
     private ChatServer ws;
     private SRCMLxml srcml;
-    private HashMap<Long,String> ruleTable; // ruleID, {ID: longNumber, ...}
-    private HashMap<Long,String> tagTable; // tagID, {ID: longNumber, ...}
+    private HashMap<String,String> ruleTable; // ruleID, {ID: longNumber, ...}
+    private HashMap<String,String> tagTable; // tagID, {ID: string, ...}
     private Project currentProject;
     String projectPath;
     private List<VirtualFile> ignoredFiles;
@@ -63,7 +63,7 @@ public class FileChangeManager implements ProjectComponent {
      * @param updatedRuleInfo the tag information that is stored in ruleTable.json
      * @return false if no ID is found
      */
-    private boolean updateRule (long ruleID, String updatedRuleInfo) {
+    private boolean updateRule (String ruleID, String updatedRuleInfo) {
         if (this.ruleTable.get(ruleID) == null) return false;
         this.ruleTable.put(ruleID, updatedRuleInfo);
         return true;
@@ -75,7 +75,7 @@ public class FileChangeManager implements ProjectComponent {
      * @param newRuleInfo the tag information that is stored in ruleTable.json
      * @return false if the ID exists in the table
      */
-    private boolean addNewRule(long newRuleID, String newRuleInfo) {
+    private boolean addNewRule(String newRuleID, String newRuleInfo) {
         if (this.tagTable.get(newRuleID) != null) return false;
         this.tagTable.put(newRuleID, newRuleInfo);
         return true;
@@ -87,7 +87,7 @@ public class FileChangeManager implements ProjectComponent {
      * @param updatedTagInfo the tag information that is stored in tagTable.json
      * @return false if no ID is found
      */
-    private boolean updateTag (long tagID, String updatedTagInfo) {
+    private boolean updateTag (String tagID, String updatedTagInfo) {
         if (this.tagTable.get(tagID) == null) return false;
         this.tagTable.put(tagID, updatedTagInfo);
         return true;
@@ -99,7 +99,7 @@ public class FileChangeManager implements ProjectComponent {
      * @param newTagInfo the tag information that is stored in tagTable.json
      * @return false if the ID exists in the table
      */
-    private boolean addNewTag(long newTagID, String newTagInfo) {
+    private boolean addNewTag(String newTagID, String newTagInfo) {
         if (this.tagTable.get(newTagID) != null) return false;
         this.tagTable.put(newTagID, newTagInfo);
         return true;
@@ -260,7 +260,7 @@ public class FileChangeManager implements ProjectComponent {
 
             case "MODIFIED_RULE":
                 // data: {ruleID: longNumber, ruleInfo: {...}}
-                long ruleID = messageAsJson.get("data").getAsJsonObject().get("ruleID").getAsLong();
+                String ruleID = messageAsJson.get("data").getAsJsonObject().get("ruleID").getAsString();
                 String ruleInfo = messageAsJson.get("data").getAsJsonObject().get("ruleInfo").getAsJsonObject().toString();
 
                 boolean ruleResult = this.updateRule(ruleID, ruleInfo);
@@ -274,7 +274,7 @@ public class FileChangeManager implements ProjectComponent {
 
             case "MODIFIED_TAG":
                 // data: {tagID: longNumber, tagInfo: {...}}
-                long tagID = messageAsJson.get("data").getAsJsonObject().get("tagID").getAsLong();
+                String tagID = messageAsJson.get("data").getAsJsonObject().get("tagID").getAsString();
                 String tagInfo = messageAsJson.get("data").getAsJsonObject().get("tagInfo").getAsJsonObject().toString();
 
                 boolean result = this.updateTag(tagID, tagInfo);
@@ -298,7 +298,7 @@ public class FileChangeManager implements ProjectComponent {
 
             case "NEW_RULE":
                 // data: {ruleID: longNumber, ruleInfo: {...}}
-                long newRuleID = messageAsJson.get("data").getAsJsonObject().get("ruleID").getAsLong();
+                String newRuleID = messageAsJson.get("data").getAsJsonObject().get("ruleID").getAsString();
                 String newRuleInfo = messageAsJson.get("data").getAsJsonObject().get("ruleInfo").getAsJsonObject().toString();
 
                 boolean newRuleResult = this.addNewRule(newRuleID, newRuleInfo);
@@ -311,8 +311,8 @@ public class FileChangeManager implements ProjectComponent {
                 break;
 
             case "NEW_TAG":
-                // data: {tagID: longNumber, tagInfo: {...}}
-                long newTagID = messageAsJson.get("data").getAsJsonObject().get("tagID").getAsLong();
+                // data: {tagID: String, tagInfo: {...}}
+                String newTagID = messageAsJson.get("data").getAsJsonObject().get("tagID").getAsString();
                 String newTagInfo = messageAsJson.get("data").getAsJsonObject().get("tagInfo").getAsJsonObject().toString();
 
                 boolean newResult = this.addNewTag(newTagID, newTagInfo);

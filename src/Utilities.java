@@ -24,7 +24,7 @@ class Utilities {
      * @param project open project in the IDE
      * @return a list of the initial rules <index, rule text>
      */
-    static HashMap<Long, String> getInitialRuleTable(Project project) {
+    static HashMap<String, String> getInitialRuleTable(Project project) {
         return getHashMap("ruleTable.json", project);
     }
 
@@ -34,7 +34,7 @@ class Utilities {
      * @param project open project in the IDE
      * @return a hashMap of the initial rules <ruleID, rule text>
      */
-    static HashMap<Long, String> getInitialTagTable(Project project) {
+    static HashMap<String, String> getInitialTagTable(Project project) {
         return getHashMap("tagTable.json", project);
     }
 
@@ -43,8 +43,8 @@ class Utilities {
      * @param project      open project in the IDE
      * @return HashMap
      */
-    private static HashMap<Long, String> getHashMap(String jsonFilePath, Project project) {
-        HashMap<Long, String> items = new HashMap<>();
+    private static HashMap<String, String> getHashMap(String jsonFilePath, Project project) {
+        HashMap<String, String> items = new HashMap<>();
 
         if (project.getBasePath() == null)
             return items;
@@ -63,7 +63,7 @@ class Utilities {
                 JSONArray allItems = new JSONArray(result.toString());
                 for (int j = 0; j < allItems.length(); ++j) {
                     JSONObject itemI = allItems.getJSONObject(j);
-                    long itemIndex = itemI.getInt("ID");
+                    String itemIndex = itemI.getString("ID");
                     items.put(itemIndex, itemI.toString());
                 }
             } catch (JSONException e) {
@@ -132,7 +132,7 @@ class Utilities {
      *
      * @param filePath either projectPath / tagTable.json
      */
-    static void writeTableFile(String filePath, HashMap<Long, String> hashObject) {
+    static void writeTableFile(String filePath, HashMap<String, String> hashObject) {
         try {
             PrintWriter writer = new PrintWriter(filePath, "UTF-8");
             writer.println('[');
