@@ -39,7 +39,7 @@ public class FileChangeManager implements ProjectComponent {
     private final MessageBusConnection connection;
     private ChatServer ws;
     private SRCMLxml srcml;
-    private HashMap<String,String> ruleTable; // ruleID, {ID: longNumber, ...}
+    private HashMap<String,String> ruleTable; // ruleID, {ID: string, ...}
     private HashMap<String,String> tagTable; // tagID, {ID: string, ...}
     private Project currentProject;
     String projectPath;
@@ -265,10 +265,10 @@ public class FileChangeManager implements ProjectComponent {
 
                 boolean ruleResult = this.updateRule(ruleID, ruleInfo);
                 if (!ruleResult)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_RULE", messageAsJson.get("data")}).toString());
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
 
-                Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.tagTable);
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE", messageAsJson.get("data")}).toString());
+                Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.ruleTable);
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
 
                 break;
 
@@ -279,10 +279,10 @@ public class FileChangeManager implements ProjectComponent {
 
                 boolean result = this.updateTag(tagID, tagInfo);
                 if (!result)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_TAG", messageAsJson.get("data")}).toString());
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
 
                 Utilities.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", messageAsJson.get("data")}).toString());
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
 
                 break;
 
@@ -303,10 +303,10 @@ public class FileChangeManager implements ProjectComponent {
 
                 boolean newRuleResult = this.addNewRule(newRuleID, newRuleInfo);
                 if (!newRuleResult)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_RULE", messageAsJson.get("data")}).toString());
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
 
-                Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.tagTable);
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE", messageAsJson.get("data")}).toString());
+                Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.ruleTable);
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
 
                 break;
 
@@ -317,10 +317,10 @@ public class FileChangeManager implements ProjectComponent {
 
                 boolean newResult = this.addNewTag(newTagID, newTagInfo);
                 if (!newResult)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_TAG", messageAsJson.get("data")}).toString());
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
 
                 Utilities.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG", messageAsJson.get("data")}).toString());
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
 
                 break;
 

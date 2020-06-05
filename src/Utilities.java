@@ -25,7 +25,7 @@ class Utilities {
      * @return a list of the initial rules <index, rule text>
      */
     static HashMap<String, String> getInitialRuleTable(Project project) {
-        return getHashMap("ruleTable.json", project);
+        return getHashMap("ruleTable.json", project, "index");
     }
 
     /**
@@ -35,15 +35,16 @@ class Utilities {
      * @return a hashMap of the initial rules <ruleID, rule text>
      */
     static HashMap<String, String> getInitialTagTable(Project project) {
-        return getHashMap("tagTable.json", project);
+        return getHashMap("tagTable.json", project, "ID");
     }
 
     /**
      * @param jsonFilePath relative path of tagTable.json or ruleTable.json
      * @param project      open project in the IDE
+     * @param field        name of the property: ID for tagTable, index for ruleTable
      * @return HashMap
      */
-    private static HashMap<String, String> getHashMap(String jsonFilePath, Project project) {
+    private static HashMap<String, String> getHashMap(String jsonFilePath, Project project, String field) {
         HashMap<String, String> items = new HashMap<>();
 
         if (project.getBasePath() == null)
@@ -63,7 +64,7 @@ class Utilities {
                 JSONArray allItems = new JSONArray(result.toString());
                 for (int j = 0; j < allItems.length(); ++j) {
                     JSONObject itemI = allItems.getJSONObject(j);
-                    String itemIndex = itemI.getString("ID");
+                    String itemIndex = itemI.getString(field);
                     items.put(itemIndex, itemI.toString());
                 }
             } catch (JSONException e) {
@@ -138,8 +139,8 @@ class Utilities {
             writer.println('[');
             String prefix = "";
             for (String obj : hashObject.values()) {
-                writer.println(prefix);
-                writer.print(obj);
+                writer.print(prefix);
+                writer.println(obj);
                 prefix = ",";
             }
             writer.println(']');
