@@ -267,6 +267,7 @@ public class FileChangeManager implements ProjectComponent {
                         }
                     }
                 });
+                break;
 
             case "MODIFIED_RULE":
                 // data: {ruleID: longNumber, ruleInfo: {...}}
@@ -337,9 +338,11 @@ public class FileChangeManager implements ProjectComponent {
                 String path = projectPath.concat("/LearningDR");
                 File directory = new File(path);
                 Utilities.deleteDirectory(directory);
+                break;
 
             case "LEARN_RULES_FILE_LOCATIONS":
                 // "fileLocations.txt"
+                break;
 
             case "LEARN_RULES_DATABASES":
                 // analysisFileName + "_subClassOf_" + parentClass + ".txt"
@@ -360,6 +363,7 @@ public class FileChangeManager implements ProjectComponent {
                     File directoryFile = new File(dirPath);
                     Utilities.deleteDirectory(directoryFile);
                 }
+                break;
 
             case "LEARN_RULES_FILE_LOCATIONS_APPEND":
             case "LEARN_RULES_DATABASES_APPEND":
