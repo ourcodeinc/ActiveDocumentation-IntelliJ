@@ -9,4 +9,4 @@ In this version, the core of the plugin is based on [SRCML](http://www.srcml.org
 
 ## ruleJson.txt and tagJson.txt
 
-There must be two files named `ruleJson.txt` and `tagJson.txt` in the project folder. The example for these files can be found in `README.md` in **active-doc-client** repository.
+There must be two files named `ruleTable.json` and `tagTable.json` in the project folder. The example for these files can be found in `README.md` in **active-doc-client** repository.
