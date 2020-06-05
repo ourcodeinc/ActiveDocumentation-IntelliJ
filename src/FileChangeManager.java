@@ -39,8 +39,8 @@ public class FileChangeManager implements ProjectComponent {
     private final MessageBusConnection connection;
     private ChatServer ws;
     private SRCMLxml srcml;
-    private HashMap<String,String> ruleTable; // ruleID, {ID: string, ...}
-    private HashMap<String,String> tagTable; // tagID, {ID: string, ...}
+    private HashMap<String, String> ruleTable; // ruleID, {index: string, ...}
+    private HashMap<String, String> tagTable; // tagID, {ID: string, ...}
     private Project currentProject;
     String projectPath;
     private List<VirtualFile> ignoredFiles;
@@ -59,11 +59,12 @@ public class FileChangeManager implements ProjectComponent {
 
     /**
      * update a tag in tagTable
-     * @param ruleID the ID of an existing rule
+     *
+     * @param ruleID          the ID of an existing rule
      * @param updatedRuleInfo the tag information that is stored in ruleTable.json
      * @return false if no ID is found
      */
-    private boolean updateRule (String ruleID, String updatedRuleInfo) {
+    private boolean updateRule(String ruleID, String updatedRuleInfo) {
         if (this.ruleTable.get(ruleID) == null) return false;
         this.ruleTable.put(ruleID, updatedRuleInfo);
         return true;
@@ -71,7 +72,8 @@ public class FileChangeManager implements ProjectComponent {
 
     /**
      * add a new tag in tagTable
-     * @param newRuleID the new and unique ID
+     *
+     * @param newRuleID   the new and unique ID
      * @param newRuleInfo the tag information that is stored in ruleTable.json
      * @return false if the ID exists in the table
      */
@@ -83,11 +85,12 @@ public class FileChangeManager implements ProjectComponent {
 
     /**
      * update a tag in tagTable
-     * @param tagID the ID of an existing tag
+     *
+     * @param tagID          the ID of an existing tag
      * @param updatedTagInfo the tag information that is stored in tagTable.json
      * @return false if no ID is found
      */
-    private boolean updateTag (String tagID, String updatedTagInfo) {
+    private boolean updateTag(String tagID, String updatedTagInfo) {
         if (this.tagTable.get(tagID) == null) return false;
         this.tagTable.put(tagID, updatedTagInfo);
         return true;
@@ -95,7 +98,8 @@ public class FileChangeManager implements ProjectComponent {
 
     /**
      * add a new tag in tagTable
-     * @param newTagID the new and unique ID
+     *
+     * @param newTagID   the new and unique ID
      * @param newTagInfo the tag information that is stored in tagTable.json
      * @return false if the ID exists in the table
      */
@@ -107,6 +111,7 @@ public class FileChangeManager implements ProjectComponent {
 
     /**
      * get the string of all rules to send to the client
+     *
      * @return string
      */
     String getRuleTable() {
@@ -122,6 +127,7 @@ public class FileChangeManager implements ProjectComponent {
 
     /**
      * get the string of all tags to send to the client
+     *
      * @return string
      */
     String getTagTable() {
@@ -173,7 +179,9 @@ public class FileChangeManager implements ProjectComponent {
                         if (Objects.requireNonNull(event.getManager().getSelectedFiles()[0].getCanonicalFile()).getName().endsWith(".java")) {
                             ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FILE_CHANGE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
                         }
-                } catch (NullPointerException e){ System.out.println("error happened in finding the changed file.");}
+                } catch (NullPointerException e) {
+                    System.out.println("error happened in finding the changed file.");
+                }
             }
 
         });
@@ -220,10 +228,12 @@ public class FileChangeManager implements ProjectComponent {
     }
 
     @Override
-    public void projectClosed() { }
+    public void projectClosed() {
+    }
 
     /**
      * process the message received from the client
+     *
      * @param messageAsJson JsonObject
      */
     void processReceivedMessages(JsonObject messageAsJson) {
@@ -269,7 +279,6 @@ public class FileChangeManager implements ProjectComponent {
 
                 Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.ruleTable);
                 ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
-
                 break;
 
             case "MODIFIED_TAG":
@@ -283,9 +292,7 @@ public class FileChangeManager implements ProjectComponent {
 
                 Utilities.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
                 ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
-
                 break;
-
 
             case "EXPR_STMT":
                 String exprText = messageAsJson.get("data").getAsJsonObject().get("codeText").getAsString();
@@ -293,7 +300,6 @@ public class FileChangeManager implements ProjectComponent {
                 ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "EXPR_STMT_XML",
                         MessageProcessor.encodeXMLandText(new Object[]{resultExprXml, messageAsJson.get("data").getAsJsonObject().get("messageID").getAsString()})
                 }).toString());
-
                 break;
 
             case "NEW_RULE":
@@ -307,7 +313,6 @@ public class FileChangeManager implements ProjectComponent {
 
                 Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.ruleTable);
                 ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
-
                 break;
 
             case "NEW_TAG":
@@ -321,10 +326,9 @@ public class FileChangeManager implements ProjectComponent {
 
                 Utilities.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
                 ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
-
                 break;
 
-                /*  mining rules  */
+            /*  mining rules  */
 
             case "LEARN_RULES_META_DATA":
                 // "attribute_META_data.txt"
@@ -342,7 +346,7 @@ public class FileChangeManager implements ProjectComponent {
                 // analysisFileName = "AttributeEncoding"
 
                 JsonArray filePathData = messageAsJson.get("data").getAsJsonArray();
-                for (int i=0; i < filePathData.size(); i++) {
+                for (int i = 0; i < filePathData.size(); i++) {
                     writeDataToFileLearningDR(filePathData.get(i).getAsJsonArray().get(0).getAsString(),
                             filePathData.get(i).getAsJsonArray().get(1).getAsString(), false);
                 }
@@ -360,7 +364,7 @@ public class FileChangeManager implements ProjectComponent {
             case "LEARN_RULES_FILE_LOCATIONS_APPEND":
             case "LEARN_RULES_DATABASES_APPEND":
                 JsonArray filePathDataAppend = messageAsJson.get("data").getAsJsonArray();
-                for (int i=0; i < filePathDataAppend.size(); i++) {
+                for (int i = 0; i < filePathDataAppend.size(); i++) {
                     writeDataToFileLearningDR(filePathDataAppend.get(i).getAsJsonArray().get(0).getAsString(),
                             filePathDataAppend.get(i).getAsJsonArray().get(1).getAsString(), true);
                 }
@@ -403,7 +407,8 @@ public class FileChangeManager implements ProjectComponent {
 
     /**
      * handle events based on event types.
-     * @param event VFileEvent
+     *
+     * @param event     VFileEvent
      * @param eventType one of CREATE, TEXT_CHANGE, PROPERTY_CHANGE, DELETE
      */
     private void handleEvents(VFileEvent event, String eventType) {
@@ -480,7 +485,10 @@ public class FileChangeManager implements ProjectComponent {
      * @return true/false
      */
     private boolean shouldIgnoreFile(VirtualFile s) {
-        return !(s.getName().endsWith(".java") || s.getName().endsWith("ruleTable.json") || s.getName().endsWith("tagTable.json"));
+        return !(s.getName().endsWith(".java")
+                || s.getName().endsWith("ruleTable.json")
+                || s.getName().endsWith("tagTable.json")
+                || s.getName().equals("tempExprDeclFile.java"));
     }
 
     /**
@@ -532,6 +540,7 @@ public class FileChangeManager implements ProjectComponent {
 
     /**
      * change the xml data and inform clients
+     *
      * @param filePath String
      * @param newXml   String
      */
@@ -548,7 +557,6 @@ public class FileChangeManager implements ProjectComponent {
      * @return json
      */
     JsonObject generateProjectHierarchyAsJSON() {
-
         Project project = ProjectManager.getInstance().getOpenProjects()[0];
 
         if (project.getBasePath() == null)
@@ -625,6 +633,7 @@ public class FileChangeManager implements ProjectComponent {
 
     /**
      * verify if a file should be ignored, useful for project hierarchy
+     *
      * @param s virtual file
      * @return boolean
      */
@@ -644,14 +653,14 @@ public class FileChangeManager implements ProjectComponent {
 
     /**
      * write in file
+     *
      * @param fileName name of files
-     * @param content content of the file
+     * @param content  content of the file
      */
     private void writeDataToFileLearningDR(String fileName, String content, boolean append) {
-
         String directoryName = projectPath.concat("/LearningDR");
         File directory = new File(directoryName);
-        if (! directory.exists()){
+        if (!directory.exists()) {
             directory.mkdir();
         }
 
@@ -660,8 +669,7 @@ public class FileChangeManager implements ProjectComponent {
             if (append) {
                 writer = new PrintWriter(new FileOutputStream(
                         new File(projectPath + "/LearningDR/" + fileName), true /* append = true */));
-            }
-            else {
+            } else {
                 writer = new PrintWriter(projectPath + "/LearningDR/" + fileName, "UTF-8");
             }
             writer.print(content);
@@ -673,13 +681,14 @@ public class FileChangeManager implements ProjectComponent {
 
     /**
      * sending the data for feature selection to the client
-     * @param path of the file from which a code snippet is selected
-     * @param startIndex start of the selection
-     * @param endIndex end of the selection
+     *
+     * @param path            of the file from which a code snippet is selected
+     * @param startIndex      start of the selection
+     * @param endIndex        end of the selection
      * @param startLineOffset offset of the start of the selection w.r.t. start of the line
-     * @param lineNumber of the javaFile
-     * @param lineText code at line of the selection
-     * @param text text of the selection
+     * @param lineNumber      of the javaFile
+     * @param lineText        code at line of the selection
+     * @param text            text of the selection
      */
     void sendFeatureSelectionData(String path, String startIndex, String endIndex, String startLineOffset, String lineNumber, String lineText, String text) {
         ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FEATURE_SELECTION",

@@ -13,7 +13,6 @@
   <change-notes><![CDATA[
   The tool window in the plugin is not functional. Instead the plugin runs in background and is accessible in the browser immediately.
   The logic for mining rules is added.
-  Testing refactoring.
     ]]>
   </change-notes>
 
