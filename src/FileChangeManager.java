@@ -1,3 +1,8 @@
+/*
+ * written by saharmehrpour
+ * This class manages the changes that are done or must be done on the project files.
+ */
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.intellij.openapi.application.ApplicationManager;
@@ -29,118 +34,125 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.*;
 
-
 public class FileChangeManager implements ProjectComponent {
 
     private final MessageBusConnection connection;
     private ChatServer ws;
     private SRCMLxml srcml;
-    private List<List<String>> ruleIndexText; // index - text
-    private List<List<String>> tagNameText; // tagName - text
+    private HashMap<String, String> ruleTable; // ruleID, {index: string, ...}
+    private HashMap<String, String> tagTable; // tagID, {ID: string, ...}
     private Project currentProject;
     String projectPath;
     private List<VirtualFile> ignoredFiles;
 
     FileChangeManager(Project project) {
-
         connection = ApplicationManager.getApplication().getMessageBus().connect();
         currentProject = project;
         projectPath = project.getBasePath();
 
-        srcml = new SRCMLxml(FileChangeManager.getFilePaths(project), project.getBasePath());
+        srcml = new SRCMLxml(Utilities.getFilePaths(project), project.getBasePath());
         SRCMLHandler.createXMLForProject(srcml);
 
-        ruleIndexText = MessageProcessor.getInitialRulesAsList(project);
-        tagNameText = MessageProcessor.getInitialTagsAsList(project);
-
+        tagTable = Utilities.getInitialTagTable(project);
+        ruleTable = Utilities.getInitialRuleTable(project);
     }
-
 
     /**
-     * find the corresponding rule for ruleIndex and update it
+     * update a tag in tagTable
      *
-     * @param ruleIndex String received from client
-     * @param ruleText  String received from client
+     * @param ruleID          the ID of an existing rule
+     * @param updatedRuleInfo the tag information that is stored in ruleTable.json
+     * @return false if no ID is found
      */
-    private void setRuleIndexText(String ruleIndex, String ruleText) {
-        for (int i = 0; i < this.ruleIndexText.size(); i++) {
-            if (this.ruleIndexText.get(i).get(0).equals(ruleIndex)) {
-                this.ruleIndexText.set(i, new ArrayList<>(Arrays.asList(ruleIndex, ruleText)));
-                return;
-            }
-        }
-
-        // new Rule
-        this.ruleIndexText.add(new ArrayList<>(Arrays.asList(ruleIndex, ruleText)));
-
+    private boolean updateRule(String ruleID, String updatedRuleInfo) {
+        if (this.ruleTable.get(ruleID) == null) return false;
+        this.ruleTable.put(ruleID, updatedRuleInfo);
+        return true;
     }
-
 
     /**
-     * find the corresponding tag for tagName and update it
+     * add a new tag in tagTable
      *
-     * @param tagName String received from client
-     * @param tagText String received from client
+     * @param newRuleID   the new and unique ID
+     * @param newRuleInfo the tag information that is stored in ruleTable.json
+     * @return false if the ID exists in the table
      */
-    private void setTagNameText(String tagName, String tagText) {
-        for (int i = 0; i < this.tagNameText.size(); i++) {
-            if (this.tagNameText.get(i).get(0).equals(tagName)) {
-                this.tagNameText.set(i, new ArrayList<>(Arrays.asList(tagName, tagText)));
-                return;
-            }
-        }
-        this.tagNameText.add(new ArrayList<>(Arrays.asList(tagName, tagText)));
+    private boolean addNewRule(String newRuleID, String newRuleInfo) {
+        if (this.tagTable.get(newRuleID) != null) return false;
+        this.tagTable.put(newRuleID, newRuleInfo);
+        return true;
     }
 
+    /**
+     * update a tag in tagTable
+     *
+     * @param tagID          the ID of an existing tag
+     * @param updatedTagInfo the tag information that is stored in tagTable.json
+     * @return false if no ID is found
+     */
+    private boolean updateTag(String tagID, String updatedTagInfo) {
+        if (this.tagTable.get(tagID) == null) return false;
+        this.tagTable.put(tagID, updatedTagInfo);
+        return true;
+    }
+
+    /**
+     * add a new tag in tagTable
+     *
+     * @param newTagID   the new and unique ID
+     * @param newTagInfo the tag information that is stored in tagTable.json
+     * @return false if the ID exists in the table
+     */
+    private boolean addNewTag(String newTagID, String newTagInfo) {
+        if (this.tagTable.get(newTagID) != null) return false;
+        this.tagTable.put(newTagID, newTagInfo);
+        return true;
+    }
 
     /**
      * get the string of all rules to send to the client
      *
      * @return string
      */
-    String getAllRules() {
-        StringBuilder allRules = new StringBuilder("[");
-        for (int i = 0; i < this.ruleIndexText.size(); i++) {
-            allRules.append(this.ruleIndexText.get(i).get(1));
-            if (i != this.ruleIndexText.size() - 1)
-                allRules.append(',');
+    String getRuleTable() {
+        StringBuilder ruleTableString = new StringBuilder("[");
+        String prefix = "";
+        for (String tag : this.ruleTable.values()) {
+            ruleTableString.append(prefix);
+            ruleTableString.append(tag);
+            prefix = ",";
         }
-        return allRules + "]";
+        return ruleTableString + "]";
     }
-
 
     /**
      * get the string of all tags to send to the client
      *
      * @return string
      */
-    String getAllTags() {
-        StringBuilder allTags = new StringBuilder("[");
-        for (int i = 0; i < this.tagNameText.size(); i++) {
-            allTags.append(this.tagNameText.get(i).get(1));
-            if (i != this.tagNameText.size() - 1)
-                allTags.append(',');
+    String getTagTable() {
+        StringBuilder tagTableString = new StringBuilder("[");
+        String prefix = "";
+        for (String tag : this.tagTable.values()) {
+            tagTableString.append(prefix);
+            tagTableString.append(tag);
+            prefix = ",";
         }
-        return allTags + "]";
+        return tagTableString + "]";
     }
 
     /**
-     * getter
-     *
      * @return srcml object
      */
     SRCMLxml getSrcml() {
         return srcml;
     }
 
-
     public void initComponent() {
-        ignoredFiles = createIgnoredFileList(currentProject);
+        ignoredFiles = Utilities.createIgnoredFileList(currentProject);
         connection.subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
             @Override
             public void after(@NotNull List<? extends VFileEvent> events) {
-
-                // update rules in ChatServer
                 for (VFileEvent event : events) {
                     if (event.getFile() != null && shouldIgnoreFile(event.getFile()))
                         continue;
@@ -154,7 +166,6 @@ public class FileChangeManager implements ProjectComponent {
                     } else if (event instanceof VFilePropertyChangeEvent) { // Property Change
                         eventType = "PROPERTY_CHANGE";
                     }
-
                     handleEvents(event, eventType);
                 }
             }
@@ -163,10 +174,14 @@ public class FileChangeManager implements ProjectComponent {
         connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new FileEditorManagerListener() {
             @Override
             public void selectionChanged(@NotNull FileEditorManagerEvent event) {
-                if(event.getManager().getSelectedFiles().length > 0)
-                    if(Objects.requireNonNull(event.getManager().getSelectedFiles()[0].getCanonicalFile()).getName().endsWith(".java")) {
-                        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "SHOW_RULES_FOR_FILE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
-                    }
+                try {
+                    if (event.getManager().getSelectedFiles().length > 0)
+                        if (Objects.requireNonNull(event.getManager().getSelectedFiles()[0].getCanonicalFile()).getName().endsWith(".java")) {
+                            ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FILE_CHANGE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
+                        }
+                } catch (NullPointerException e) {
+                    System.out.println("error happened in finding the changed file.");
+                }
             }
 
         });
@@ -176,8 +191,9 @@ public class FileChangeManager implements ProjectComponent {
      * Overridden method
      */
     public void disposeComponent() {
-        ruleIndexText = new ArrayList<>();
-        tagNameText = new ArrayList<>();
+        ruleTable = new HashMap<>();
+        tagTable = new HashMap<>();
+        currentProject = null;
 
         Project[] AllProjects = ProjectManager.getInstance().getOpenProjects();
         if (AllProjects.length == 0) {
@@ -185,7 +201,7 @@ public class FileChangeManager implements ProjectComponent {
                 if (ws != null)
                     ws.stop();
             } catch (IOException | InterruptedException e) {
-//                e.printStackTrace();
+                System.out.println(e);
             }
         }
     }
@@ -196,11 +212,6 @@ public class FileChangeManager implements ProjectComponent {
         return "";
     }
 
-    // ProjectComponent
-
-    /**
-     * Overridden method
-     */
     @Override
     public void projectOpened() {
         Project[] AllProjects = ProjectManager.getInstance().getOpenProjects();
@@ -216,11 +227,9 @@ public class FileChangeManager implements ProjectComponent {
         }
     }
 
-    /**
-     * Overridden method
-     */
     @Override
-    public void projectClosed() { }
+    public void projectClosed() {
+    }
 
     /**
      * process the message received from the client
@@ -230,6 +239,7 @@ public class FileChangeManager implements ProjectComponent {
     void processReceivedMessages(JsonObject messageAsJson) {
 
         String command = messageAsJson.get("command").getAsString();
+        if (currentProject == null) return;
 
         switch (command) {
             case "XML_RESULT":
@@ -243,13 +253,11 @@ public class FileChangeManager implements ProjectComponent {
                     return;
                 }
 
-                //System.out.println(SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml"));
-
                 EventQueue.invokeLater(() -> {
                     String fileRelativePath = messageAsJson.get("data").getAsJsonObject().get("fileName").getAsString();
                     String relativePath = fileRelativePath.startsWith("/") ? fileRelativePath : "/" + fileRelativePath;
                     VirtualFile fileByPath = LocalFileSystem.getInstance().findFileByPath(relativePath);
-                    if (fileByPath != null) {
+                    if (fileByPath != null && currentProject != null) {
                         FileEditorManager.getInstance(currentProject).openFile(fileByPath, true);
                         Editor theEditor = FileEditorManager.getInstance(currentProject).getSelectedTextEditor();
                         int indexToFocusOn = SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml");
@@ -260,36 +268,31 @@ public class FileChangeManager implements ProjectComponent {
                     }
                 });
 
-                break;
-
             case "MODIFIED_RULE":
+                // data: {ruleID: longNumber, ruleInfo: {...}}
+                String ruleID = messageAsJson.get("data").getAsJsonObject().get("ruleID").getAsString();
+                String ruleInfo = messageAsJson.get("data").getAsJsonObject().get("ruleInfo").getAsJsonObject().toString();
 
-                String ruleIndex = Integer.toString(messageAsJson.get("data").getAsJsonObject().get("index").getAsInt());
-                String ruleText = messageAsJson.get("data").getAsJsonObject().get("ruleText").getAsJsonObject().toString();
+                boolean ruleResult = this.updateRule(ruleID, ruleInfo);
+                if (!ruleResult)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
 
-                this.setRuleIndexText(ruleIndex, ruleText);
-                this.writeRuleOrTagJsonFile("ruleJson.txt");
-
-                // send message
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE",
-                        MessageProcessor.encodeModifiedRule(new Object[]{ruleIndex, ruleText})
-                }).toString());
-
+                Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.ruleTable);
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
                 break;
 
             case "MODIFIED_TAG":
+                // data: {tagID: longNumber, tagInfo: {...}}
+                String tagID = messageAsJson.get("data").getAsJsonObject().get("tagID").getAsString();
+                String tagInfo = messageAsJson.get("data").getAsJsonObject().get("tagInfo").getAsJsonObject().toString();
 
-                String tagName = messageAsJson.get("data").getAsJsonObject().get("tagName").getAsString();
-                String tagText = messageAsJson.get("data").getAsJsonObject().get("tagText").getAsJsonObject().toString();
+                boolean result = this.updateTag(tagID, tagInfo);
+                if (!result)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
 
-                this.setTagNameText(tagName, tagText);
-                this.writeRuleOrTagJsonFile("tagJson.txt");
-
-                // send message
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", tagText}).toString());
-
+                Utilities.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
                 break;
-
 
             case "EXPR_STMT":
                 String exprText = messageAsJson.get("data").getAsJsonObject().get("codeText").getAsString();
@@ -297,36 +300,35 @@ public class FileChangeManager implements ProjectComponent {
                 ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "EXPR_STMT_XML",
                         MessageProcessor.encodeXMLandText(new Object[]{resultExprXml, messageAsJson.get("data").getAsJsonObject().get("messageID").getAsString()})
                 }).toString());
-
                 break;
 
             case "NEW_RULE":
+                // data: {ruleID: longNumber, ruleInfo: {...}}
+                String newRuleID = messageAsJson.get("data").getAsJsonObject().get("ruleID").getAsString();
+                String newRuleInfo = messageAsJson.get("data").getAsJsonObject().get("ruleInfo").getAsJsonObject().toString();
 
-                String newRuleIndex = Integer.toString(messageAsJson.get("data").getAsJsonObject().get("index").getAsInt());
-                String newRuleText = messageAsJson.get("data").getAsJsonObject().get("ruleText").getAsJsonObject().toString();
+                boolean newRuleResult = this.addNewRule(newRuleID, newRuleInfo);
+                if (!newRuleResult)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
 
-                this.setRuleIndexText(newRuleIndex, newRuleText);
-                this.writeRuleOrTagJsonFile("ruleJson.txt");
-
-                // send message
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE",
-                        MessageProcessor.encodeModifiedRule(new Object[]{newRuleIndex, newRuleText})
-                }).toString());
-
+                Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.ruleTable);
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
                 break;
 
             case "NEW_TAG":
-                String newTagName = messageAsJson.get("data").getAsJsonObject().get("tagName").getAsString();
-                String newTagText = messageAsJson.get("data").getAsJsonObject().get("tagText").getAsJsonObject().toString();
+                // data: {tagID: String, tagInfo: {...}}
+                String newTagID = messageAsJson.get("data").getAsJsonObject().get("tagID").getAsString();
+                String newTagInfo = messageAsJson.get("data").getAsJsonObject().get("tagInfo").getAsJsonObject().toString();
 
-                this.setTagNameText(newTagName, newTagText);
-                this.writeRuleOrTagJsonFile("tagJson.txt");
+                boolean newResult = this.addNewTag(newTagID, newTagInfo);
+                if (!newResult)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
 
-                // send message
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG",
-                        MessageProcessor.encodeModifiedTag(new Object[]{newTagName, newTagText})
-                }).toString());
+                Utilities.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
                 break;
+
+            /*  mining rules  */
 
             case "LEARN_RULES_META_DATA":
                 // "attribute_META_data.txt"
@@ -334,7 +336,7 @@ public class FileChangeManager implements ProjectComponent {
                 // assumption: the first received data is the meta data
                 String path = projectPath.concat("/LearningDR");
                 File directory = new File(path);
-                this.deleteDirectory(directory);
+                Utilities.deleteDirectory(directory);
 
             case "LEARN_RULES_FILE_LOCATIONS":
                 // "fileLocations.txt"
@@ -344,7 +346,7 @@ public class FileChangeManager implements ProjectComponent {
                 // analysisFileName = "AttributeEncoding"
 
                 JsonArray filePathData = messageAsJson.get("data").getAsJsonArray();
-                for (int i=0; i < filePathData.size(); i++) {
+                for (int i = 0; i < filePathData.size(); i++) {
                     writeDataToFileLearningDR(filePathData.get(i).getAsJsonArray().get(0).getAsString(),
                             filePathData.get(i).getAsJsonArray().get(1).getAsString(), false);
                 }
@@ -356,13 +358,13 @@ public class FileChangeManager implements ProjectComponent {
                 if (cnt == 0) {
                     String dirPath = projectPath.concat("/LearningDR");
                     File directoryFile = new File(dirPath);
-                    this.deleteDirectory(directoryFile);
+                    Utilities.deleteDirectory(directoryFile);
                 }
 
             case "LEARN_RULES_FILE_LOCATIONS_APPEND":
             case "LEARN_RULES_DATABASES_APPEND":
                 JsonArray filePathDataAppend = messageAsJson.get("data").getAsJsonArray();
-                for (int i=0; i < filePathDataAppend.size(); i++) {
+                for (int i = 0; i < filePathDataAppend.size(); i++) {
                     writeDataToFileLearningDR(filePathDataAppend.get(i).getAsJsonArray().get(0).getAsString(),
                             filePathDataAppend.get(i).getAsJsonArray().get(1).getAsString(), true);
                 }
@@ -399,29 +401,28 @@ public class FileChangeManager implements ProjectComponent {
                                 new Object[]{outputContentMinedData.get("output").toString(), outputContentMinedData.get("metaData").toString()}
                         )}).toString());
                 break;
-
         }
 
     }
 
-
     /**
      * handle events based on event types.
-     * @param event VFileEvent
+     *
+     * @param event     VFileEvent
      * @param eventType one of CREATE, TEXT_CHANGE, PROPERTY_CHANGE, DELETE
      */
     private void handleEvents(VFileEvent event, String eventType) {
         VirtualFile file = event.getFile();
-        if (file == null) return;
+        if (file == null || currentProject == null) return;
 
         switch (eventType) {
             case "CREATE":
             case "DELETE":
-                if (file.getName().equals("ruleJson.txt")) {
+                if (file.getName().equals("ruleTable.json")) {
                     updateRules();
                     return;
                 }
-                if (file.getName().equals("tagJson.txt")) {
+                if (file.getName().equals("tagTable.json")) {
                     updateTags();
                     return;
                 }
@@ -434,20 +435,19 @@ public class FileChangeManager implements ProjectComponent {
                 if (eventType.equals("DELETE"))
                     SRCMLHandler.removeXMLForProject(srcml, file.getPath());
 
-                this.updateSrcml(file.getPath(), newXml);
+                this.updateXML(file.getPath(), newXml);
 
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATED_PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
                 break;
 
             case "TEXT_CHANGE":
-
-                if (file.getName().equals("ruleJson.txt")) {
-                    System.out.println("ruleJson.txt modified.");
+                if (file.getName().equals("ruleTable.json")) {
+                    System.out.println("ruleTable.json modified.");
                     updateRules();
                     return;
                 }
-                if (file.getName().equals("tagJson.txt")) {
-                    System.out.println("tagJson.txt modified.");
+                if (file.getName().equals("tagTable.json")) {
+                    System.out.println("tagTable.json modified.");
                     updateTags();
                     return;
                 }
@@ -457,23 +457,23 @@ public class FileChangeManager implements ProjectComponent {
                     return;
 
                 String updatedXml = SRCMLHandler.updateXMLForProject(this.getSrcml(), file.getPath());
-                this.updateSrcml(file.getPath(), updatedXml);
+                this.updateXML(file.getPath(), updatedXml);
                 break;
 
             case "PROPERTY_CHANGE":
                 // when a file's properties change. for instance, if the file is renamed.
-                List<String> newPaths = getFilePaths(currentProject);
+                List<String> newPaths = Utilities.getFilePaths(currentProject);
 
                 for (String path : srcml.getPaths()) {
                     if (!newPaths.contains(path)) {
 
                         SRCMLHandler.removeXMLForProject(srcml, path);
                         String changedXml = SRCMLHandler.addXMLForProject(srcml, file.getPath());
-                        this.updateSrcml(file.getPath(), changedXml);
+                        this.updateXML(file.getPath(), changedXml);
                         break;
                     }
                 }
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATED_PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
+                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
                 break;
         }
     }
@@ -485,75 +485,10 @@ public class FileChangeManager implements ProjectComponent {
      * @return true/false
      */
     private boolean shouldIgnoreFile(VirtualFile s) {
-        return !(s.getName().endsWith(".java") || s.getName().endsWith("ruleJson.txt") || s.getName().endsWith("tagJson.txt"));
-    }
-
-    /**
-     * verify if a file should be ignored, useful for project hierarchy
-     * @param s virtual file
-     * @return boolean
-     */
-    private boolean shouldIgnoreFileForProjectHierarchy(VirtualFile s) {
-        if (ignoredFiles == null) {
-            return false;
-        }
-        for (VirtualFile vfile : ignoredFiles) {
-            if (Objects.equals(vfile.getCanonicalPath(), s.getCanonicalPath())) {
-                return true;
-            } else if (isFileAChildOf(s, vfile)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * check whether a file is a child of another file
-     * formerly this method was in utilities
-     * @param maybeChild first file
-     * @param possibleParent second file
-     * @return boolean
-     */
-    private static boolean isFileAChildOf(VirtualFile maybeChild, VirtualFile possibleParent) {
-        final VirtualFile parent = possibleParent.getCanonicalFile();
-        if (parent != null && (!parent.exists() || !parent.isDirectory())) {
-            // this cannot possibly be the parent
-            return false;
-        }
-
-        VirtualFile child = maybeChild.getCanonicalFile();
-        while (child != null) {
-            if (child.equals(parent)) {
-                return true;
-            }
-            child = child.getParent();
-        }
-        // No match found, and we've hit the root directory
-        return false;
-    }
-
-    /**
-     * creating ignore list
-     * formerly this method was in utilities
-     * @param project for a given project
-     * @return list of files
-     */
-    private static List<VirtualFile> createIgnoredFileList(Project project) {
-        List<VirtualFile> ignoredFiles = new ArrayList<>();
-        List<String> files = new ArrayList<>(Arrays.asList(".idea", "out", "source_xml.xml", "tempResultXmlFile.xml", "LearningDR", "test",
-                "testProject.iml", ".DS_Store", "bin", "build", "node_modules", ".setting", ".git", "war", "tempExprDeclFile.java"));
-        if (project.getBasePath() == null)
-            return ignoredFiles;
-        VirtualFile rootDirectoryVirtualFile = LocalFileSystem.getInstance().findFileByPath(project.getBasePath());
-        if (rootDirectoryVirtualFile == null)
-            return ignoredFiles;
-        for (String f : files) {
-            VirtualFile vfile = rootDirectoryVirtualFile.findFileByRelativePath(f);
-            if (vfile != null) {
-                ignoredFiles.add(vfile);
-            }
-        }
-        return ignoredFiles;
+        return !(s.getName().endsWith(".java")
+                || s.getName().endsWith("ruleTable.json")
+                || s.getName().endsWith("tagTable.json")
+                || s.getName().equals("tempExprDeclFile.java"));
     }
 
     /**
@@ -563,7 +498,6 @@ public class FileChangeManager implements ProjectComponent {
      * @return boolean
      */
     private boolean shouldIgnoreEvent(VirtualFile file) {
-
         if (file.isDirectory() || file.getCanonicalPath() == null)
             return true;
         if (!file.getCanonicalPath().endsWith(".java"))
@@ -575,134 +509,24 @@ public class FileChangeManager implements ProjectComponent {
     }
 
     /**
-     * generate list of java file paths
-     * @param project it is required as in the constructor, project is needed to be provided
-     * @return list of file paths in the project
-     */
-    private static List<String> getFilePaths(Project project) {
-        List<String> paths = new ArrayList<>();
-
-        // start off with root
-//        VirtualFile rootDirectoryVirtualFile = project.getBaseDir();
-
-        if (project.getBasePath() == null)
-            return paths;
-        VirtualFile rootDirectoryVirtualFile = LocalFileSystem.getInstance().findFileByPath(project.getBasePath());
-
-        // set up queue
-        List<VirtualFile> q = new ArrayList<>();
-        q.add(rootDirectoryVirtualFile);
-
-        // traverse the queue
-        while (!q.isEmpty()) {
-            VirtualFile item = q.get(0);
-            q.remove(0);
-            for (VirtualFile childOfItem : item.getChildren()) {
-                if (childOfItem.isDirectory())
-                    q.add(childOfItem);
-                else if (childOfItem.getCanonicalPath() != null && childOfItem.getCanonicalPath().endsWith(".java")) {
-                    paths.add(childOfItem.toString().substring(7)); // remove file:// from the beginning
-                }
-            }
-        }
-
-        return paths;
-    }
-
-    /**
      * check whether the given project is the same as the project for which
      * srcml is created. It updates the srcml and project path accordingly.
      */
     void checkChangedProject() {
-
         if (!this.srcml.getProjectPath().equals(projectPath)) {
-            SRCMLxml srcml = new SRCMLxml(FileChangeManager.getFilePaths(currentProject), projectPath);
+            SRCMLxml srcml = new SRCMLxml(Utilities.getFilePaths(currentProject), projectPath);
             SRCMLHandler.createXMLForProject(srcml);
             System.out.println("XML data is created.");
-
             this.srcml = srcml;
-
         }
     }
-
-    /**
-     * write in file
-     *
-     * @param fileName either ruleJson.txt or tagJson.txt
-     */
-    private void writeRuleOrTagJsonFile(String fileName) {
-
-        try {
-            PrintWriter writer = new PrintWriter(projectPath + "/" + fileName, "UTF-8");
-            switch (fileName) {
-                case "ruleJson.txt":
-                    writer.println('[');
-                    for (int i = 0; i < this.ruleIndexText.size(); i++) {
-                        writer.println(this.ruleIndexText.get(i).get(1));
-                        if (i != this.ruleIndexText.size() - 1)
-                            writer.println(',');
-                    }
-                    writer.println(']');
-                    break;
-                case "tagJson.txt":
-                    writer.println('[');
-                    for (int i = 0; i < this.tagNameText.size(); i++) {
-                        writer.println(this.tagNameText.get(i).get(1));
-                        if (i != this.tagNameText.size() - 1)
-                            writer.println(',');
-                    }
-                    writer.println(']');
-                    break;
-            }
-            writer.close();
-        } catch (IOException e) {
-            System.out.println("error in writing " + fileName);
-        }
-
-    }
-
-    /**
-     * write in file
-     *
-     * @param fileName name of files
-     * @param content content of the file
-     */
-    private void writeDataToFileLearningDR(String fileName, String content, boolean append) {
-
-        String directoryName = projectPath.concat("/LearningDR");
-
-        File directory = new File(directoryName);
-        if (! directory.exists()){
-            directory.mkdir();
-        }
-
-        try {
-            PrintWriter writer;
-            if (append) {
-                writer = new PrintWriter(new FileOutputStream(
-                        new File(projectPath + "/LearningDR/" + fileName), true /* append = true */));
-            }
-            else {
-                writer = new PrintWriter(projectPath + "/LearningDR/" + fileName, "UTF-8");
-            }
-            writer.print(content);
-            writer.close();
-        } catch (IOException e) {
-            System.out.println("error in writing " + fileName);
-        }
-
-    }
-
 
     /**
      * update the ruleIndexText and send messages to clients
      */
     private void updateRules() {
-        this.ruleIndexText = MessageProcessor.getInitialRulesAsList(currentProject);
-
-        // send the message
-        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", this.getAllRules()}).toString());
-        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE_TABLE", ""}).toString());
+        this.ruleTable = Utilities.getInitialRuleTable(currentProject);
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", this.getRuleTable()}).toString());
         ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
     }
 
@@ -710,26 +534,22 @@ public class FileChangeManager implements ProjectComponent {
      * update the tagNameText and send messages to clients
      */
     private void updateTags() {
-        this.tagNameText = MessageProcessor.getInitialTagsAsList(currentProject);
-
-        // send the message
-        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", this.getAllTags()}).toString());
-        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG_TABLE", ""}).toString());
+        this.tagTable = Utilities.getInitialTagTable(currentProject);
+        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", this.getTagTable()}).toString());
     }
 
     /**
-     * change the srcml and send some messages to clients if the srcml is updated
+     * change the xml data and inform clients
      *
      * @param filePath String
      * @param newXml   String
      */
-    private void updateSrcml(String filePath, String newXml) {
+    private void updateXML(String filePath, String newXml) {
         ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_XML",
                 MessageProcessor.encodeNewXMLData(new Object[]{filePath, newXml})
         }).toString());
         ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES_FOR_FILE", filePath}).toString());
     }
-
 
     /**
      * Copied from master branch
@@ -737,11 +557,7 @@ public class FileChangeManager implements ProjectComponent {
      * @return json
      */
     JsonObject generateProjectHierarchyAsJSON() {
-
-
-        // start off with root
         Project project = ProjectManager.getInstance().getOpenProjects()[0];
-//        VirtualFile rootDirectoryVirtualFile = project.getBaseDir();
 
         if (project.getBasePath() == null)
             return new JsonObject();
@@ -776,14 +592,11 @@ public class FileChangeManager implements ProjectComponent {
             java.util.List<VirtualFile> new_q = new ArrayList<>();
             for (VirtualFile item : q) {
 
-                if (shouldIgnoreFileForProjectHierarchy(item)) {
-                    continue;
-                }
+                if (shouldIgnoreFileForProjectHierarchy(item)) continue;
 
                 for (VirtualFile childOfItem : item.getChildren()) {
-                    if (shouldIgnoreFileForProjectHierarchy(childOfItem)) {
-                        continue;
-                    }
+                    if (shouldIgnoreFileForProjectHierarchy(childOfItem)) continue;
+
                     new_q.add(childOfItem);
                     JsonObject jsonChildOfItem = new JsonObject();
                     JsonObject propertiesOfChild = new JsonObject();
@@ -808,9 +621,6 @@ public class FileChangeManager implements ProjectComponent {
                             if (psiFile != null)
                                 propertiesOfChild.addProperty("fileName", psiFile.getName());
                         }
-
-//                        propertiesOfChild.addProperty("text", psiFile.getText());
-//                        propertiesOfChild.add("ast", generateASTAsJSON(psiFile));
                     }
                     canonicalToJsonMap.get(item.getCanonicalPath()).get("children").getAsJsonArray().add(jsonChildOfItem);
                     canonicalToJsonMap.put(childOfItem.getCanonicalPath(), jsonChildOfItem);
@@ -818,39 +628,71 @@ public class FileChangeManager implements ProjectComponent {
             }
             q = new_q;
         }
-
         return jsonRootDirectory;
+    }
 
+    /**
+     * verify if a file should be ignored, useful for project hierarchy
+     *
+     * @param s virtual file
+     * @return boolean
+     */
+    private boolean shouldIgnoreFileForProjectHierarchy(VirtualFile s) {
+        if (ignoredFiles == null) {
+            return false;
+        }
+        for (VirtualFile vfile : ignoredFiles) {
+            if (Objects.equals(vfile.getCanonicalPath(), s.getCanonicalPath())) {
+                return true;
+            } else if (Utilities.isFileAChildOf(s, vfile)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * write in file
+     *
+     * @param fileName name of files
+     * @param content  content of the file
+     */
+    private void writeDataToFileLearningDR(String fileName, String content, boolean append) {
+        String directoryName = projectPath.concat("/LearningDR");
+        File directory = new File(directoryName);
+        if (!directory.exists()) {
+            directory.mkdir();
+        }
+
+        try {
+            PrintWriter writer;
+            if (append) {
+                writer = new PrintWriter(new FileOutputStream(
+                        new File(projectPath + "/LearningDR/" + fileName), true /* append = true */));
+            } else {
+                writer = new PrintWriter(projectPath + "/LearningDR/" + fileName, "UTF-8");
+            }
+            writer.print(content);
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("error in writing " + fileName);
+        }
     }
 
     /**
      * sending the data for feature selection to the client
-     * @param path of the file from which a code snippet is selected
-     * @param startIndex start of the selection
-     * @param endIndex end of the selection
+     *
+     * @param path            of the file from which a code snippet is selected
+     * @param startIndex      start of the selection
+     * @param endIndex        end of the selection
      * @param startLineOffset offset of the start of the selection w.r.t. start of the line
-     * @param lineNumber of the javaFile
-     * @param lineText code at line of the selection
-     * @param text text of the selection
+     * @param lineNumber      of the javaFile
+     * @param lineText        code at line of the selection
+     * @param text            text of the selection
      */
     void sendFeatureSelectionData(String path, String startIndex, String endIndex, String startLineOffset, String lineNumber, String lineText, String text) {
         ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FEATURE_SELECTION",
                 MessageProcessor.encodeSelectedFragment(new Object[]{path, startIndex, endIndex, startLineOffset, lineNumber, lineText, text})
         }).toString());
-    }
-
-    /**
-     * delete a directory recursively for deleting learningDR
-     * @param directoryToBeDeleted File
-     * @return boolean
-     */
-    boolean deleteDirectory(File directoryToBeDeleted) {
-        File[] allContents = directoryToBeDeleted.listFiles();
-        if (allContents != null) {
-            for (File file : allContents) {
-                deleteDirectory(file);
-            }
-        }
-        return directoryToBeDeleted.delete();
     }
 }

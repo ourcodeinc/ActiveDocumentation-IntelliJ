@@ -1,3 +1,8 @@
+/*
+ * written by saharmehrpour
+ * This class creates the chat server using websockets.
+ */
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.java_websocket.WebSocket;
@@ -9,10 +14,6 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-
-/*
- * written by saharmehrpour
- */
 
 /**
  * A simple WebSocketServer implementation. Keeps track of a "chatroom".
@@ -26,9 +27,8 @@ public class ChatServer extends WebSocketServer {
     private FileChangeManager manager; // to process received messages
 
     /**
-     *
      * @param port = 8887
-     * @throws UnknownHostException
+     * @throws UnknownHostException if it fails to build a connection
      */
     ChatServer(int port) throws UnknownHostException {
         super(new InetSocketAddress(port));
@@ -40,47 +40,35 @@ public class ChatServer extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        // this.sendToAll( "new connection: " + handshake.getResourceDescriptor() );
         System.out.println("(onOpen) " + conn.getRemoteSocketAddress().getAddress().getHostAddress() + " entered the room!");
 
         // check whether the project is changed
         manager.checkChangedProject();
-
-        // this message is not processed
-        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "ENTER", (conn + " has entered the room!")}).toString());
-
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "ENTER", (conn + " connected to ActiveDocumentation")}).toString());
         for (int i = 0; i < manager.getSrcml().fileNumber; i++) {
             this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML",
                     MessageProcessor.encodeXMLData(new Object[]{manager.getSrcml().getPaths().get(i), manager.getSrcml().getXmls().get(i)})
             }).toString());
         }
-
-        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", manager.getAllRules()}).toString());
-        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", manager.getAllTags()}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", manager.getRuleTable()}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", manager.getTagTable()}).toString());
         this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
         this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", manager.generateProjectHierarchyAsJSON()}).toString());
-        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT", manager.projectPath}).toString());
-
-//        sendBackedUpMessages();
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_PATH", manager.projectPath}).toString());
     }
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        // this message is not processed
-        this.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "LEFT", (conn + " has left the room!")}).toString());
+        this.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "LEFT", (conn + " disconnected")}).toString());
         System.out.println("(onClose) " + conn + " has left the room!");
     }
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-
         JsonParser parser = new JsonParser();
         final JsonObject messageAsJson = parser.parse(message).getAsJsonObject();
-//        System.out.println("(onMessage) " /*+ messageAsJson*/);
         manager.processReceivedMessages(messageAsJson);
-
     }
-
 
     @Override
     public void onError(WebSocket conn, Exception ex) {
@@ -106,18 +94,6 @@ public class ChatServer extends WebSocketServer {
         }
     }
 
-    private void sendBackedUpMessages() {
-        Collection<WebSocket> con = getConnections();
-        if (con.size() == 0) {
-            if (backedUpMessages.size() > 0) {
-                System.out.println("(sendBackedUpMessages) " + "Can't clear out backlog since there's no connection right now.");
-            }
-        } else {
-            sendAllMessages(con);
-        }
-    }
-
-
     /**
      * extracted local method
      * send the message to all connections
@@ -136,7 +112,6 @@ public class ChatServer extends WebSocketServer {
             backedUpMessages.remove(0);
         }
     }
-
 
     private void sendAMessage(WebSocket con, String message) {
         con.send(message);
