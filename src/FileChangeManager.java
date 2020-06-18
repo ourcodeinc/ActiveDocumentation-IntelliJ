@@ -177,7 +177,8 @@ public class FileChangeManager implements ProjectComponent {
                 try {
                     if (event.getManager().getSelectedFiles().length > 0)
                         if (Objects.requireNonNull(event.getManager().getSelectedFiles()[0].getCanonicalFile()).getName().endsWith(".java")) {
-                            ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FILE_CHANGE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
+                            if (ws != null)
+                                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FILE_CHANGE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
                         }
                 } catch (NullPointerException e) {
                     System.out.println("error happened in finding the changed file.");
@@ -276,10 +277,12 @@ public class FileChangeManager implements ProjectComponent {
 
                 boolean ruleResult = this.updateRule(ruleID, ruleInfo);
                 if (!ruleResult)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
+                    if (ws != null)
+                        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
 
                 Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.ruleTable);
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
+                if (ws != null)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
                 break;
 
             case "MODIFIED_TAG":
@@ -289,16 +292,18 @@ public class FileChangeManager implements ProjectComponent {
 
                 boolean result = this.updateTag(tagID, tagInfo);
                 if (!result)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
+                    if (ws != null)
+                        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
 
                 Utilities.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
+                if (ws != null)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
                 break;
 
             case "EXPR_STMT":
                 String exprText = messageAsJson.get("data").getAsJsonObject().get("codeText").getAsString();
                 String resultExprXml = SRCMLHandler.createXMLForText(exprText, projectPath + "/tempExprFile.java");
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "EXPR_STMT_XML",
+                if (ws != null) ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "EXPR_STMT_XML",
                         MessageProcessor.encodeXMLandText(new Object[]{resultExprXml, messageAsJson.get("data").getAsJsonObject().get("messageID").getAsString()})
                 }).toString());
                 break;
@@ -310,10 +315,12 @@ public class FileChangeManager implements ProjectComponent {
 
                 boolean newRuleResult = this.addNewRule(newRuleID, newRuleInfo);
                 if (!newRuleResult)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
+                    if (ws != null)
+                        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
 
                 Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.ruleTable);
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
+                if (ws != null)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
                 break;
 
             case "NEW_TAG":
@@ -323,10 +330,12 @@ public class FileChangeManager implements ProjectComponent {
 
                 boolean newResult = this.addNewTag(newTagID, newTagInfo);
                 if (!newResult)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
+                    if (ws != null)
+                        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
 
                 Utilities.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
+                if (ws != null)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
                 break;
 
             /*  mining rules  */
@@ -374,7 +383,7 @@ public class FileChangeManager implements ProjectComponent {
                 int support = messageAsJson.get("data").getAsInt();
                 JsonObject outputContent = FPMaxHandler.analyzeDatabases(projectPath, support);
                 // send message
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FP_MAX_OUTPUT",
+                if (ws != null) ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FP_MAX_OUTPUT",
                         MessageProcessor.encodeFPMaxOutput(new Object[]{outputContent})
                 }).toString());
                 break;
@@ -385,9 +394,10 @@ public class FileChangeManager implements ProjectComponent {
                 int delta = messageAsJson.get("data").getAsJsonObject().get("delta").getAsInt();
                 JsonObject outputContentTNR = TNRHandler.analyzeDatabases_tnr(projectPath, k, confidence, delta);
                 // send message
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TNR_OUTPUT",
-                        MessageProcessor.encodeTNROutput(new Object[]{outputContentTNR})
-                }).toString());
+                if (ws != null)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TNR_OUTPUT",
+                            MessageProcessor.encodeTNROutput(new Object[]{outputContentTNR})
+                    }).toString());
                 break;
 
             case "DANGEROUS_READ_MINED_RULES":
@@ -396,10 +406,11 @@ public class FileChangeManager implements ProjectComponent {
                     System.out.println("Error happened in reading files.");
                     break;
                 }
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "DANGEROUS_READ_MINED_RULES",
-                        MessageProcessor.encodeDangerousMinedData(
-                                new Object[]{outputContentMinedData.get("output").toString(), outputContentMinedData.get("metaData").toString()}
-                        )}).toString());
+                if (ws != null)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "DANGEROUS_READ_MINED_RULES",
+                            MessageProcessor.encodeDangerousMinedData(
+                                    new Object[]{outputContentMinedData.get("output").toString(), outputContentMinedData.get("metaData").toString()}
+                            )}).toString());
                 break;
         }
 
@@ -437,7 +448,8 @@ public class FileChangeManager implements ProjectComponent {
 
                 this.updateXML(file.getPath(), newXml);
 
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
+                if (ws != null)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
                 break;
 
             case "TEXT_CHANGE":
@@ -473,7 +485,8 @@ public class FileChangeManager implements ProjectComponent {
                         break;
                     }
                 }
-                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
+                if (ws != null)
+                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
                 break;
         }
     }
@@ -526,8 +539,10 @@ public class FileChangeManager implements ProjectComponent {
      */
     private void updateRules() {
         this.ruleTable = Utilities.getInitialRuleTable(currentProject);
-        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", this.getRuleTable()}).toString());
-        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
+        if (ws != null)
+            ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", this.getRuleTable()}).toString());
+        if (ws != null)
+            ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
     }
 
     /**
@@ -535,7 +550,8 @@ public class FileChangeManager implements ProjectComponent {
      */
     private void updateTags() {
         this.tagTable = Utilities.getInitialTagTable(currentProject);
-        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", this.getTagTable()}).toString());
+        if (ws != null)
+            ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", this.getTagTable()}).toString());
     }
 
     /**
@@ -545,10 +561,11 @@ public class FileChangeManager implements ProjectComponent {
      * @param newXml   String
      */
     private void updateXML(String filePath, String newXml) {
-        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_XML",
+        if (ws != null) ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_XML",
                 MessageProcessor.encodeNewXMLData(new Object[]{filePath, newXml})
         }).toString());
-        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES_FOR_FILE", filePath}).toString());
+        if (ws != null)
+            ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES_FOR_FILE", filePath}).toString());
     }
 
     /**
@@ -691,7 +708,7 @@ public class FileChangeManager implements ProjectComponent {
      * @param text            text of the selection
      */
     void sendFeatureSelectionData(String path, String startIndex, String endIndex, String startLineOffset, String lineNumber, String lineText, String text) {
-        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FEATURE_SELECTION",
+        if (ws != null) ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FEATURE_SELECTION",
                 MessageProcessor.encodeSelectedFragment(new Object[]{path, startIndex, endIndex, startLineOffset, lineNumber, lineText, text})
         }).toString());
     }
