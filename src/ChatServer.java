@@ -12,8 +12,6 @@ import org.java_websocket.server.WebSocketServer;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * A simple WebSocketServer implementation. Keeps track of a "chatroom".
@@ -23,7 +21,6 @@ import java.util.List;
  */
 public class ChatServer extends WebSocketServer {
 
-    private List<String> backedUpMessages = new LinkedList<>();
     private FileChangeManager manager; // to process received messages
 
     /**
@@ -85,31 +82,14 @@ public class ChatServer extends WebSocketServer {
      * @param text The String to send across the network.
      */
     void sendToAll(String text) {
-        Collection<WebSocket> con = getConnections();
-        backedUpMessages.add(text);
-        if (con.size() == 0) {
-            System.out.println("(sendToAll) " + "Putting message on hold since there's no connection.");
+        Collection<WebSocket> conn = getConnections();
+        if (conn.size() == 0) {
+            System.out.println("(sendToAll) " + "There's no connection.");
         } else {
-            sendAllMessages(con);
-        }
-    }
-
-    /**
-     * extracted local method
-     * send the message to all connections
-     *
-     * @param con list of connections
-     */
-    private void sendAllMessages(Collection<WebSocket> con) {
-        while (con.size() != 0 && !backedUpMessages.isEmpty()) {
-            String itemToSend = backedUpMessages.get(0);
-            synchronized (con) {
-                for (WebSocket c : con) {
-                    c.send(itemToSend);
-                    System.out.println("(sendMessage) " /*+ "Server sent: " + itemToSend*/);
-                }
+            for (WebSocket c : conn) {
+                c.send(text);
+                System.out.println("(sendMessage) ");
             }
-            backedUpMessages.remove(0);
         }
     }
 
