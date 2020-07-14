@@ -7,9 +7,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.ScrollType;
-import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
@@ -23,122 +20,39 @@ import com.intellij.openapi.vfs.newvfs.events.*;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.messages.MessageBusConnection;
-import core.model.*;
+import core.model.SRCMLHandler;
+import core.model.SRCMLxml;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.*;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.*;
+import java.util.Objects;
 
 public class FileChangeManager implements ProjectComponent {
 
     private final MessageBusConnection connection;
     private ChatServer ws;
     private SRCMLxml srcml;
-    private HashMap<String, String> ruleTable; // ruleID, {index: string, ...}
-    private HashMap<String, String> tagTable; // tagID, {ID: string, ...}
     private Project currentProject;
     String projectPath;
     private List<VirtualFile> ignoredFiles;
+
+    private static FileChangeManager thisClass = null;
 
     FileChangeManager(Project project) {
         connection = ApplicationManager.getApplication().getMessageBus().connect();
         currentProject = project;
         projectPath = project.getBasePath();
-
         srcml = new SRCMLxml(Utilities.getFilePaths(project), project.getBasePath());
         SRCMLHandler.createXMLForProject(srcml);
 
-        tagTable = Utilities.getInitialTagTable(project);
-        ruleTable = Utilities.getInitialRuleTable(project);
+        thisClass = this;
     }
 
-    /**
-     * update a tag in tagTable
-     *
-     * @param ruleID          the ID of an existing rule
-     * @param updatedRuleInfo the tag information that is stored in ruleTable.json
-     * @return false if no ID is found
-     */
-    private boolean updateRule(String ruleID, String updatedRuleInfo) {
-        if (this.ruleTable.get(ruleID) == null) return false;
-        this.ruleTable.put(ruleID, updatedRuleInfo);
-        return true;
-    }
-
-    /**
-     * add a new tag in tagTable
-     *
-     * @param newRuleID   the new and unique ID
-     * @param newRuleInfo the tag information that is stored in ruleTable.json
-     * @return false if the ID exists in the table
-     */
-    private boolean addNewRule(String newRuleID, String newRuleInfo) {
-        if (this.tagTable.get(newRuleID) != null) return false;
-        this.tagTable.put(newRuleID, newRuleInfo);
-        return true;
-    }
-
-    /**
-     * update a tag in tagTable
-     *
-     * @param tagID          the ID of an existing tag
-     * @param updatedTagInfo the tag information that is stored in tagTable.json
-     * @return false if no ID is found
-     */
-    private boolean updateTag(String tagID, String updatedTagInfo) {
-        if (this.tagTable.get(tagID) == null) return false;
-        this.tagTable.put(tagID, updatedTagInfo);
-        return true;
-    }
-
-    /**
-     * add a new tag in tagTable
-     *
-     * @param newTagID   the new and unique ID
-     * @param newTagInfo the tag information that is stored in tagTable.json
-     * @return false if the ID exists in the table
-     */
-    private boolean addNewTag(String newTagID, String newTagInfo) {
-        if (this.tagTable.get(newTagID) != null) return false;
-        this.tagTable.put(newTagID, newTagInfo);
-        return true;
-    }
-
-    /**
-     * get the string of all rules to send to the client
-     *
-     * @return string
-     */
-    String getRuleTable() {
-        StringBuilder ruleTableString = new StringBuilder("[");
-        String prefix = "";
-        for (String tag : this.ruleTable.values()) {
-            ruleTableString.append(prefix);
-            ruleTableString.append(tag);
-            prefix = ",";
-        }
-        return ruleTableString + "]";
-    }
-
-    /**
-     * get the string of all tags to send to the client
-     *
-     * @return string
-     */
-    String getTagTable() {
-        StringBuilder tagTableString = new StringBuilder("[");
-        String prefix = "";
-        for (String tag : this.tagTable.values()) {
-            tagTableString.append(prefix);
-            tagTableString.append(tag);
-            prefix = ",";
-        }
-        return tagTableString + "]";
+    static FileChangeManager getInstance() {
+        return thisClass;
     }
 
     /**
@@ -177,14 +91,12 @@ public class FileChangeManager implements ProjectComponent {
                 try {
                     if (event.getManager().getSelectedFiles().length > 0)
                         if (Objects.requireNonNull(event.getManager().getSelectedFiles()[0].getCanonicalFile()).getName().endsWith(".java")) {
-                            if (ws != null)
-                                ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FILE_CHANGE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
+                            sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FILE_CHANGE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
                         }
                 } catch (NullPointerException e) {
                     System.out.println("error happened in finding the changed file.");
                 }
             }
-
         });
     }
 
@@ -192,8 +104,6 @@ public class FileChangeManager implements ProjectComponent {
      * Overridden method
      */
     public void disposeComponent() {
-        ruleTable = new HashMap<>();
-        tagTable = new HashMap<>();
         currentProject = null;
 
         Project[] AllProjects = ProjectManager.getInstance().getOpenProjects();
@@ -219,201 +129,19 @@ public class FileChangeManager implements ProjectComponent {
         if (AllProjects.length == 1) {
             try {
                 ws = new ChatServer(8887);
-                ws.setManager(this);
                 ws.start();
             } catch (Exception e) {
                 System.out.println("Error in creating a Chat server.");
                 e.printStackTrace();
             }
+
+            new FollowAndAuthorRulesProcessor(projectPath, currentProject, ws);
+            new MiningRulesProcessor(projectPath, currentProject, ws);
         }
     }
 
     @Override
     public void projectClosed() {
-    }
-
-    /**
-     * process the message received from the client
-     *
-     * @param messageAsJson JsonObject
-     */
-    void processReceivedMessages(JsonObject messageAsJson) {
-
-        String command = messageAsJson.get("command").getAsString();
-        if (currentProject == null) return;
-
-        switch (command) {
-            case "XML_RESULT":
-                try {
-                    PrintWriter writer = new PrintWriter(projectPath + "/tempResultXmlFile.xml", "UTF-8");
-                    writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>");
-                    writer.println(messageAsJson.get("data").getAsJsonObject().get("xml").getAsString());
-                    writer.close();
-                } catch (IOException e) {
-                    System.out.println("error in writing the result xml");
-                    return;
-                }
-
-                EventQueue.invokeLater(() -> {
-                    String fileRelativePath = messageAsJson.get("data").getAsJsonObject().get("fileName").getAsString();
-                    String relativePath = fileRelativePath.startsWith("/") ? fileRelativePath : "/" + fileRelativePath;
-                    VirtualFile fileByPath = LocalFileSystem.getInstance().findFileByPath(relativePath);
-                    if (fileByPath != null && currentProject != null) {
-                        FileEditorManager.getInstance(currentProject).openFile(fileByPath, true);
-                        Editor theEditor = FileEditorManager.getInstance(currentProject).getSelectedTextEditor();
-                        int indexToFocusOn = SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml");
-                        if (theEditor != null) {
-                            theEditor.getCaretModel().moveToOffset(indexToFocusOn);
-                            theEditor.getScrollingModel().scrollToCaret(ScrollType.RELATIVE);
-                        }
-                    }
-                });
-                break;
-
-            case "MODIFIED_RULE":
-                // data: {ruleID: longNumber, ruleInfo: {...}}
-                String ruleID = messageAsJson.get("data").getAsJsonObject().get("ruleID").getAsString();
-                String ruleInfo = messageAsJson.get("data").getAsJsonObject().get("ruleInfo").getAsJsonObject().toString();
-
-                boolean ruleResult = this.updateRule(ruleID, ruleInfo);
-                if (!ruleResult)
-                    if (ws != null)
-                        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
-
-                Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.ruleTable);
-                if (ws != null)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
-                break;
-
-            case "MODIFIED_TAG":
-                // data: {tagID: longNumber, tagInfo: {...}}
-                String tagID = messageAsJson.get("data").getAsJsonObject().get("tagID").getAsString();
-                String tagInfo = messageAsJson.get("data").getAsJsonObject().get("tagInfo").getAsJsonObject().toString();
-
-                boolean result = this.updateTag(tagID, tagInfo);
-                if (!result)
-                    if (ws != null)
-                        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
-
-                Utilities.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
-                if (ws != null)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
-                break;
-
-            case "EXPR_STMT":
-                String exprText = messageAsJson.get("data").getAsJsonObject().get("codeText").getAsString();
-                String resultExprXml = SRCMLHandler.createXMLForText(exprText, projectPath + "/tempExprFile.java");
-                if (ws != null) ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "EXPR_STMT_XML",
-                        MessageProcessor.encodeXMLandText(new Object[]{resultExprXml, messageAsJson.get("data").getAsJsonObject().get("messageID").getAsString()})
-                }).toString());
-                break;
-
-            case "NEW_RULE":
-                // data: {ruleID: longNumber, ruleInfo: {...}}
-                String newRuleID = messageAsJson.get("data").getAsJsonObject().get("ruleID").getAsString();
-                String newRuleInfo = messageAsJson.get("data").getAsJsonObject().get("ruleInfo").getAsJsonObject().toString();
-
-                boolean newRuleResult = this.addNewRule(newRuleID, newRuleInfo);
-                if (!newRuleResult)
-                    if (ws != null)
-                        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
-
-                Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.ruleTable);
-                if (ws != null)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
-                break;
-
-            case "NEW_TAG":
-                // data: {tagID: String, tagInfo: {...}}
-                String newTagID = messageAsJson.get("data").getAsJsonObject().get("tagID").getAsString();
-                String newTagInfo = messageAsJson.get("data").getAsJsonObject().get("tagInfo").getAsJsonObject().toString();
-
-                boolean newResult = this.addNewTag(newTagID, newTagInfo);
-                if (!newResult)
-                    if (ws != null)
-                        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
-
-                Utilities.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
-                if (ws != null)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
-                break;
-
-            /*  mining rules  */
-
-            case "LEARN_RULES_META_DATA":
-                // "attribute_META_data.txt"
-
-                // assumption: the first received data is the meta data
-                String path = projectPath.concat("/LearningDR");
-                File directory = new File(path);
-                Utilities.deleteDirectory(directory);
-
-            case "LEARN_RULES_FILE_LOCATIONS":
-                // "fileLocations.txt"
-            case "LEARN_RULES_DATABASES":
-                // analysisFileName + "_subClassOf_" + parentClass + ".txt"
-                // analysisFileName = "AttributeEncoding"
-
-                JsonArray filePathData = messageAsJson.get("data").getAsJsonArray();
-                for (int i = 0; i < filePathData.size(); i++) {
-                    writeDataToFileLearningDR(filePathData.get(i).getAsJsonArray().get(0).getAsString(),
-                            filePathData.get(i).getAsJsonArray().get(1).getAsString(), false);
-                }
-                break;
-
-            case "LEARN_RULES_META_DATA_APPEND":
-                // assumption: the first received data is the meta data
-                int cnt = messageAsJson.get("part").getAsInt();
-                if (cnt == 0) {
-                    String dirPath = projectPath.concat("/LearningDR");
-                    File directoryFile = new File(dirPath);
-                    Utilities.deleteDirectory(directoryFile);
-                }
-
-            case "LEARN_RULES_FILE_LOCATIONS_APPEND":
-            case "LEARN_RULES_DATABASES_APPEND":
-                JsonArray filePathDataAppend = messageAsJson.get("data").getAsJsonArray();
-                for (int i = 0; i < filePathDataAppend.size(); i++) {
-                    writeDataToFileLearningDR(filePathDataAppend.get(i).getAsJsonArray().get(0).getAsString(),
-                            filePathDataAppend.get(i).getAsJsonArray().get(1).getAsString(), true);
-                }
-                break;
-
-            case "EXECUTE_FP_MAX":
-                int support = messageAsJson.get("data").getAsInt();
-                JsonObject outputContent = FPMaxHandler.analyzeDatabases(projectPath, support);
-                // send message
-                if (ws != null) ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FP_MAX_OUTPUT",
-                        MessageProcessor.encodeFPMaxOutput(new Object[]{outputContent})
-                }).toString());
-                break;
-
-            case "EXECUTE_TNR":
-                int k = messageAsJson.get("data").getAsJsonObject().get("k").getAsInt();
-                double confidence = messageAsJson.get("data").getAsJsonObject().get("confidence").getAsDouble();
-                int delta = messageAsJson.get("data").getAsJsonObject().get("delta").getAsInt();
-                JsonObject outputContentTNR = TNRHandler.analyzeDatabases_tnr(projectPath, k, confidence, delta);
-                // send message
-                if (ws != null)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TNR_OUTPUT",
-                            MessageProcessor.encodeTNROutput(new Object[]{outputContentTNR})
-                    }).toString());
-                break;
-
-            case "DANGEROUS_READ_MINED_RULES":
-                JsonObject outputContentMinedData = MiningRulesUtilities.readMinedRulesFile(projectPath);
-                if (outputContentMinedData == null) {
-                    System.out.println("Error happened in reading files.");
-                    break;
-                }
-                if (ws != null)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "DANGEROUS_READ_MINED_RULES",
-                            MessageProcessor.encodeDangerousMinedData(
-                                    new Object[]{outputContentMinedData.get("output").toString(), outputContentMinedData.get("metaData").toString()}
-                            )}).toString());
-                break;
-        }
-
     }
 
     /**
@@ -430,11 +158,11 @@ public class FileChangeManager implements ProjectComponent {
             case "CREATE":
             case "DELETE":
                 if (file.getName().equals("ruleTable.json")) {
-                    updateRules();
+                    FollowAndAuthorRulesProcessor.getInstance().updateRules();
                     return;
                 }
                 if (file.getName().equals("tagTable.json")) {
-                    updateTags();
+                    FollowAndAuthorRulesProcessor.getInstance().updateTags();
                     return;
                 }
 
@@ -448,19 +176,18 @@ public class FileChangeManager implements ProjectComponent {
 
                 this.updateXML(file.getPath(), newXml);
 
-                if (ws != null)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
+                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
                 break;
 
             case "TEXT_CHANGE":
                 if (file.getName().equals("ruleTable.json")) {
                     System.out.println("ruleTable.json modified.");
-                    updateRules();
+                    FollowAndAuthorRulesProcessor.getInstance().updateRules();
                     return;
                 }
                 if (file.getName().equals("tagTable.json")) {
                     System.out.println("tagTable.json modified.");
-                    updateTags();
+                    FollowAndAuthorRulesProcessor.getInstance().updateTags();
                     return;
                 }
 
@@ -485,8 +212,8 @@ public class FileChangeManager implements ProjectComponent {
                         break;
                     }
                 }
-                if (ws != null)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
+                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
+
                 break;
         }
     }
@@ -535,37 +262,14 @@ public class FileChangeManager implements ProjectComponent {
     }
 
     /**
-     * update the ruleIndexText and send messages to clients
-     */
-    private void updateRules() {
-        this.ruleTable = Utilities.getInitialRuleTable(currentProject);
-        if (ws != null)
-            ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", this.getRuleTable()}).toString());
-        if (ws != null)
-            ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
-    }
-
-    /**
-     * update the tagNameText and send messages to clients
-     */
-    private void updateTags() {
-        this.tagTable = Utilities.getInitialTagTable(currentProject);
-        if (ws != null)
-            ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", this.getTagTable()}).toString());
-    }
-
-    /**
      * change the xml data and inform clients
      *
      * @param filePath String
      * @param newXml   String
      */
     private void updateXML(String filePath, String newXml) {
-        if (ws != null) ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_XML",
-                MessageProcessor.encodeNewXMLData(new Object[]{filePath, newXml})
-        }).toString());
-        if (ws != null)
-            ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES_FOR_FILE", filePath}).toString());
+        sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_XML", MessageProcessor.encodeNewXMLData(new Object[]{filePath, newXml})}).toString());
+        sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES_FOR_FILE", filePath}).toString());
     }
 
     /**
@@ -669,47 +373,11 @@ public class FileChangeManager implements ProjectComponent {
     }
 
     /**
-     * write in file
-     *
-     * @param fileName name of files
-     * @param content  content of the file
+     * send the message through web socket
+     * @param msg the processed string
      */
-    private void writeDataToFileLearningDR(String fileName, String content, boolean append) {
-        String directoryName = projectPath.concat("/LearningDR");
-        File directory = new File(directoryName);
-        if (!directory.exists()) {
-            directory.mkdir();
-        }
-
-        try {
-            PrintWriter writer;
-            if (append) {
-                writer = new PrintWriter(new FileOutputStream(
-                        new File(projectPath + "/LearningDR/" + fileName), true /* append = true */));
-            } else {
-                writer = new PrintWriter(projectPath + "/LearningDR/" + fileName, "UTF-8");
-            }
-            writer.print(content);
-            writer.close();
-        } catch (IOException e) {
-            System.out.println("error in writing " + fileName);
-        }
-    }
-
-    /**
-     * sending the data for feature selection to the client
-     *
-     * @param path            of the file from which a code snippet is selected
-     * @param startIndex      start of the selection
-     * @param endIndex        end of the selection
-     * @param startLineOffset offset of the start of the selection w.r.t. start of the line
-     * @param lineNumber      of the javaFile
-     * @param lineText        code at line of the selection
-     * @param text            text of the selection
-     */
-    void sendFeatureSelectionData(String path, String startIndex, String endIndex, String startLineOffset, String lineNumber, String lineText, String text) {
-        if (ws != null) ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FEATURE_SELECTION",
-                MessageProcessor.encodeSelectedFragment(new Object[]{path, startIndex, endIndex, startLineOffset, lineNumber, lineText, text})
-        }).toString());
+    void sendMessage(String msg) {
+        if (ws != null)
+            ws.sendToAll(msg);
     }
 }
