@@ -38,6 +38,7 @@ class MiningRulesProcessor {
     }
 
     static MiningRulesProcessor getInstance() {
+        if (thisClass == null) new MiningRulesProcessor("", null, null);
         return thisClass;
     }
 

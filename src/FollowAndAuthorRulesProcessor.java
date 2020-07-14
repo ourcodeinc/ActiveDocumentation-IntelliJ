@@ -43,6 +43,7 @@ class FollowAndAuthorRulesProcessor {
     }
 
     static FollowAndAuthorRulesProcessor getInstance() {
+        if (thisClass == null) new FollowAndAuthorRulesProcessor("", null, null);
         return thisClass;
     }
 
