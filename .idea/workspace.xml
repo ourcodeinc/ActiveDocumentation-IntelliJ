@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="58b556b8-eb92-424a-98ec-0b5a01a6042e" name="Default" comment="" />
+    <list default="true" id="58b556b8-eb92-424a-98ec-0b5a01a6042e" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" beforeDir="false" afterPath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/META-INF/plugin.xml" beforeDir="false" afterPath="$PROJECT_DIR$/resources/META-INF/plugin.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ChatServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ChatServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/FileChangeManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FileChangeManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/contextMenuActions.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FeatureSelectionAction.java" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,7 +76,7 @@
     <property name="project.structure.proportion" value="0.1524288" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="preferences.fileTypes" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RecentsManager">
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
@@ -305,6 +312,12 @@
       <workItem from="1592497296846" duration="250000" />
       <workItem from="1592505069809" duration="59000" />
       <workItem from="1593483510064" duration="413000" />
+      <workItem from="1593484171074" duration="352000" />
+      <workItem from="1594517901571" duration="74000" />
+      <workItem from="1594517988926" duration="47000" />
+      <workItem from="1594518119778" duration="77000" />
+      <workItem from="1594690961117" duration="21000" />
+      <workItem from="1594690996233" duration="6735000" />
     </task>
     <servers />
   </component>

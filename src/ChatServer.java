@@ -21,8 +21,6 @@ import java.util.Collection;
  */
 public class ChatServer extends WebSocketServer {
 
-    private FileChangeManager manager; // to process received messages
-
     /**
      * @param port = 8887
      * @throws UnknownHostException if it fails to build a connection
@@ -31,13 +29,11 @@ public class ChatServer extends WebSocketServer {
         super(new InetSocketAddress(port));
     }
 
-    void setManager(FileChangeManager fcm) {
-        manager = fcm;
-    }
-
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         System.out.println("(onOpen) " + conn.getRemoteSocketAddress().getAddress().getHostAddress() + " entered the room!");
+
+        FileChangeManager manager = FileChangeManager.getInstance();
 
         // check whether the project is changed
         manager.checkChangedProject();
@@ -47,8 +43,8 @@ public class ChatServer extends WebSocketServer {
                     MessageProcessor.encodeXMLData(new Object[]{manager.getSrcml().getPaths().get(i), manager.getSrcml().getXmls().get(i)})
             }).toString());
         }
-        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", manager.getRuleTable()}).toString());
-        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", manager.getTagTable()}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", FollowAndAuthorRulesProcessor.getInstance().getRuleTable()}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", FollowAndAuthorRulesProcessor.getInstance().getTagTable()}).toString());
         this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
         this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", manager.generateProjectHierarchyAsJSON()}).toString());
         this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_PATH", manager.projectPath}).toString());
@@ -64,7 +60,17 @@ public class ChatServer extends WebSocketServer {
     public void onMessage(WebSocket conn, String message) {
         JsonParser parser = new JsonParser();
         final JsonObject messageAsJson = parser.parse(message).getAsJsonObject();
-        manager.processReceivedMessages(messageAsJson);
+
+        FollowAndAuthorRulesProcessor faw = FollowAndAuthorRulesProcessor.getInstance();
+        MiningRulesProcessor mr = MiningRulesProcessor.getInstance();
+
+        if (faw.wsMessages.contains(messageAsJson.get("command").getAsString())) {
+            faw.processReceivedMessages(messageAsJson);
+        }
+
+        else if (mr.wsMessages.contains(messageAsJson.get("command").getAsString())) {
+            mr.processReceivedMessages(messageAsJson);
+        }
     }
 
     @Override

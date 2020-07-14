@@ -1,4 +1,5 @@
 /*
+ * This class creates the context menu for Feature Selection
  * @author : Sahar Mehrpour
  * created on Dec 26, 2019
  */
@@ -13,7 +14,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import org.jetbrains.annotations.NotNull;
 
-public class contextMenuActions extends AnAction {
+public class FeatureSelectionAction extends AnAction {
     @Override
     public void actionPerformed(@NotNull AnActionEvent event) {
 
@@ -30,14 +31,15 @@ public class contextMenuActions extends AnAction {
 
         Project project = event.getData(CommonDataKeys.PROJECT);
         if (project != null) {
-            project.getComponent(FileChangeManager.class).sendFeatureSelectionData(path,
-                    Integer.toString(startOffset),
-                    Integer.toString(endOffset),
-                    Integer.toString(startOffset - startOffsetLineSelection),
-                    Integer.toString(document.getLineNumber(startOffset)),
-                    document.getText(new TextRange(startOffsetLineSelection, endOffsetLineSelection)),
-                    primaryCaret.getSelectedText());
+            FileChangeManager.getInstance().sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FEATURE_SELECTION",
+                    MessageProcessor.encodeSelectedFragment(new Object[]{path, Integer.toString(startOffset),
+                            Integer.toString(endOffset),
+                            Integer.toString(startOffset - startOffsetLineSelection),
+                            Integer.toString(document.getLineNumber(startOffset)),
+                            document.getText(new TextRange(startOffsetLineSelection, endOffsetLineSelection)),
+                            primaryCaret.getSelectedText()
+                    })
+            }).toString());
         }
-
     }
 }
