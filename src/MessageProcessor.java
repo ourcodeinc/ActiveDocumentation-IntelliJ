@@ -7,11 +7,10 @@ class MessageProcessor {
     private static final String[] textXMLKeys = {"xmlText", "messageID"};
 
     private static final String[] fpMaxOutputKeys = {"fpMaxOutput"};
-    private static final String[] tnrOutputKeys = {"tnrOutputKeys"};
     private static final String[] selectedFragmentKeys = {"path", "startOffset", "endOffset", "startLineOffset", "lineNumber", "lineText", "text"};
     private static final String[] dangerousReadMinedRulesKeys = {"outputFiles", "metaData"};
 
-    private static final String[] doiInformationKeys = {"visitedFiles", "searchHistory", "cursorLocation"};
+    private static final String[] doiInformationKeys = {"visitedFiles", "searchHistory", "caretLocations"};
 
     static JsonObject encodeData(Object[] source_Destination_Protocol_Data_Array) {
         return createJsonObject(source_Destination_Protocol_Data_Array, dataKeys);
