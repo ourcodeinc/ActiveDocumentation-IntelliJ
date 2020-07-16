@@ -94,54 +94,6 @@ class MiningRulesProcessor {
                         // todo what it does?
                     }
                 }, ApplicationManager.getApplication());
-
-        EditorFactory.getInstance()
-                .getEventMulticaster()
-                .addEditorMouseListener(
-                        new EditorMouseListener() {
-                            @Override
-                            public void mousePressed(@NotNull EditorMouseEvent event) {
-                                // todo what it does?
-                            }
-
-                            @Override
-                            public void mouseClicked(@NotNull EditorMouseEvent event) {
-                                // todo what it does?
-                            }
-
-                            @Override
-                            public void mouseReleased(@NotNull EditorMouseEvent event) {
-                                // todo what it does?
-                            }
-
-                            @Override
-                            public void mouseEntered(@NotNull EditorMouseEvent event) {
-                                // todo what it does?
-                            }
-
-                            @Override
-                            public void mouseExited(@NotNull EditorMouseEvent event) {
-                                // todo what it does?
-                            }
-                        }, ApplicationManager.getApplication());
-
-        EditorFactory.getInstance()
-                .getEventMulticaster()
-                .addEditorMouseMotionListener(
-                        new EditorMouseMotionListener() {
-                            @Override
-                            public void mouseMoved(@NotNull EditorMouseEvent e) {
-                                // todo what it does?
-                            }
-
-                            @Override
-                            public void mouseDragged(@NotNull EditorMouseEvent e) {
-                                // todo what it does?
-                            }
-                        }, ApplicationManager.getApplication());
-
-
-
     }
 
     static MiningRulesProcessor getInstance() {
