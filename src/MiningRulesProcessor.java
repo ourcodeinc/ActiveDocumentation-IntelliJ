@@ -33,9 +33,9 @@ class MiningRulesProcessor {
     private String currentFilePathForSearch = "";
     private String[] searchHistoryRaw = {}; // the raw history received from FindInProjectSettings.getInstance(project).getRecentFindStrings()
 
-    private List<String[]> visitedFiles; // [filePath, numberOfVisits.toString()]
-    private List<List<String>> searchHistory; // [[searchTerms], [filePath1, filePath2]]
-    private List<String[]> caretLocations; // [filePath, offSet.toString()]
+    private List<String[]> visitedFiles; // [filePath, numberOfVisits.toString()] todo check
+    private List<List<String>> searchHistory; // [[searchTerms], [filePath1, filePath2]] todo check
+    private List<List<String>> caretLocations; // [[filePath], [offSet.toString(), otherUsefulInfo]] todo check
 
     // list of messages received through web socket and should be processed in this class
     final List<String> wsMessages = Arrays.asList("LEARN_RULES_META_DATA", "LEARN_RULES_FILE_LOCATIONS", "LEARN_RULES_DATABASES",
@@ -164,24 +164,24 @@ class MiningRulesProcessor {
      */
     void updateVisitedFiles(String newFilePath) {
         // todo
-        // check if user has already visited the file
-        // update the field accordingly
+        //  check if user has already visited the file
+        //  update the field accordingly
     }
 
     // todo after completing the implementation add javaDoc. Type: /** just above the method definition and then press enter
     void updateSearchHistory(String newFilePath) {
         // todo
-        // we have raw search history
-        // we get the new search history
-        // we can compare them
-        // the diff of these two is the search terms of the old file
-        // update the fields
+        //  we have raw search history
+        //  we get the new search history
+        //  we can compare them
+        //  the diff of these two is the search terms of the old file
+        //  update the fields
     }
 
     // todo after completing the implementation add javaDoc. Type: /** just above the method definition and then press enter
     void updateCaretLocations() {
         // todo process the input
-        // newInfo = {filePath, offset};
+        //  the filePath is a required property
     }
 
     /**
@@ -255,7 +255,7 @@ class MiningRulesProcessor {
                 break;
 
             case "SEND_DOI_INFORMATION":
-                // todo update if we have more data to send
+                // todo check and update if we have more data to send
                 sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "DOI_INFORMATION",
                         MessageProcessor.encodeDoiInformation(
                                 new Object[]{getVisitedFiles(), getSearchHistory(), getCaretLocations()}
