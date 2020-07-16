@@ -6,40 +6,182 @@
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.editor.Caret;
+import com.intellij.openapi.editor.EditorFactory;
+import com.intellij.openapi.editor.SelectionModel;
+import com.intellij.openapi.editor.event.*;
 import com.intellij.openapi.project.Project;
 import core.model.FPMaxHandler;
 import core.model.MiningRulesUtilities;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 class MiningRulesProcessor {
-    private ChatServer ws;
+    private final ChatServer ws;
 
-    private Project currentProject;
-    private String projectPath;
+    private final Project currentProject;
+    private final String projectPath;
+
+    private String currentFilePathForSearch = "";
+    private String[] searchHistoryRaw = {}; // the raw history received from FindInProjectSettings.getInstance(project).getRecentFindStrings()
+
+    private List<String[]> visitedFiles; // [filePath, numberOfVisits.toString()]
+    private List<List<String>> searchHistory; // [[searchTerms], [filePath1, filePath2]]
+    private List<String[]> caretLocations; // [filePath, offSet.toString()]
 
     // list of messages received through web socket and should be processed in this class
     final List<String> wsMessages = Arrays.asList("LEARN_RULES_META_DATA", "LEARN_RULES_FILE_LOCATIONS", "LEARN_RULES_DATABASES",
             "LEARN_RULES_META_DATA_APPEND", "LEARN_RULES_FILE_LOCATIONS_APPEND", "LEARN_RULES_DATABASES_APPEND",
-            "EXECUTE_FP_MAX", "DANGEROUS_READ_MINED_RULES");
+            "EXECUTE_FP_MAX", "DANGEROUS_READ_MINED_RULES", "SEND_DOI_INFORMATION");
     private static MiningRulesProcessor thisClass = null;
 
-    MiningRulesProcessor(String projectPath, Project currentProject, ChatServer ws) {
+    String getVisitedFiles() {
+        // todo
+        return "";
+    }
+
+    String getSearchHistory() {
+        // todo
+        return "";
+    }
+
+    String getCaretLocations() {
+        // todo
+        return "";
+    }
+
+    MiningRulesProcessor(Project currentProject, ChatServer ws) {
         this.currentProject = currentProject;
-        this.projectPath = projectPath;
+        this.projectPath = currentProject.getBasePath();
         this.ws = ws;
 
+        this.visitedFiles = new ArrayList<>();
+        this.searchHistory = new ArrayList<>();
+        this.caretLocations = new ArrayList<>();
+
         thisClass = this;
+
+        EditorFactory.getInstance()
+                .getEventMulticaster()
+                .addCaretListener(new CaretListener() {
+                    @Override
+                    public void caretPositionChanged(@NotNull CaretEvent event) {
+                        Caret caret = event.getCaret();
+                        int selectionStart = caret.getSelectionStart();
+                        int selectionEnd = caret.getSelectionEnd();
+                        // selection model returns the same values
+                        SelectionModel selectionModel = event.getEditor().getSelectionModel();
+                        int modelSelectionStart = selectionModel.getSelectionStart();
+                        int modelSelectionEnd = selectionModel.getSelectionEnd();
+                        // todo checkout what is needed and pass it to the method
+                        updateCaretLocations();
+                    }
+                }, ApplicationManager.getApplication());
+
+        EditorFactory.getInstance()
+                .getEventMulticaster()
+                .addVisibleAreaListener(new VisibleAreaListener() {
+                    @Override
+                    public void visibleAreaChanged(@NotNull VisibleAreaEvent visibleAreaEvent) {
+                        // todo what it does?
+                    }
+                }, ApplicationManager.getApplication());
+
+        EditorFactory.getInstance()
+                .getEventMulticaster()
+                .addEditorMouseListener(
+                        new EditorMouseListener() {
+                            @Override
+                            public void mousePressed(@NotNull EditorMouseEvent event) {
+                                // todo what it does?
+                            }
+
+                            @Override
+                            public void mouseClicked(@NotNull EditorMouseEvent event) {
+                                // todo what it does?
+                            }
+
+                            @Override
+                            public void mouseReleased(@NotNull EditorMouseEvent event) {
+                                // todo what it does?
+                            }
+
+                            @Override
+                            public void mouseEntered(@NotNull EditorMouseEvent event) {
+                                // todo what it does?
+                            }
+
+                            @Override
+                            public void mouseExited(@NotNull EditorMouseEvent event) {
+                                // todo what it does?
+                            }
+                        }, ApplicationManager.getApplication());
+
+        EditorFactory.getInstance()
+                .getEventMulticaster()
+                .addEditorMouseMotionListener(
+                        new EditorMouseMotionListener() {
+                            @Override
+                            public void mouseMoved(@NotNull EditorMouseEvent e) {
+                                // todo what it does?
+                            }
+
+                            @Override
+                            public void mouseDragged(@NotNull EditorMouseEvent e) {
+                                // todo what it does?
+                            }
+                        }, ApplicationManager.getApplication());
+
+
+
     }
 
     static MiningRulesProcessor getInstance() {
-        if (thisClass == null) new MiningRulesProcessor("", null, null);
+        if (thisClass == null) new MiningRulesProcessor(null, null);
         return thisClass;
+    }
+
+    /**
+     * the path of the newly visited file
+     * @param filePath path of the newly opened/visited file
+     */
+    void newVisitedFile(String filePath) {
+        updateVisitedFiles(filePath);
+        updateSearchHistory(filePath);
+    }
+
+    /**
+     * add the newly visited file to the list
+     * @param newFilePath path of the newly opened file
+     */
+    void updateVisitedFiles(String newFilePath) {
+        // todo
+        // check if user has already visited the file
+        // update the field accordingly
+    }
+
+    // todo after completing the implementation add javaDoc. Type: /** just above the method definition and then press enter
+    void updateSearchHistory(String newFilePath) {
+        // todo
+        // we have raw search history
+        // we get the new search history
+        // we can compare them
+        // the diff of these two is the search terms of the old file
+        // update the fields
+    }
+
+    // todo after completing the implementation add javaDoc. Type: /** just above the method definition and then press enter
+    void updateCaretLocations() {
+        // todo process the input
+        // newInfo = {filePath, offset};
     }
 
     /**
@@ -48,7 +190,6 @@ class MiningRulesProcessor {
      * @param messageAsJson JsonObject
      */
     void processReceivedMessages(JsonObject messageAsJson) {
-
         String command = messageAsJson.get("command").getAsString();
         if (currentProject == null) return;
 
@@ -96,7 +237,7 @@ class MiningRulesProcessor {
                 int support = messageAsJson.get("data").getAsInt();
                 JsonObject outputContent = FPMaxHandler.analyzeDatabases(projectPath, support);
                 // send message
-                if (ws != null) ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FP_MAX_OUTPUT",
+                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FP_MAX_OUTPUT",
                         MessageProcessor.encodeFPMaxOutput(new Object[]{outputContent})
                 }).toString());
                 break;
@@ -107,11 +248,18 @@ class MiningRulesProcessor {
                     System.out.println("Error happened in reading files.");
                     break;
                 }
-                if (ws != null)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "DANGEROUS_READ_MINED_RULES",
-                            MessageProcessor.encodeDangerousMinedData(
-                                    new Object[]{outputContentMinedData.get("output").toString(), outputContentMinedData.get("metaData").toString()}
-                            )}).toString());
+                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "DANGEROUS_READ_MINED_RULES",
+                        MessageProcessor.encodeDangerousMinedData(
+                                new Object[]{outputContentMinedData.get("output").toString(), outputContentMinedData.get("metaData").toString()}
+                        )}).toString());
+                break;
+
+            case "SEND_DOI_INFORMATION":
+                // todo update if we have more data to send
+                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "DOI_INFORMATION",
+                        MessageProcessor.encodeDoiInformation(
+                                new Object[]{getVisitedFiles(), getSearchHistory(), getCaretLocations()}
+                        )}).toString());
                 break;
         }
     }
@@ -141,6 +289,17 @@ class MiningRulesProcessor {
             writer.close();
         } catch (IOException e) {
             System.out.println("error in writing " + fileName);
+        }
+    }
+
+    /**
+     * send a message to the web-app
+     *
+     * @param message the formatted message, sent exactly as it is given
+     */
+    private void sendMessage(String message) {
+        if (ws != null) {
+            ws.sendToAll(message);
         }
     }
 }

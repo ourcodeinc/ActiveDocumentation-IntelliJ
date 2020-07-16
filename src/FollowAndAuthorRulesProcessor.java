@@ -22,18 +22,18 @@ import java.awt.*;
 
 class FollowAndAuthorRulesProcessor {
 
-    private ChatServer ws;
+    private final ChatServer ws;
     private HashMap<String, String> ruleTable; // ruleID, {index: string, ...}
     private HashMap<String, String> tagTable; // tagID, {ID: string, ...}
-    private Project currentProject;
-    private String projectPath;
+    private final Project currentProject;
+    private final String projectPath;
 
     final List<String> wsMessages = Arrays.asList("XML_RESULT", "MODIFIED_RULE", "MODIFIED_TAG", "EXPR_STMT", "NEW_RULE", "NEW_TAG");
     private static FollowAndAuthorRulesProcessor thisClass = null;
 
-    FollowAndAuthorRulesProcessor(String projectPath, Project currentProject, ChatServer ws) {
+    FollowAndAuthorRulesProcessor(Project currentProject, ChatServer ws) {
         this.currentProject = currentProject;
-        this.projectPath = projectPath;
+        this.projectPath = currentProject.getBasePath();
         this.ws = ws;
 
         this.tagTable = Utilities.getInitialTagTable(currentProject);
@@ -43,7 +43,7 @@ class FollowAndAuthorRulesProcessor {
     }
 
     static FollowAndAuthorRulesProcessor getInstance() {
-        if (thisClass == null) new FollowAndAuthorRulesProcessor("", null, null);
+        if (thisClass == null) new FollowAndAuthorRulesProcessor(null, null);
         return thisClass;
     }
 
@@ -73,7 +73,7 @@ class FollowAndAuthorRulesProcessor {
                     String fileRelativePath = messageAsJson.get("data").getAsJsonObject().get("fileName").getAsString();
                     String relativePath = fileRelativePath.startsWith("/") ? fileRelativePath : "/" + fileRelativePath;
                     VirtualFile fileByPath = LocalFileSystem.getInstance().findFileByPath(relativePath);
-                    if (fileByPath != null && currentProject != null) {
+                    if (fileByPath != null) {
                         FileEditorManager.getInstance(currentProject).openFile(fileByPath, true);
                         Editor theEditor = FileEditorManager.getInstance(currentProject).getSelectedTextEditor();
                         int indexToFocusOn = SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml");
@@ -92,12 +92,10 @@ class FollowAndAuthorRulesProcessor {
 
                 boolean ruleResult = this.updateRule(ruleID, ruleInfo);
                 if (!ruleResult)
-                    if (ws != null)
-                        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
+                    sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
 
                 Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.ruleTable);
-                if (ws != null)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
+                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
                 break;
 
             case "MODIFIED_TAG":
@@ -107,18 +105,16 @@ class FollowAndAuthorRulesProcessor {
 
                 boolean result = this.updateTag(tagID, tagInfo);
                 if (!result)
-                    if (ws != null)
-                        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
+                    sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
 
                 Utilities.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
-                if (ws != null)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
+                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
                 break;
 
             case "EXPR_STMT":
                 String exprText = messageAsJson.get("data").getAsJsonObject().get("codeText").getAsString();
                 String resultExprXml = SRCMLHandler.createXMLForText(exprText, projectPath + "/tempExprFile.java");
-                if (ws != null) ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "EXPR_STMT_XML",
+                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "EXPR_STMT_XML",
                         MessageProcessor.encodeXMLandText(new Object[]{resultExprXml, messageAsJson.get("data").getAsJsonObject().get("messageID").getAsString()})
                 }).toString());
                 break;
@@ -130,12 +126,10 @@ class FollowAndAuthorRulesProcessor {
 
                 boolean newRuleResult = this.addNewRule(newRuleID, newRuleInfo);
                 if (!newRuleResult)
-                    if (ws != null)
-                        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
+                    sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
 
                 Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.ruleTable);
-                if (ws != null)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
+                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
                 break;
 
             case "NEW_TAG":
@@ -145,12 +139,10 @@ class FollowAndAuthorRulesProcessor {
 
                 boolean newResult = this.addNewTag(newTagID, newTagInfo);
                 if (!newResult)
-                    if (ws != null)
-                        ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
+                    sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
 
                 Utilities.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
-                if (ws != null)
-                    ws.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
+                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
                 break;
         }
     }
@@ -259,10 +251,10 @@ class FollowAndAuthorRulesProcessor {
 
     /**
      * send the message through web socket
-     * @param msg the processed string
+     * @param message the processed string
      */
-    private void sendMessage(String msg) {
+    private void sendMessage(String message) {
         if (ws != null)
-            ws.sendToAll(msg);
+            ws.sendToAll(message);
     }
 }

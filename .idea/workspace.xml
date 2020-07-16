@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AnalysisUIOptions">
+    <option name="SCOPE_TYPE" value="3" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="58b556b8-eb92-424a-98ec-0b5a01a6042e" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" beforeDir="false" afterPath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/META-INF/plugin.xml" beforeDir="false" afterPath="$PROJECT_DIR$/resources/META-INF/plugin.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ChatServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ChatServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ActiveDocumentationPlugin.iml" beforeDir="false" afterPath="$PROJECT_DIR$/ActiveDocumentationPlugin.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/FileChangeManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FileChangeManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/contextMenuActions.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FeatureSelectionAction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/FollowAndAuthorRulesProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FollowAndAuthorRulesProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MessageProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MessageProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MiningRulesProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MiningRulesProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/index.html" beforeDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -50,7 +54,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="version1" />
+        <entry key="$PROJECT_DIR$" value="Sahar" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -66,26 +70,26 @@
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="1" id="Add" />
   </component>
+  <component name="ProjectViewState">
+    <option name="autoscrollFromSource" value="true" />
+    <option name="autoscrollToSource" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
   <component name="PropertiesComponent">
     <property name="SearchEverywhereHistoryKey" value="initial release&#9;null&#9;null" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/resources/icons" />
     <property name="nodejs_interpreter_path" value="/usr/local/bin/node" />
-    <property name="project.structure.last.edited" value="Modules" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="project.structure.last.edited" value="SDKs" />
     <property name="project.structure.proportion" value="0.1524288" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
-      <recent name="icons" />
-    </key>
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/resources/icons" />
-      <recent name="$PROJECT_DIR$/resources/META-INF" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/lib" />
       <recent name="$PROJECT_DIR$/resources" />
@@ -93,18 +97,14 @@
       <recent name="$PROJECT_DIR$/resources/META-INF" />
       <recent name="$PROJECT_DIR$/src/client" />
     </key>
-  </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="" />
+      <recent name="icons" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/resources/icons" />
+      <recent name="$PROJECT_DIR$/resources/META-INF" />
+    </key>
   </component>
   <component name="RunManager">
     <configuration default="true" type="Applet">
@@ -126,7 +126,7 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="JetRunConfigurationType" factoryName="Kotlin">
+    <configuration default="true" type="JetRunConfigurationType">
       <module name="ActiveDocumentation" />
       <option name="VM_PARAMETERS" />
       <option name="PROGRAM_PARAMETERS" />
@@ -318,23 +318,93 @@
       <workItem from="1594518119778" duration="77000" />
       <workItem from="1594690961117" duration="21000" />
       <workItem from="1594690996233" duration="6735000" />
+      <workItem from="1594850230106" duration="1371000" />
+      <workItem from="1594852019511" duration="2808000" />
+      <workItem from="1594854913289" duration="49000" />
+      <workItem from="1594855024652" duration="41000" />
+      <workItem from="1594855079488" duration="635000" />
+      <workItem from="1594855759967" duration="741000" />
+      <workItem from="1594856629643" duration="23000" />
+      <workItem from="1594874190710" duration="720000" />
+      <workItem from="1594875060624" duration="3826000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
+    <option name="version" value="2" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
         <entry key="MAIN">
           <value>
-            <State>
-              <option name="COLUMN_ORDER" />
-            </State>
+            <State />
           </value>
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="910" y="362" key="#Inspections" timestamp="1594855458475">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state x="910" y="362" key="#Inspections/0.23.2560.1335@0.23.2560.1335" timestamp="1594855458475" />
+    <state x="1046" y="339" key="#com.intellij.ide.util.MemberChooser" timestamp="1594878776073">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state x="1046" y="339" key="#com.intellij.ide.util.MemberChooser/0.23.2560.1335@0.23.2560.1335" timestamp="1594878776073" />
+    <state x="1018" y="571" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes" timestamp="1594868679232">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state x="1018" y="571" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes/0.23.2560.1335@0.23.2560.1335" timestamp="1594868679232" />
+    <state x="952" y="387" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1594871971365">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state x="952" y="387" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.2560.1335@0.23.2560.1335" timestamp="1594871971364" />
+    <state width="2234" height="435" key="GridCell.Tab.0.bottom" timestamp="1594879319554">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state width="2234" height="435" key="GridCell.Tab.0.bottom/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319554" />
+    <state width="2234" height="435" key="GridCell.Tab.0.center" timestamp="1594879319553">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state width="2234" height="435" key="GridCell.Tab.0.center/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319553" />
+    <state width="2234" height="435" key="GridCell.Tab.0.left" timestamp="1594879319552">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state width="2234" height="435" key="GridCell.Tab.0.left/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319552" />
+    <state width="2234" height="435" key="GridCell.Tab.0.right" timestamp="1594879319553">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state width="2234" height="435" key="GridCell.Tab.0.right/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319553" />
+    <state width="2234" height="435" key="GridCell.Tab.1.bottom" timestamp="1594879319555">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state width="2234" height="435" key="GridCell.Tab.1.bottom/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319555" />
+    <state width="2234" height="435" key="GridCell.Tab.1.center" timestamp="1594879319554">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state width="2234" height="435" key="GridCell.Tab.1.center/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319554" />
+    <state width="2234" height="435" key="GridCell.Tab.1.left" timestamp="1594879319554">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state width="2234" height="435" key="GridCell.Tab.1.left/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319554" />
+    <state width="2234" height="435" key="GridCell.Tab.1.right" timestamp="1594879319555">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state width="2234" height="435" key="GridCell.Tab.1.right/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319555" />
+    <state x="821" y="68" key="SettingsEditor" timestamp="1594874487259">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state x="821" y="68" key="SettingsEditor/0.23.2560.1335@0.23.2560.1335" timestamp="1594874487259" />
+    <state x="1457" y="525" key="scopes" timestamp="1594863143176">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state x="1457" y="525" key="scopes/0.23.2560.1335@0.23.2560.1335" timestamp="1594863143176" />
+    <state x="1519" y="320" width="838" height="1032" key="search.everywhere.popup" timestamp="1594856650066">
+      <screen x="0" y="23" width="2560" height="1335" />
+    </state>
+    <state x="1519" y="320" width="838" height="1032" key="search.everywhere.popup/0.23.2560.1335@0.23.2560.1335" timestamp="1594856650066" />
   </component>
 </project>

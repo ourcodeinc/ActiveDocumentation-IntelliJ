@@ -91,7 +91,9 @@ public class FileChangeManager implements ProjectComponent {
                 try {
                     if (event.getManager().getSelectedFiles().length > 0)
                         if (Objects.requireNonNull(event.getManager().getSelectedFiles()[0].getCanonicalFile()).getName().endsWith(".java")) {
-                            sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FILE_CHANGE", event.getManager().getSelectedFiles()[0].getPath()}).toString());
+                            String filePath = event.getManager().getSelectedFiles()[0].getPath();
+                            MiningRulesProcessor.getInstance().newVisitedFile(filePath);
+                            sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FILE_CHANGE", filePath}).toString());
                         }
                 } catch (NullPointerException e) {
                     System.out.println("error happened in finding the changed file.");
@@ -135,8 +137,8 @@ public class FileChangeManager implements ProjectComponent {
                 e.printStackTrace();
             }
 
-            new FollowAndAuthorRulesProcessor(projectPath, currentProject, ws);
-            new MiningRulesProcessor(projectPath, currentProject, ws);
+            new FollowAndAuthorRulesProcessor(currentProject, ws);
+            new MiningRulesProcessor(currentProject, ws);
         }
     }
 
