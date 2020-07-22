@@ -10,7 +10,9 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.SelectionModel;
-import com.intellij.openapi.editor.event.*;
+import com.intellij.openapi.editor.event.CaretEvent;
+import com.intellij.openapi.editor.event.CaretListener;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import core.model.FPMaxHandler;
 import core.model.MiningRulesUtilities;
@@ -20,15 +22,17 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 class MiningRulesProcessor {
     private final ChatServer ws;
 
     private final Project currentProject;
     private final String projectPath;
+    private HashMap<String, ArrayList<ArrayList<Integer>>> VisitedElements = new HashMap<String, ArrayList<ArrayList<Integer>>>();
+    private HashMap<String, Integer> VisitedPaths = new HashMap<String, Integer>();
+    TreeMap<Integer, String> cursorLocations = new TreeMap<Integer, String>();
+
 
     private String currentFilePathForSearch = "";
     private String[] searchHistoryRaw = {}; // the raw history received from FindInProjectSettings.getInstance(project).getRecentFindStrings()
@@ -44,6 +48,7 @@ class MiningRulesProcessor {
     private static MiningRulesProcessor thisClass = null;
 
     String getVisitedFiles() {
+        System.out.println(VisitedPaths.toString());
         // todo
         return "";
     }
@@ -53,9 +58,59 @@ class MiningRulesProcessor {
         return "";
     }
 
+    String getVisitedElements() {
+        String result = "{";
+        for (String path : VisitedElements.keySet()) {
+            result += "\"" + path + "\"" + ":" + VisitedElements.get(path).toString() + ",";
+        }
+        if (result.length() > 1) {
+            result = result.substring(0, result.length() - 1);
+        }
+        result += "}";
+        return result;
+        // return VisitedElements.toString();
+    }
+
     String getCaretLocations() {
-        // todo
+
         return "";
+    }
+
+    void findCaretLocations(int startCaretLocation, int endCaretLocation) {
+        String path = FileEditorManager.getInstance(currentProject).getSelectedFiles()[0].getCanonicalPath();
+        if (path == null || !path.endsWith(".java")) return;
+        System.out.println(path);
+
+        ArrayList<Integer> location = new ArrayList<>();
+        location.add(startCaretLocation);
+        location.add(endCaretLocation);
+        ArrayList<ArrayList<Integer>> list = new ArrayList<>();
+        list.add(location);
+        if (VisitedElements.containsKey(path)) {
+            VisitedElements.get(path).add(location);
+        } else {
+            VisitedElements.put(path, list);
+        }
+        /*
+        Find locations and add to Hashmap if not inside already
+        Increment Count
+         */
+        // for (String loc : locationCounts.keySet()) {
+        //     cursorLocations.put(locationCounts.get(loc), loc);
+        // add to treemap by <occurence, location>
+        // for(int count: )
+            /*
+        public void actionPerformed(@NotNull final AnActionEvent e){
+            final Editor editor = event.getRequiredData(CommonDataKeys.EDITOR);
+            final Document document = editor.getDocument();
+
+            Caret primaryCaret = editor.getCaretModel().getPrimaryCaret();
+            int startOffset = primaryCaret.getSelectionStart();
+            int endOffset = primaryCaret.getSelectionEnd();
+            int startOffsetLineSelection = document.getLineStartOffset(document.getLineNumber(startOffset));
+            int endOffsetLineSelection = document.getLineEndOffset(document.getLineNumber(endOffset));
+        }
+        */
     }
 
     MiningRulesProcessor(Project currentProject, ChatServer ws) {
@@ -79,13 +134,16 @@ class MiningRulesProcessor {
                         int selectionEnd = caret.getSelectionEnd();
                         // selection model returns the same values
                         SelectionModel selectionModel = event.getEditor().getSelectionModel();
-                        int modelSelectionStart = selectionModel.getSelectionStart();
-                        int modelSelectionEnd = selectionModel.getSelectionEnd();
+                        //   int modelSelectionStart = selectionModel.getSelectionStart();
+                        //   int modelSelectionEnd = selectionModel.getSelectionEnd();
+                        //   System.out.println(selectionStart + " " + selectionEnd);
                         // todo checkout what is needed and pass it to the method
-                        updateCaretLocations();
+                        //  updateCaretLocations();
+                        MiningRulesProcessor.getInstance().findCaretLocations(selectionStart, selectionEnd);
+                        // System.out.println(filePath);
                     }
                 }, ApplicationManager.getApplication());
-
+/*
         EditorFactory.getInstance()
                 .getEventMulticaster()
                 .addVisibleAreaListener(new VisibleAreaListener() {
@@ -94,6 +152,8 @@ class MiningRulesProcessor {
                         // todo what it does?
                     }
                 }, ApplicationManager.getApplication());
+                /*
+ */
     }
 
     static MiningRulesProcessor getInstance() {
@@ -103,18 +163,27 @@ class MiningRulesProcessor {
 
     /**
      * the path of the newly visited file
+     *
      * @param filePath path of the newly opened/visited file
      */
     void newVisitedFile(String filePath) {
         updateVisitedFiles(filePath);
         updateSearchHistory(filePath);
+        this.currentFilePathForSearch = filePath;
     }
 
     /**
      * add the newly visited file to the list
+     *
      * @param newFilePath path of the newly opened file
      */
     void updateVisitedFiles(String newFilePath) {
+        if (VisitedPaths.containsKey(newFilePath)) {
+            VisitedPaths.put(newFilePath, VisitedPaths.get(newFilePath) + 1);
+        } else {
+            VisitedPaths.put(newFilePath, 1);
+        }
+        System.out.println(getVisitedFiles());
         // todo
         //  check if user has already visited the file
         //  update the field accordingly

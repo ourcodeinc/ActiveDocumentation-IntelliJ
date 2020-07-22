@@ -5,15 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="58b556b8-eb92-424a-98ec-0b5a01a6042e" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ActiveDocumentationPlugin.iml" beforeDir="false" afterPath="$PROJECT_DIR$/ActiveDocumentationPlugin.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/FileChangeManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FileChangeManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/FollowAndAuthorRulesProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FollowAndAuthorRulesProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MessageProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MessageProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/MiningRulesProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MiningRulesProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.html" beforeDir="false" />
     </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -28,6 +24,9 @@
   </component>
   <component name="CodeInsightWorkspaceSettings">
     <option name="optimizeImportsOnTheFly" value="true" />
+  </component>
+  <component name="CodeStyleSettingsInfer">
+    <option name="done" value="true" />
   </component>
   <component name="DatabaseView">
     <option name="SHOW_INTERMEDIATE" value="true" />
@@ -65,6 +64,9 @@
     <option name="FILTER_INFO" value="true" />
     <option name="FILTER_DEBUG" value="true" />
     <option name="CUSTOM_FILTER" />
+  </component>
+  <component name="ProjectCodeStyleSettingsMigration">
+    <option name="version" value="1" />
   </component>
   <component name="ProjectId" id="1U2tvKGAEwJu7ZDy9Ux4XvDC8Ox" />
   <component name="ProjectLevelVcsManager">
@@ -106,6 +108,18 @@
       <recent name="$PROJECT_DIR$/resources/META-INF" />
     </key>
   </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
   <component name="RunManager">
     <configuration default="true" type="Applet">
       <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
@@ -126,7 +140,7 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="JetRunConfigurationType">
+    <configuration default="true" type="JetRunConfigurationType" factoryName="Kotlin">
       <module name="ActiveDocumentation" />
       <option name="VM_PARAMETERS" />
       <option name="PROGRAM_PARAMETERS" />
@@ -338,73 +352,44 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>
     </option>
-    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="910" y="362" key="#Inspections" timestamp="1594855458475">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state x="910" y="362" key="#Inspections/0.23.2560.1335@0.23.2560.1335" timestamp="1594855458475" />
-    <state x="1046" y="339" key="#com.intellij.ide.util.MemberChooser" timestamp="1594878776073">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state x="1046" y="339" key="#com.intellij.ide.util.MemberChooser/0.23.2560.1335@0.23.2560.1335" timestamp="1594878776073" />
-    <state x="1018" y="571" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes" timestamp="1594868679232">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state x="1018" y="571" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes/0.23.2560.1335@0.23.2560.1335" timestamp="1594868679232" />
-    <state x="952" y="387" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1594871971365">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state x="952" y="387" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.2560.1335@0.23.2560.1335" timestamp="1594871971364" />
-    <state width="2234" height="435" key="GridCell.Tab.0.bottom" timestamp="1594879319554">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state width="2234" height="435" key="GridCell.Tab.0.bottom/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319554" />
-    <state width="2234" height="435" key="GridCell.Tab.0.center" timestamp="1594879319553">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state width="2234" height="435" key="GridCell.Tab.0.center/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319553" />
-    <state width="2234" height="435" key="GridCell.Tab.0.left" timestamp="1594879319552">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state width="2234" height="435" key="GridCell.Tab.0.left/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319552" />
-    <state width="2234" height="435" key="GridCell.Tab.0.right" timestamp="1594879319553">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state width="2234" height="435" key="GridCell.Tab.0.right/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319553" />
-    <state width="2234" height="435" key="GridCell.Tab.1.bottom" timestamp="1594879319555">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state width="2234" height="435" key="GridCell.Tab.1.bottom/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319555" />
-    <state width="2234" height="435" key="GridCell.Tab.1.center" timestamp="1594879319554">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state width="2234" height="435" key="GridCell.Tab.1.center/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319554" />
-    <state width="2234" height="435" key="GridCell.Tab.1.left" timestamp="1594879319554">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state width="2234" height="435" key="GridCell.Tab.1.left/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319554" />
-    <state width="2234" height="435" key="GridCell.Tab.1.right" timestamp="1594879319555">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state width="2234" height="435" key="GridCell.Tab.1.right/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319555" />
-    <state x="821" y="68" key="SettingsEditor" timestamp="1594874487259">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state x="821" y="68" key="SettingsEditor/0.23.2560.1335@0.23.2560.1335" timestamp="1594874487259" />
-    <state x="1457" y="525" key="scopes" timestamp="1594863143176">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state x="1457" y="525" key="scopes/0.23.2560.1335@0.23.2560.1335" timestamp="1594863143176" />
-    <state x="1519" y="320" width="838" height="1032" key="search.everywhere.popup" timestamp="1594856650066">
-      <screen x="0" y="23" width="2560" height="1335" />
-    </state>
-    <state x="1519" y="320" width="838" height="1032" key="search.everywhere.popup/0.23.2560.1335@0.23.2560.1335" timestamp="1594856650066" />
+    <state x="910" y="362" key="#Inspections" />
+    <state x="910" y="362" key="#Inspections/0.23.2560.1335@0.23.2560.1335" />
+    <state x="1046" y="339" key="#com.intellij.ide.util.MemberChooser" />
+    <state x="1046" y="339" key="#com.intellij.ide.util.MemberChooser/0.23.2560.1335@0.23.2560.1335" />
+    <state x="1018" y="571" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes" />
+    <state x="1018" y="571" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes/0.23.2560.1335@0.23.2560.1335" />
+    <state x="952" y="387" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" />
+    <state x="952" y="387" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.23.2560.1335@0.23.2560.1335" />
+    <state width="2234" height="435" key="GridCell.Tab.0.bottom" />
+    <state width="2234" height="435" key="GridCell.Tab.0.bottom/0.23.2560.1335@0.23.2560.1335" />
+    <state width="2234" height="435" key="GridCell.Tab.0.center" />
+    <state width="2234" height="435" key="GridCell.Tab.0.center/0.23.2560.1335@0.23.2560.1335" />
+    <state width="2234" height="435" key="GridCell.Tab.0.left" />
+    <state width="2234" height="435" key="GridCell.Tab.0.left/0.23.2560.1335@0.23.2560.1335" />
+    <state width="2234" height="435" key="GridCell.Tab.0.right" />
+    <state width="2234" height="435" key="GridCell.Tab.0.right/0.23.2560.1335@0.23.2560.1335" />
+    <state width="2234" height="435" key="GridCell.Tab.1.bottom" />
+    <state width="2234" height="435" key="GridCell.Tab.1.bottom/0.23.2560.1335@0.23.2560.1335" />
+    <state width="2234" height="435" key="GridCell.Tab.1.center" />
+    <state width="2234" height="435" key="GridCell.Tab.1.center/0.23.2560.1335@0.23.2560.1335" />
+    <state width="2234" height="435" key="GridCell.Tab.1.left" />
+    <state width="2234" height="435" key="GridCell.Tab.1.left/0.23.2560.1335@0.23.2560.1335" />
+    <state width="2234" height="435" key="GridCell.Tab.1.right" />
+    <state width="2234" height="435" key="GridCell.Tab.1.right/0.23.2560.1335@0.23.2560.1335" />
+    <state x="821" y="68" key="SettingsEditor" />
+    <state x="821" y="68" key="SettingsEditor/0.23.2560.1335@0.23.2560.1335" />
+    <state x="1457" y="525" key="scopes" />
+    <state x="1457" y="525" key="scopes/0.23.2560.1335@0.23.2560.1335" />
+    <state x="1519" y="320" width="838" height="1032" key="search.everywhere.popup" />
+    <state x="1519" y="320" width="838" height="1032" key="search.everywhere.popup/0.23.2560.1335@0.23.2560.1335" />
   </component>
 </project>
