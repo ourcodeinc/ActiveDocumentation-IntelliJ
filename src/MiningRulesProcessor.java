@@ -6,12 +6,19 @@
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.intellij.find.FindInProjectSettings;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.SelectionModel;
-import com.intellij.openapi.editor.event.*;
+import com.intellij.openapi.editor.event.CaretEvent;
+import com.intellij.openapi.editor.event.CaretListener;
+import com.intellij.openapi.editor.event.VisibleAreaEvent;
+import com.intellij.openapi.editor.event.VisibleAreaListener;
+import com.intellij.openapi.fileEditor.impl.EditorHistoryManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.vcsUtil.VcsUtil;
 import core.model.FPMaxHandler;
 import core.model.MiningRulesUtilities;
 import org.jetbrains.annotations.NotNull;
@@ -22,6 +29,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 class MiningRulesProcessor {
@@ -31,10 +39,11 @@ class MiningRulesProcessor {
     private final String projectPath;
 
     private String currentFilePathForSearch = "";
-    private String[] searchHistoryRaw = {}; // the raw history received from FindInProjectSettings.getInstance(project).getRecentFindStrings()
-
-    private List<String[]> visitedFiles; // [filePath, numberOfVisits.toString()] todo check
-    private List<List<String>> searchHistory; // [[searchTerms], [filePath1, filePath2]] todo check
+    private String[] searchHistoryRaw; //= FindInProjectSettings.getInstance(currentProject).getRecentFindStrings(); // the raw history received from FindInProjectSettings.getInstance(project).getRecentFindStrings()
+    private List<String> fileList;
+    //private List<String[]> visitedFiles; // [filePath, numberOfVisits] todo check
+    private HashMap<String, Integer> visitedFiles; // [filePath, numberOfVisits] todo check
+    private HashMap <String, List<String>> searchHistory; // [[searchTerms], [filePath1, filePath2]] todo check
     private List<List<String>> caretLocations; // [[filePath], [offSet.toString(), otherUsefulInfo]] todo check
 
     // list of messages received through web socket and should be processed in this class
@@ -43,14 +52,47 @@ class MiningRulesProcessor {
             "EXECUTE_FP_MAX", "DANGEROUS_READ_MINED_RULES", "SEND_DOI_INFORMATION");
     private static MiningRulesProcessor thisClass = null;
 
-    String getVisitedFiles() {
+
+    //A List of the visited files
+    List <String> getFileList() {
         // todo
-        return "";
+        VirtualFile[] files = EditorHistoryManager.getInstance(currentProject).getFiles();
+        for (int i = files.length - 1; i >= 0; --i) {
+            VirtualFile file = files[i];
+            String path = VcsUtil.getFilePath(file).toString();
+            fileList.add(path);
+        }
+        return fileList;
     }
 
-    String getSearchHistory() {
+    HashMap<String, Integer> getVisitedFiles() {
         // todo
-        return "";
+        for (String s : getFileList()) {
+            if (visitedFiles.containsKey(s)) {
+                visitedFiles.put(s, visitedFiles.get(s) + 1);
+            } else {
+                visitedFiles.put(s, 1);
+            }
+        }
+        return visitedFiles;
+    }
+
+  // simply returns current search history result if you want to update searchhistory
+    String[] getSearchHistory() {
+        // todo
+        //finding current file path
+        //FileEditorManagerEx fileEditorManager = (FileEditorManagerEx) FileEditorManager.getInstance(currentProject);
+        //VirtualFile file = fileEditorManager.getCurrentFile();
+        //String currentFilePath = VcsUtil.getFilePath(file).toString();
+
+        //getting current search results
+        String[] recent_search_results = FindInProjectSettings.getInstance(currentProject).getRecentFindStrings();
+
+        //putting current file path
+        //if (currentFilePath != null) {
+        //    searchHistory.put(currentFilePath, recent_search_results);
+        //}
+        return recent_search_results;
     }
 
     String getCaretLocations() {
@@ -63,8 +105,9 @@ class MiningRulesProcessor {
         this.projectPath = currentProject.getBasePath();
         this.ws = ws;
 
-        this.visitedFiles = new ArrayList<>();
-        this.searchHistory = new ArrayList<>();
+        this.fileList = new ArrayList<>();
+        this.visitedFiles = new HashMap<>();
+        this.searchHistory = new HashMap<>();
         this.caretLocations = new ArrayList<>();
 
         thisClass = this;
@@ -118,16 +161,41 @@ class MiningRulesProcessor {
         // todo
         //  check if user has already visited the file
         //  update the field accordingly
+        if (getVisitedFiles().containsKey(newFilePath)) {
+            visitedFiles.put(newFilePath, visitedFiles.get(newFilePath) + 1);
+        } else {
+            visitedFiles.put(newFilePath, 1);
+        }
+
     }
 
     // todo after completing the implementation add javaDoc. Type: /** just above the method definition and then press enter
     void updateSearchHistory(String newFilePath) {
         // todo
-        //  we have raw search history
-        //  we get the new search history
-        //  we can compare them
-        //  the diff of these two is the search terms of the old file
-        //  update the fields
+        String prevkey = "";
+        if (searchHistory.size() <1) {
+            String[] rawhist = searchHistoryRaw;
+            List<String> temp = Arrays.asList( rawhist );
+            searchHistory.put(newFilePath, temp);
+            prevkey = newFilePath;
+        }else{
+            String[] newsearchhistory = getSearchHistory();
+            String[] oldsearchhistory = searchHistoryRaw;
+
+            //compare them by finding difference
+            List<String> diff = new ArrayList<>();
+            //new search history should be greater than or equal the raw search history as the user searches more
+            for(int k = 0; k < newsearchhistory.length-1; k++){
+                if( Arrays.asList(oldsearchhistory).contains(newsearchhistory[k]) == false){
+                    diff.add(newsearchhistory[k]);
+                }
+            }
+            //assign that difference as the value to the previous key in the actual searchhistory hashmap
+            searchHistory.put(prevkey, diff);
+
+            // update the prevkey after you have stored the difference into the old filepath
+            prevkey = newFilePath;
+        }
     }
 
     // todo after completing the implementation add javaDoc. Type: /** just above the method definition and then press enter

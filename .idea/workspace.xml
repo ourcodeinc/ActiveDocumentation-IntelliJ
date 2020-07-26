@@ -3,16 +3,29 @@
   <component name="AnalysisUIOptions">
     <option name="SCOPE_TYPE" value="3" />
   </component>
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="58b556b8-eb92-424a-98ec-0b5a01a6042e" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ActiveDocumentationPlugin.iml" beforeDir="false" afterPath="$PROJECT_DIR$/ActiveDocumentationPlugin.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/FileChangeManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FileChangeManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/FollowAndAuthorRulesProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FollowAndAuthorRulesProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MessageProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MessageProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/MiningRulesProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MiningRulesProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.html" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,7 +67,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="Sahar" />
+        <entry key="$PROJECT_DIR$" value="todoBranch" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -80,12 +93,18 @@
     <property name="SearchEverywhereHistoryKey" value="initial release&#9;null&#9;null" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/resources/icons" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="nodejs_interpreter_path" value="/usr/local/bin/node" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="project.structure.last.edited" value="SDKs" />
+    <property name="project.structure.last.edited" value="Project" />
     <property name="project.structure.proportion" value="0.1524288" />
-    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="project.structure.side.proportion" value="0.11454755" />
     <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
@@ -152,6 +171,7 @@
       <module name="ActiveDocumentationPlugin" />
       <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
       <option name="PROGRAM_PARAMETERS" value="" />
+      <alternative-path path="14" alternative-path-enabled="true" />
       <predefined_log_file enabled="true" id="idea.log" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -327,6 +347,13 @@
       <workItem from="1594856629643" duration="23000" />
       <workItem from="1594874190710" duration="720000" />
       <workItem from="1594875060624" duration="3826000" />
+      <workItem from="1595199982396" duration="394000" />
+      <workItem from="1595200415966" duration="78000" />
+      <workItem from="1595200524726" duration="41000" />
+      <workItem from="1595200578671" duration="25000" />
+      <workItem from="1595200619814" duration="402000" />
+      <workItem from="1595201201792" duration="7386000" />
+      <workItem from="1595374738276" duration="15466000" />
     </task>
     <servers />
   </component>
@@ -346,10 +373,18 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
+    <state x="684" y="297" key="#Custom_Plugin_Repositories" timestamp="1595200338720">
+      <screen x="0" y="23" width="1440" height="827" />
+    </state>
+    <state x="684" y="297" key="#Custom_Plugin_Repositories/0.23.1440.827@0.23.1440.827" timestamp="1595200338720" />
     <state x="910" y="362" key="#Inspections" timestamp="1594855458475">
       <screen x="0" y="23" width="2560" height="1335" />
     </state>
     <state x="910" y="362" key="#Inspections/0.23.2560.1335@0.23.2560.1335" timestamp="1594855458475" />
+    <state x="311" y="91" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1595200683210">
+      <screen x="0" y="23" width="1440" height="827" />
+    </state>
+    <state x="311" y="91" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1440.827@0.23.1440.827" timestamp="1595200683210" />
     <state x="1046" y="339" key="#com.intellij.ide.util.MemberChooser" timestamp="1594878776073">
       <screen x="0" y="23" width="2560" height="1335" />
     </state>
@@ -394,9 +429,11 @@
       <screen x="0" y="23" width="2560" height="1335" />
     </state>
     <state width="2234" height="435" key="GridCell.Tab.1.right/0.23.2560.1335@0.23.2560.1335" timestamp="1594879319555" />
-    <state x="821" y="68" key="SettingsEditor" timestamp="1594874487259">
-      <screen x="0" y="23" width="2560" height="1335" />
+    <state x="217" y="23" width="1024" height="830" key="SettingsEditor" timestamp="1595348152096">
+      <screen x="0" y="23" width="1440" height="830" />
     </state>
+    <state x="376" y="23" width="1024" height="827" key="SettingsEditor/0.23.1440.827@0.23.1440.827" timestamp="1595200901217" />
+    <state x="217" y="23" width="1024" height="830" key="SettingsEditor/0.23.1440.830@0.23.1440.830" timestamp="1595348152096" />
     <state x="821" y="68" key="SettingsEditor/0.23.2560.1335@0.23.2560.1335" timestamp="1594874487259" />
     <state x="1457" y="525" key="scopes" timestamp="1594863143176">
       <screen x="0" y="23" width="2560" height="1335" />
