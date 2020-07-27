@@ -42,6 +42,36 @@ class MiningRulesProcessor {
             "EXECUTE_FP_MAX", "DANGEROUS_READ_MINED_RULES", "SEND_DOI_INFORMATION");
     private static MiningRulesProcessor thisClass = null;
 
+    MiningRulesProcessor(Project currentProject, ChatServer ws) {
+        this.currentProject = currentProject;
+        this.projectPath = currentProject.getBasePath();
+        this.ws = ws;
+
+        this.visitedElements = new HashMap<>();
+        this.visitedFiles = new HashMap<>();
+        this.searchHistory = new HashMap<>();
+
+        thisClass = this;
+
+        EditorFactory.getInstance()
+                .getEventMulticaster()
+                .addCaretListener(new CaretListener() {
+                    @Override
+                    public void caretPositionChanged(@NotNull CaretEvent event) {
+                        Caret caret = event.getCaret();
+                        assert caret != null;
+                        int selectionStart = caret.getSelectionStart();
+                        int selectionEnd = caret.getSelectionEnd();
+                        MiningRulesProcessor.getInstance().findCaretLocations(selectionStart, selectionEnd);
+                    }
+                }, ApplicationManager.getApplication());
+    }
+
+    static MiningRulesProcessor getInstance() {
+        if (thisClass == null) new MiningRulesProcessor(null, null);
+        return thisClass;
+    }
+
     /**
      * convert the data for visitedFiles to String
      *
@@ -59,7 +89,7 @@ class MiningRulesProcessor {
         return result.toString();
     }
 
-  // simply returns current search history result if you want to update searchhistory
+    // simply returns current search history result if you want to update searchhistory
     String[] getSearchHistory() {
         // todo
         //finding current file path
@@ -102,36 +132,6 @@ class MiningRulesProcessor {
             visitedElements.get(path).add(location);
         else
             visitedElements.put(path, new ArrayList<>(Arrays.asList(location)));
-    }
-
-    MiningRulesProcessor(Project currentProject, ChatServer ws) {
-        this.currentProject = currentProject;
-        this.projectPath = currentProject.getBasePath();
-        this.ws = ws;
-
-        this.visitedElements = new HashMap<>();
-        this.visitedFiles = new HashMap<>();
-        this.searchHistory = new HashMap<>();
-
-        thisClass = this;
-
-        EditorFactory.getInstance()
-                .getEventMulticaster()
-                .addCaretListener(new CaretListener() {
-                    @Override
-                    public void caretPositionChanged(@NotNull CaretEvent event) {
-                        Caret caret = event.getCaret();
-                        assert caret != null;
-                        int selectionStart = caret.getSelectionStart();
-                        int selectionEnd = caret.getSelectionEnd();
-                        MiningRulesProcessor.getInstance().findCaretLocations(selectionStart, selectionEnd);
-                    }
-                }, ApplicationManager.getApplication());
-    }
-
-    static MiningRulesProcessor getInstance() {
-        if (thisClass == null) new MiningRulesProcessor(null, null);
-        return thisClass;
     }
 
     /**
