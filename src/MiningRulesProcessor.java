@@ -29,12 +29,12 @@ class MiningRulesProcessor {
     private final Project currentProject;
     private final String projectPath;
 
-    private String currentFilePathForSearch = "";
-    private String[] searchHistoryRaw = {}; // the raw history received from FindInProjectSettings.getInstance(project).getRecentFindStrings()
+    private String currentFilePath = "";
+    private String[] searchHistoryRaw = {}; // the raw history
 
-    private Map<String, ArrayList<ArrayList<Integer>>> visitedElements; // <filePath, [[startOffset1, endOffset1]]]>
-    private Map<String, Integer> visitedFiles; // <filePath, numberOfVisits>
-    private HashMap <String, List<String>> searchHistory; // [[searchTerms], [filePath1, filePath2]] todo check
+    private final Map<String, ArrayList<ArrayList<Integer>>> visitedElements; // <filePath, [[startOffset1, endOffset1]]]>
+    private final Map<String, Integer> visitedFiles; // <filePath, numberOfVisits>
+    private final HashMap <String, List<String>> searchHistory; // <filePath, [[searchTerms], [filePath1, filePath2]]>
 
     // list of messages received through web socket and should be processed in this class
     final List<String> wsMessages = Arrays.asList("LEARN_RULES_META_DATA", "LEARN_RULES_FILE_LOCATIONS", "LEARN_RULES_DATABASES",
@@ -47,9 +47,9 @@ class MiningRulesProcessor {
         this.projectPath = currentProject.getBasePath();
         this.ws = ws;
 
-        this.visitedElements = new HashMap<>();
-        this.visitedFiles = new HashMap<>();
-        this.searchHistory = new HashMap<>();
+        visitedElements = new HashMap<>();
+        visitedFiles = new HashMap<>();
+        searchHistory = new HashMap<>();
 
         thisClass = this;
 
@@ -89,22 +89,28 @@ class MiningRulesProcessor {
         return result.toString();
     }
 
-    // simply returns current search history result if you want to update searchhistory
-    String[] getSearchHistory() {
-        // todo
-        //finding current file path
-        //FileEditorManagerEx fileEditorManager = (FileEditorManagerEx) FileEditorManager.getInstance(currentProject);
-        //VirtualFile file = fileEditorManager.getCurrentFile();
-        //String currentFilePath = VcsUtil.getFilePath(file).toString();
-
-        //getting current search results
-        String[] recent_search_results = FindInProjectSettings.getInstance(currentProject).getRecentFindStrings();
-
-        //putting current file path
-        //if (currentFilePath != null) {
-        //    searchHistory.put(currentFilePath, recent_search_results);
-        //}
-        return recent_search_results;
+    /**
+     * convert the data for searchHistory to String
+     * @return String
+     */
+    String getSearchHistory() {
+        StringBuilder result = new StringBuilder();
+        for (String path : searchHistory.keySet()) {
+            result.append("\"").append(path).append("\":[");
+            List<String> searchKeyWords = searchHistory.get(path);
+            for (Object searchKeyWord : searchKeyWords) {
+                result.append("\"").append(searchKeyWord).append("\",");
+            }
+            if (searchKeyWords.size() > 0) {
+                result = new StringBuilder(result.substring(0, result.length() - 1));
+            }
+            result.append("],");
+        }
+        if (result.length() > 1) {
+            result = new StringBuilder(result.substring(0, result.length() - 1));
+        }
+        result = new StringBuilder("{" + result + "}");
+        return result.toString();
     }
 
     /**
@@ -131,7 +137,7 @@ class MiningRulesProcessor {
         if (visitedElements.containsKey(path))
             visitedElements.get(path).add(location);
         else
-            visitedElements.put(path, new ArrayList<>(Arrays.asList(location)));
+            visitedElements.put(path, new ArrayList<>(Collections.singletonList(location)));
     }
 
     /**
@@ -141,8 +147,8 @@ class MiningRulesProcessor {
      */
     void newVisitedFile(String filePath) {
         updateVisitedFiles(filePath);
-        updateSearchHistory(filePath);
-        this.currentFilePathForSearch = filePath;
+        updateSearchHistory();
+        currentFilePath = filePath;
     }
 
     /**
@@ -160,33 +166,31 @@ class MiningRulesProcessor {
 
     /**
      * update the search history upon changing the active file in the editor
-     * @param newFilePath the path of the newly active file in the editor
      */
-    void updateSearchHistory(String newFilePath) {
-        // todo
-        String prevkey = "";
-        if (searchHistory.size() <1) {
-            String[] rawhist = searchHistoryRaw;
-            List<String> temp = Arrays.asList( rawhist );
-            searchHistory.put(newFilePath, temp);
-            prevkey = newFilePath;
-        }else{
-            String[] newsearchhistory = getSearchHistory();
-            String[] oldsearchhistory = searchHistoryRaw;
-
-            //compare them by finding difference
-            List<String> diff = new ArrayList<>();
-            //new search history should be greater than or equal the raw search history as the user searches more
-            for(int k = 0; k < newsearchhistory.length-1; k++){
-                if( Arrays.asList(oldsearchhistory).contains(newsearchhistory[k]) == false){
-                    diff.add(newsearchhistory[k]);
+    void updateSearchHistory() {
+        String[] newSearchHistoryRaw = FindInProjectSettings.getInstance(currentProject).getRecentFindStrings();
+        // there are old search terms
+        if (currentFilePath.equals("")) {
+            searchHistory.put("none", Arrays.asList(newSearchHistoryRaw));
+            searchHistoryRaw = newSearchHistoryRaw;
+        } else {
+            // there are new items in Search History
+            if (newSearchHistoryRaw.length > searchHistoryRaw.length) {
+                // find the diff of the Search history
+                List<String> diff = Arrays.asList(Arrays.copyOfRange(newSearchHistoryRaw,
+                        searchHistoryRaw.length, newSearchHistoryRaw.length));
+                // add to previous search terms
+                if (searchHistory.containsKey(currentFilePath)) {
+                    List<String> allSearch = searchHistory.get(currentFilePath);
+                    allSearch.addAll(diff);
+                    searchHistory.put(currentFilePath, allSearch);
+                } else {
+                    // create new entry
+                    searchHistory.put(currentFilePath, diff);
                 }
+                // update the Search history
+                searchHistoryRaw = newSearchHistoryRaw;
             }
-            //assign that difference as the value to the previous key in the actual searchhistory hashmap
-            searchHistory.put(prevkey, diff);
-
-            // update the prevkey after you have stored the difference into the old filepath
-            prevkey = newFilePath;
         }
     }
 
