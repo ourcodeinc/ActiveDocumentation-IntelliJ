@@ -13,10 +13,7 @@ import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.CaretEvent;
 import com.intellij.openapi.editor.event.CaretListener;
 import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.fileEditor.impl.EditorHistoryManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.vcsUtil.VcsUtil;
 import core.model.FPMaxHandler;
 import core.model.MiningRulesUtilities;
 import org.jetbrains.annotations.NotNull;
@@ -29,21 +26,14 @@ import java.util.*;
 
 class MiningRulesProcessor {
     private final ChatServer ws;
-
     private final Project currentProject;
     private final String projectPath;
-
 
     private String currentFilePathForSearch = "";
     private String[] searchHistoryRaw = {}; // the raw history received from FindInProjectSettings.getInstance(project).getRecentFindStrings()
 
-    private List<String[]> visitedFiles; // [filePath, numberOfVisits.toString()] todo check
-
     private Map<String, ArrayList<ArrayList<Integer>>> visitedElements; // <filePath, [[startOffset1, endOffset1]]]>
-    private Map<String, Integer> visitedPaths; // <filePath, numberOfVisits>
-
-    private List<String> fileList;
-    private HashMap<String, Integer> visitedFiles_A; // [filePath, numberOfVisits] todo check
+    private Map<String, Integer> visitedFiles; // <filePath, numberOfVisits>
     private HashMap <String, List<String>> searchHistory; // [[searchTerms], [filePath1, filePath2]] todo check
 
     // list of messages received through web socket and should be processed in this class
@@ -59,38 +49,14 @@ class MiningRulesProcessor {
      */
     String getVisitedFiles() {
         StringBuilder result = new StringBuilder();
-        for (String path : visitedPaths.keySet()) {
-            result.append("\"").append(path).append("\":").append(visitedPaths.get(path)).append(",");
+        for (String path : visitedFiles.keySet()) {
+            result.append("\"").append(path).append("\":").append(visitedFiles.get(path)).append(",");
         }
         if (result.length() > 1) {
             result = new StringBuilder(result.substring(0, result.length() - 1));
         }
         result = new StringBuilder("{" + result + "}");
         return result.toString();
-    }
-
-    //A List of the visited files
-    List <String> getFileList() {
-        // todo
-        VirtualFile[] files = EditorHistoryManager.getInstance(currentProject).getFiles();
-        for (int i = files.length - 1; i >= 0; --i) {
-            VirtualFile file = files[i];
-            String path = VcsUtil.getFilePath(file).toString();
-            fileList.add(path);
-        }
-        return fileList;
-    }
-
-    HashMap<String, Integer> getVisitedFiles_A() {
-        // todo
-        for (String s : getFileList()) {
-            if (visitedFiles_A.containsKey(s)) {
-                visitedFiles_A.put(s, visitedFiles_A.get(s) + 1);
-            } else {
-                visitedFiles_A.put(s, 1);
-            }
-        }
-        return visitedFiles_A;
     }
 
   // simply returns current search history result if you want to update searchhistory
@@ -143,12 +109,8 @@ class MiningRulesProcessor {
         this.projectPath = currentProject.getBasePath();
         this.ws = ws;
 
-        this.visitedFiles = new ArrayList<>();
         this.visitedElements = new HashMap<>();
-        this.visitedPaths = new HashMap<>();
-
-        this.fileList = new ArrayList<>();
-        this.visitedFiles_A = new HashMap<>();
+        this.visitedFiles = new HashMap<>();
         this.searchHistory = new HashMap<>();
 
         thisClass = this;
@@ -189,13 +151,17 @@ class MiningRulesProcessor {
      * @param newFilePath path of the newly opened file
      */
     void updateVisitedFiles(String newFilePath) {
-        if (visitedPaths.containsKey(newFilePath))
-            visitedPaths.put(newFilePath, visitedPaths.get(newFilePath) + 1);
+        if (visitedFiles.containsKey(newFilePath))
+            visitedFiles.put(newFilePath, visitedFiles.get(newFilePath) + 1);
         else
-            visitedPaths.put(newFilePath, 1);
+            visitedFiles.put(newFilePath, 1);
     }
 
-    // todo after completing the implementation add javaDoc. Type: /** just above the method definition and then press enter
+
+    /**
+     * update the search history upon changing the active file in the editor
+     * @param newFilePath the path of the newly active file in the editor
+     */
     void updateSearchHistory(String newFilePath) {
         // todo
         String prevkey = "";
