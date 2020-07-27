@@ -35,11 +35,9 @@ class MiningRulesProcessor {
 
     private List<String[]> visitedFiles; // [filePath, numberOfVisits.toString()] todo check
     private List<List<String>> searchHistory; // [[searchTerms], [filePath1, filePath2]] todo check
-    private List<List<String>> caretLocations; // [[filePath], [offSet.toString(), otherUsefulInfo]] todo check
 
     private Map<String, ArrayList<ArrayList<Integer>>> visitedElements; // <filePath, [[startOffset1, endOffset1]]]>
     private Map<String, Integer> visitedPaths; // <filePath, numberOfVisits>
-    TreeMap<Integer, String> cursorLocations = new TreeMap<Integer, String>();
 
     // list of messages received through web socket and should be processed in this class
     final List<String> wsMessages = Arrays.asList("LEARN_RULES_META_DATA", "LEARN_RULES_FILE_LOCATIONS", "LEARN_RULES_DATABASES",
@@ -47,17 +45,21 @@ class MiningRulesProcessor {
             "EXECUTE_FP_MAX", "DANGEROUS_READ_MINED_RULES", "SEND_DOI_INFORMATION");
     private static MiningRulesProcessor thisClass = null;
 
+    /**
+     * convert the data for visitedFiles to String
+     *
+     * @return String
+     */
     String getVisitedFiles() {
-        String result = "";
+        StringBuilder result = new StringBuilder();
         for (String path : visitedPaths.keySet()) {
-            result += ("\"" + path + "\":" + visitedPaths.get(path) + ",");
+            result.append("\"").append(path).append("\":").append(visitedPaths.get(path)).append(",");
         }
         if (result.length() > 1) {
-            result = result.substring(0, result.length() - 1);
+            result = new StringBuilder(result.substring(0, result.length() - 1));
         }
-        result = "{" + result + "}";
-        return result;
-        // todo
+        result = new StringBuilder("{" + result + "}");
+        return result.toString();
     }
 
     String getSearchHistory() {
@@ -65,21 +67,21 @@ class MiningRulesProcessor {
         return "";
     }
 
+    /**
+     * convert the data for visitedElement to String
+     *
+     * @return String
+     */
     String getVisitedElements() {
-        String result = "";
+        StringBuilder result = new StringBuilder();
         for (String path : visitedElements.keySet()) {
-            result += ("\"" + path + "\":" + visitedElements.get(path).toString() + ",");
+            result.append("\"").append(path).append("\":").append(visitedElements.get(path).toString()).append(",");
         }
         if (result.length() > 1) {
-            result = result.substring(0, result.length() - 1);
+            result = new StringBuilder(result.substring(0, result.length() - 1));
         }
-        result = "{" + result + "}";
-        return result;
-    }
-
-    // unecessary, may need to change below
-    String getCaretLocations() {
-        return "";
+        result = new StringBuilder("{" + result + "}");
+        return result.toString();
     }
 
     void findCaretLocations(int startCaretLocation, int endCaretLocation) {
@@ -99,7 +101,6 @@ class MiningRulesProcessor {
 
         this.visitedFiles = new ArrayList<>();
         this.searchHistory = new ArrayList<>();
-        this.caretLocations = new ArrayList<>();
         this.visitedElements = new HashMap<>();
         this.visitedPaths = new HashMap<>();
 
@@ -111,25 +112,12 @@ class MiningRulesProcessor {
                     @Override
                     public void caretPositionChanged(@NotNull CaretEvent event) {
                         Caret caret = event.getCaret();
+                        assert caret != null;
                         int selectionStart = caret.getSelectionStart();
                         int selectionEnd = caret.getSelectionEnd();
-                        // todo checkout what is needed and pass it to the method
-                        //  updateCaretLocations();
                         MiningRulesProcessor.getInstance().findCaretLocations(selectionStart, selectionEnd);
-                        // getVisitedFiles();
                     }
                 }, ApplicationManager.getApplication());
-/*
-        EditorFactory.getInstance()
-                .getEventMulticaster()
-                .addVisibleAreaListener(new VisibleAreaListener() {
-                    @Override
-                    public void visibleAreaChanged(@NotNull VisibleAreaEvent visibleAreaEvent) {
-                        // todo what it does?
-                    }
-                }, ApplicationManager.getApplication());
-                /*
- */
     }
 
     static MiningRulesProcessor getInstance() {
@@ -158,9 +146,6 @@ class MiningRulesProcessor {
             visitedPaths.put(newFilePath, visitedPaths.get(newFilePath) + 1);
         else
             visitedPaths.put(newFilePath, 1);
-        // todo
-        //  check if user has already visited the file
-        //  update the field accordingly
     }
 
     // todo after completing the implementation add javaDoc. Type: /** just above the method definition and then press enter
@@ -245,10 +230,9 @@ class MiningRulesProcessor {
                 break;
 
             case "SEND_DOI_INFORMATION":
-                // todo check and update if we have more data to send
                 sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "DOI_INFORMATION",
                         MessageProcessor.encodeDoiInformation(
-                                new Object[]{getVisitedFiles(), getSearchHistory(), getCaretLocations()}
+                                new Object[]{getVisitedFiles(), getSearchHistory(), getVisitedElements()}
                         )}).toString());
                 break;
         }
