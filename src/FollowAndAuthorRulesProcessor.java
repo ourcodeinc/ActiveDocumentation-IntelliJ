@@ -168,8 +168,8 @@ class FollowAndAuthorRulesProcessor {
      * @return false if the ID exists in the table
      */
     private boolean addNewRule(String newRuleID, String newRuleInfo) {
-        if (this.tagTable.get(newRuleID) != null) return false;
-        this.tagTable.put(newRuleID, newRuleInfo);
+        if (this.ruleTable.get(newRuleID) != null) return false;
+        this.ruleTable.put(newRuleID, newRuleInfo);
         return true;
     }
 
