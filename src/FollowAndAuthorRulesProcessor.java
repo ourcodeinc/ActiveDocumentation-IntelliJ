@@ -28,7 +28,14 @@ class FollowAndAuthorRulesProcessor {
     private final Project currentProject;
     private final String projectPath;
 
-    final List<String> wsMessages = Arrays.asList("XML_RESULT", "MODIFIED_RULE", "MODIFIED_TAG", "EXPR_STMT", "NEW_RULE", "NEW_TAG");
+    final List<String> wsMessages = Arrays.asList(
+            WebSocketConstants.RECEIVE_SNIPPET_XML_MSG,
+            WebSocketConstants.RECEIVE_MODIFIED_RULE_MSG,
+            WebSocketConstants.RECEIVE_MODIFIED_TAG_MSG,
+            WebSocketConstants.RECEIVE_CODE_TO_XML_MSG,
+            WebSocketConstants.RECEIVE_NEW_RULE_MSG,
+            WebSocketConstants.RECEIVE_NEW_TAG_MSG
+    );
     private static FollowAndAuthorRulesProcessor thisClass = null;
 
     FollowAndAuthorRulesProcessor(Project currentProject, ChatServer ws) {
@@ -54,15 +61,16 @@ class FollowAndAuthorRulesProcessor {
      */
     void processReceivedMessages(JsonObject messageAsJson) {
 
-        String command = messageAsJson.get("command").getAsString();
+        String command = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_COMMAND).getAsString();
         if (currentProject == null) return;
 
         switch (command) {
-            case "XML_RESULT":
+            case WebSocketConstants.RECEIVE_SNIPPET_XML_MSG:
                 try {
-                    PrintWriter writer = new PrintWriter(projectPath + "/tempResultXmlFile.xml", "UTF-8");
-                    writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>");
-                    writer.println(messageAsJson.get("data").getAsJsonObject().get("xml").getAsString());
+                    PrintWriter writer = new PrintWriter(projectPath + "/" + Constants.TEMP_XML_FILE, "UTF-8");
+                    writer.println(Constants.XML_HEADER);
+                    writer.println(messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA).getAsJsonObject()
+                            .get("xml").getAsString());
                     writer.close();
                 } catch (IOException e) {
                     System.out.println("error in writing the result xml");
@@ -70,13 +78,14 @@ class FollowAndAuthorRulesProcessor {
                 }
 
                 EventQueue.invokeLater(() -> {
-                    String fileRelativePath = messageAsJson.get("data").getAsJsonObject().get("fileName").getAsString();
+                    String fileRelativePath = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA)
+                            .getAsJsonObject().get("fileName").getAsString();
                     String relativePath = fileRelativePath.startsWith("/") ? fileRelativePath : "/" + fileRelativePath;
                     VirtualFile fileByPath = LocalFileSystem.getInstance().findFileByPath(relativePath);
                     if (fileByPath != null) {
                         FileEditorManager.getInstance(currentProject).openFile(fileByPath, true);
                         Editor theEditor = FileEditorManager.getInstance(currentProject).getSelectedTextEditor();
-                        int indexToFocusOn = SRCMLHandler.findLineNumber(projectPath + "/tempResultXmlFile.xml");
+                        int indexToFocusOn = SRCMLHandler.findLineNumber(projectPath + "/" + Constants.TEMP_XML_FILE);
                         if (theEditor != null) {
                             theEditor.getCaretModel().moveToOffset(indexToFocusOn);
                             theEditor.getScrollingModel().scrollToCaret(ScrollType.RELATIVE);
@@ -85,64 +94,86 @@ class FollowAndAuthorRulesProcessor {
                 });
                 break;
 
-            case "MODIFIED_RULE":
+            case WebSocketConstants.RECEIVE_MODIFIED_RULE_MSG:
                 // data: {ruleID: longNumber, ruleInfo: {...}}
-                String ruleID = messageAsJson.get("data").getAsJsonObject().get("ruleID").getAsString();
-                String ruleInfo = messageAsJson.get("data").getAsJsonObject().get("ruleInfo").getAsJsonObject().toString();
+                String ruleID = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA)
+                        .getAsJsonObject().get("ruleID").getAsString();
+                String ruleInfo = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA)
+                        .getAsJsonObject().get("ruleInfo").getAsJsonObject().toString();
 
                 boolean ruleResult = this.updateRule(ruleID, ruleInfo);
                 if (!ruleResult)
-                    sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
+                    sendMessage(MessageProcessor.encodeData(new Object[]{
+                            WebSocketConstants.SEND_FAILED_UPDATE_RULE_MSG,
+                            messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA)
+                                    .getAsJsonObject()}).toString());
 
-                Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.ruleTable);
-                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
+                Utilities.writeTableFile(this.projectPath + "/" + Constants.RULE_TABLE_JSON, this.ruleTable);
+                sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_UPDATE_RULE_MSG,
+                        messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA).getAsJsonObject()}).toString());
                 break;
 
-            case "MODIFIED_TAG":
+            case WebSocketConstants.RECEIVE_MODIFIED_TAG_MSG:
                 // data: {tagID: longNumber, tagInfo: {...}}
-                String tagID = messageAsJson.get("data").getAsJsonObject().get("tagID").getAsString();
-                String tagInfo = messageAsJson.get("data").getAsJsonObject().get("tagInfo").getAsJsonObject().toString();
+                String tagID = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA)
+                        .getAsJsonObject().get("tagID").getAsString();
+                String tagInfo = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA)
+                        .getAsJsonObject().get("tagInfo").getAsJsonObject().toString();
 
                 boolean result = this.updateTag(tagID, tagInfo);
                 if (!result)
-                    sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
+                    sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_FAILED_UPDATE_TAG_MSG,
+                            messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA).getAsJsonObject()}).toString());
 
-                Utilities.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
-                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
+                Utilities.writeTableFile(this.projectPath + "/" + Constants.TAG_TABLE_JSON, this.tagTable);
+                sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_UPDATE_TAG_MSG,
+                        messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA).getAsJsonObject()}).toString());
                 break;
 
-            case "EXPR_STMT":
-                String exprText = messageAsJson.get("data").getAsJsonObject().get("codeText").getAsString();
-                String resultExprXml = SRCMLHandler.createXMLForText(exprText, projectPath + "/tempExprFile.java");
-                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "EXPR_STMT_XML",
-                        MessageProcessor.encodeXMLandText(new Object[]{resultExprXml, messageAsJson.get("data").getAsJsonObject().get("messageID").getAsString()})
+            case WebSocketConstants.RECEIVE_CODE_TO_XML_MSG:
+                String exprText = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA)
+                        .getAsJsonObject().get("codeText").getAsString();
+                String resultExprXml = SRCMLHandler.createXMLForText(exprText, projectPath + "/" + Constants.TEMP_JAVA_FILE);
+                sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_XML_FROM_CODE_MSG,
+                        MessageProcessor.encodeXMLandText(new Object[]{resultExprXml,
+                                messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA)
+                                        .getAsJsonObject().get("messageID").getAsString()})
                 }).toString());
                 break;
 
-            case "NEW_RULE":
+            case WebSocketConstants.RECEIVE_NEW_RULE_MSG:
                 // data: {ruleID: longNumber, ruleInfo: {...}}
-                String newRuleID = messageAsJson.get("data").getAsJsonObject().get("ruleID").getAsString();
-                String newRuleInfo = messageAsJson.get("data").getAsJsonObject().get("ruleInfo").getAsJsonObject().toString();
+                String newRuleID = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA)
+                        .getAsJsonObject().get("ruleID").getAsString();
+                String newRuleInfo = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA)
+                        .getAsJsonObject().get("ruleInfo").getAsJsonObject().toString();
 
                 boolean newRuleResult = this.addNewRule(newRuleID, newRuleInfo);
                 if (!newRuleResult)
-                    sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
+                    sendMessage(MessageProcessor.encodeData(new Object[]{
+                            WebSocketConstants.SEND_FAILED_NEW_RULE_MSG,
+                            messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA).getAsJsonObject()}).toString());
 
-                Utilities.writeTableFile(this.projectPath + "/" + "ruleTable.json", this.ruleTable);
-                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_RULE", messageAsJson.get("data").getAsJsonObject()}).toString());
+                Utilities.writeTableFile(this.projectPath + "/" + Constants.RULE_TABLE_JSON, this.ruleTable);
+                sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_NEW_RULE_MSG,
+                        messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA).getAsJsonObject()}).toString());
                 break;
 
-            case "NEW_TAG":
+            case WebSocketConstants.RECEIVE_NEW_TAG_MSG:
                 // data: {tagID: String, tagInfo: {...}}
-                String newTagID = messageAsJson.get("data").getAsJsonObject().get("tagID").getAsString();
-                String newTagInfo = messageAsJson.get("data").getAsJsonObject().get("tagInfo").getAsJsonObject().toString();
+                String newTagID = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA)
+                        .getAsJsonObject().get("tagID").getAsString();
+                String newTagInfo = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA)
+                        .getAsJsonObject().get("tagInfo").getAsJsonObject().toString();
 
                 boolean newResult = this.addNewTag(newTagID, newTagInfo);
                 if (!newResult)
-                    sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FAILED_NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
+                    sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_FAILED_NEW_TAG_MSG,
+                            messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA).getAsJsonObject()}).toString());
 
-                Utilities.writeTableFile(this.projectPath + "/" + "tagTable.json", this.tagTable);
-                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "NEW_TAG", messageAsJson.get("data").getAsJsonObject()}).toString());
+                Utilities.writeTableFile(this.projectPath + "/" + Constants.TAG_TABLE_JSON, this.tagTable);
+                sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_NEW_TAG_MSG,
+                        messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA).getAsJsonObject()}).toString());
                 break;
         }
     }
@@ -237,8 +268,10 @@ class FollowAndAuthorRulesProcessor {
     void updateRules() {
         this.ruleTable = Utilities.getInitialRuleTable(currentProject);
 
-        sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", this.getRuleTable()}).toString());
-        sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
+        sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_RULE_TABLE_MSG,
+                this.getRuleTable()}).toString());
+        sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_VERIFY_RULES_MSG,
+                ""}).toString());
     }
 
     /**
@@ -246,7 +279,8 @@ class FollowAndAuthorRulesProcessor {
      */
     void updateTags() {
         this.tagTable = Utilities.getInitialTagTable(currentProject);
-        sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", this.getTagTable()}).toString());
+        sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_TAG_TABLE_MSG,
+                this.getTagTable()}).toString());
     }
 
     /**

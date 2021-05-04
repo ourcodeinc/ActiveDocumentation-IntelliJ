@@ -31,7 +31,8 @@ public class FeatureSelectionAction extends AnAction {
 
         Project project = event.getData(CommonDataKeys.PROJECT);
         if (project != null) {
-            FileChangeManager.getInstance().sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FEATURE_SELECTION",
+            FileChangeManager.getInstance().sendMessage(MessageProcessor.encodeData(new Object[]{
+                    WebSocketConstants.SEND_FEATURE_SELECTION_MSG,
                     MessageProcessor.encodeSelectedFragment(new Object[]{path, Integer.toString(startOffset),
                             Integer.toString(endOffset),
                             Integer.toString(startOffset - startOffsetLineSelection),

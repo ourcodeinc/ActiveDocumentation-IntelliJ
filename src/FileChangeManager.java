@@ -90,10 +90,12 @@ public class FileChangeManager implements ProjectComponent {
             public void selectionChanged(@NotNull FileEditorManagerEvent event) {
                 try {
                     if (event.getManager().getSelectedFiles().length > 0)
-                        if (Objects.requireNonNull(event.getManager().getSelectedFiles()[0].getCanonicalFile()).getName().endsWith(".java")) {
+                        if (Objects.requireNonNull(event.getManager().getSelectedFiles()[0].getCanonicalFile())
+                                .getName().endsWith(".java")) {
                             String filePath = event.getManager().getSelectedFiles()[0].getPath();
-                            MiningRulesProcessor.getInstance().newVisitedFile(filePath);
-                            sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "FILE_CHANGE", filePath}).toString());
+                            DoiProcessing.getInstance().newVisitedFile(filePath);
+                            sendMessage(MessageProcessor.encodeData(new Object[]{
+                                    WebSocketConstants.SEND_FILE_CHANGE_IN_IDE_MSG, filePath}).toString());
                         }
                 } catch (NullPointerException e) {
                     System.out.println("error happened in finding the changed file.");
@@ -139,6 +141,7 @@ public class FileChangeManager implements ProjectComponent {
 
             new FollowAndAuthorRulesProcessor(currentProject, ws);
             new MiningRulesProcessor(currentProject, ws);
+            new DoiProcessing(currentProject);
         }
     }
 
@@ -159,11 +162,11 @@ public class FileChangeManager implements ProjectComponent {
         switch (eventType) {
             case "CREATE":
             case "DELETE":
-                if (file.getName().equals("ruleTable.json")) {
+                if (file.getName().equals(Constants.RULE_TABLE_JSON)) {
                     FollowAndAuthorRulesProcessor.getInstance().updateRules();
                     return;
                 }
-                if (file.getName().equals("tagTable.json")) {
+                if (file.getName().equals(Constants.TAG_TABLE_JSON)) {
                     FollowAndAuthorRulesProcessor.getInstance().updateTags();
                     return;
                 }
@@ -172,23 +175,25 @@ public class FileChangeManager implements ProjectComponent {
                 if (shouldIgnoreEvent(file))
                     return;
 
-                String newXml = eventType.equals("CREATE") ? SRCMLHandler.addXMLForProject(this.getSrcml(), file.getPath()) : "";
+                String newXml = eventType.equals("CREATE") ? SRCMLHandler.addXMLForProject(this.getSrcml(),
+                        file.getPath()) : "";
                 if (eventType.equals("DELETE"))
                     SRCMLHandler.removeXMLForProject(srcml, file.getPath());
 
                 this.updateXML(file.getPath(), newXml);
 
-                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
+                sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_PROJECT_HIERARCHY_MSG,
+                        generateProjectHierarchyAsJSON()}).toString());
                 break;
 
             case "TEXT_CHANGE":
-                if (file.getName().equals("ruleTable.json")) {
-                    System.out.println("ruleTable.json modified.");
+                if (file.getName().equals(Constants.RULE_TABLE_JSON)) {
+                    System.out.println(Constants.RULE_TABLE_JSON + " modified.");
                     FollowAndAuthorRulesProcessor.getInstance().updateRules();
                     return;
                 }
-                if (file.getName().equals("tagTable.json")) {
-                    System.out.println("tagTable.json modified.");
+                if (file.getName().equals(Constants.TAG_TABLE_JSON)) {
+                    System.out.println(Constants.TAG_TABLE_JSON + " modified.");
                     FollowAndAuthorRulesProcessor.getInstance().updateTags();
                     return;
                 }
@@ -214,7 +219,8 @@ public class FileChangeManager implements ProjectComponent {
                         break;
                     }
                 }
-                sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", generateProjectHierarchyAsJSON()}).toString());
+                sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_PROJECT_HIERARCHY_MSG,
+                        generateProjectHierarchyAsJSON()}).toString());
 
                 break;
         }
@@ -228,9 +234,9 @@ public class FileChangeManager implements ProjectComponent {
      */
     private boolean shouldIgnoreFile(VirtualFile s) {
         return !(s.getName().endsWith(".java")
-                || s.getName().endsWith("ruleTable.json")
-                || s.getName().endsWith("tagTable.json")
-                || s.getName().equals("tempExprDeclFile.java"));
+                || s.getName().endsWith(Constants.RULE_TABLE_JSON)
+                || s.getName().endsWith(Constants.TAG_TABLE_JSON)
+                || s.getName().equals(Constants.TEMP_JAVA_FILE));
     }
 
     /**
@@ -270,8 +276,10 @@ public class FileChangeManager implements ProjectComponent {
      * @param newXml   String
      */
     private void updateXML(String filePath, String newXml) {
-        sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "UPDATE_XML", MessageProcessor.encodeNewXMLData(new Object[]{filePath, newXml})}).toString());
-        sendMessage(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "CHECK_RULES_FOR_FILE", filePath}).toString());
+        sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_UPDATE_XML_FILE_MSG,
+                MessageProcessor.encodeNewXMLData(new Object[]{filePath, newXml})}).toString());
+        sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_CHECK_RULES_FOR_FILE_MSG,
+                filePath}).toString());
     }
 
     /**
@@ -345,7 +353,8 @@ public class FileChangeManager implements ProjectComponent {
                                 propertiesOfChild.addProperty("fileName", psiFile.getName());
                         }
                     }
-                    canonicalToJsonMap.get(item.getCanonicalPath()).get("children").getAsJsonArray().add(jsonChildOfItem);
+                    canonicalToJsonMap.get(item.getCanonicalPath()).get("children").getAsJsonArray()
+                            .add(jsonChildOfItem);
                     canonicalToJsonMap.put(childOfItem.getCanonicalPath(), jsonChildOfItem);
                 }
             }

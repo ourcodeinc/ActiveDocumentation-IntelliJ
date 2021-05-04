@@ -2,15 +2,19 @@ import com.google.gson.JsonObject;
 
 class MessageProcessor {
 
-    private static final String[] dataKeys = {"source", "destination", "command", "data"};
+    private static final String[] dataKeys = {
+            WebSocketConstants.MESSAGE_KEY_COMMAND,
+            WebSocketConstants.MESSAGE_KEY_DATA
+    };
     private static final String[] xmlKeys = {"filePath", "xml"};
     private static final String[] textXMLKeys = {"xmlText", "messageID"};
 
-    private static final String[] fpMaxOutputKeys = {"fpMaxOutput"};
-    private static final String[] selectedFragmentKeys = {"path", "startOffset", "endOffset", "startLineOffset", "lineNumber", "lineText", "text"};
-    private static final String[] dangerousReadMinedRulesKeys = {"outputFiles", "metaData"};
-
-    private static final String[] doiInformationKeys = {"visitedFiles", "searchHistory", "visitedElements"};
+    private static final String[] selectedFragmentKeys = {"filePath", "startOffset", "endOffset", "startLineOffset",
+            "lineNumber", "lineText", "text"};
+    private static final String[] doiInformationKeys = {"recentVisitedFiles", "recentSearches", "recentVisitedElements"};
+    private static final String[] minedRulesKey = {"minedFrequentItemSets"};
+    private static final String[] elementInfoForForMineRules = {"filePath", "startOffset", "startLineOffset",
+            "lineNumber", "text"};
 
     static JsonObject encodeData(Object[] source_Destination_Protocol_Data_Array) {
         return createJsonObject(source_Destination_Protocol_Data_Array, dataKeys);
@@ -30,20 +34,20 @@ class MessageProcessor {
 
     /*  mining rules*/
 
-    static JsonObject encodeFPMaxOutput(Object[] fpMax_output) {
-        return createJsonObject(fpMax_output, fpMaxOutputKeys);
-    }
-
     static JsonObject encodeSelectedFragment(Object[] selected_frag_data) {
         return createJsonObject(selected_frag_data, selectedFragmentKeys);
     }
 
-    static JsonObject encodeDangerousMinedData(Object[] mined_data) {
-        return createJsonObject(mined_data, dangerousReadMinedRulesKeys);
-    }
-
     static JsonObject encodeDoiInformation(Object[] doi_information) {
         return createJsonObject(doi_information, doiInformationKeys);
+    }
+
+    static JsonObject encodeMinedRules(Object[] mined_rules_output) {
+        return createJsonObject(mined_rules_output, minedRulesKey);
+    }
+
+    static JsonObject encodeElementInfoForMineRules(Object[] mine_rules_for_file_info) {
+        return createJsonObject(mine_rules_for_file_info, elementInfoForForMineRules);
     }
 
     private static JsonObject createJsonObject(Object[] data_Array, String[] keys) {

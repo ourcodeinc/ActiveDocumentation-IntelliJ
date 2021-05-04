@@ -10,7 +10,6 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.Collection;
 
 /**
@@ -23,52 +22,58 @@ public class ChatServer extends WebSocketServer {
 
     /**
      * @param port = 8887
-     * @throws UnknownHostException if it fails to build a connection
      */
-    ChatServer(int port) throws UnknownHostException {
+    ChatServer(int port) {
         super(new InetSocketAddress(port));
     }
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        System.out.println("(onOpen) " + conn.getRemoteSocketAddress().getAddress().getHostAddress() + " entered the room!");
+        System.out.println("(onOpen) " + conn.getRemoteSocketAddress().getAddress().getHostAddress());
 
         FileChangeManager manager = FileChangeManager.getInstance();
 
         // check whether the project is changed
         manager.checkChangedProject();
-        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "ENTER", (conn + " connected to ActiveDocumentation")}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_ENTER_CHAT_MSG,
+                (conn + " connected to ActiveDocumentation")}).toString());
         for (int i = 0; i < manager.getSrcml().fileNumber; i++) {
-            this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "XML",
-                    MessageProcessor.encodeXMLData(new Object[]{manager.getSrcml().getPaths().get(i), manager.getSrcml().getXmls().get(i)})
+            this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_XML_FILES_MSG,
+                    MessageProcessor.encodeXMLData(new Object[]{
+                            manager.getSrcml().getPaths().get(i), manager.getSrcml().getXmls().get(i)})
             }).toString());
         }
-        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "RULE_TABLE", FollowAndAuthorRulesProcessor.getInstance().getRuleTable()}).toString());
-        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "TAG_TABLE", FollowAndAuthorRulesProcessor.getInstance().getTagTable()}).toString());
-        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "VERIFY_RULES", ""}).toString());
-        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_HIERARCHY", manager.generateProjectHierarchyAsJSON()}).toString());
-        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "PROJECT_PATH", manager.projectPath}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_RULE_TABLE_MSG,
+                FollowAndAuthorRulesProcessor.getInstance().getRuleTable()}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_TAG_TABLE_MSG,
+                FollowAndAuthorRulesProcessor.getInstance().getTagTable()}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_VERIFY_RULES_MSG,
+                ""}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_PROJECT_HIERARCHY_MSG,
+                manager.generateProjectHierarchyAsJSON()}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_PROJECT_PATH_MSG,
+                manager.projectPath}).toString());
     }
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        this.sendToAll(MessageProcessor.encodeData(new Object[]{"IDEA", "WEB", "LEFT", (conn + " disconnected")}).toString());
+        this.sendToAll(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_LEFT_CHAT_MSG,
+                (conn + " disconnected")}).toString());
         System.out.println("(onClose) " + conn + " has left the room!");
     }
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        JsonParser parser = new JsonParser();
-        final JsonObject messageAsJson = parser.parse(message).getAsJsonObject();
+        final JsonObject messageAsJson = JsonParser.parseString(message).getAsJsonObject();
 
         FollowAndAuthorRulesProcessor faw = FollowAndAuthorRulesProcessor.getInstance();
         MiningRulesProcessor mr = MiningRulesProcessor.getInstance();
 
-        if (faw.wsMessages.contains(messageAsJson.get("command").getAsString())) {
+        if (faw.wsMessages.contains(messageAsJson.get(WebSocketConstants.MESSAGE_KEY_COMMAND).getAsString())) {
             faw.processReceivedMessages(messageAsJson);
         }
 
-        else if (mr.wsMessages.contains(messageAsJson.get("command").getAsString())) {
+        else if (mr.wsMessages.contains(messageAsJson.get(WebSocketConstants.MESSAGE_KEY_COMMAND).getAsString())) {
             mr.processReceivedMessages(messageAsJson);
         }
     }

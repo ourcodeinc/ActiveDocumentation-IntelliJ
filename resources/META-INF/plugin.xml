@@ -17,7 +17,7 @@
   </change-notes>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-  <idea-version since-build="145.0"/>
+  <idea-version since-build="172.0"/>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
        on how to target different products -->
@@ -37,8 +37,11 @@
       <action id="FileChangeManager.FeatureSelectionAction" class="FeatureSelectionAction"
               text="ActiveDocumentation Feature Selection"
               description="ActiveDocumentation feature selection"/>
+      <action id="MineRulesForFileAction" class="MineRulesForFileAction" text="Mine Rules"
+              description="Mine design rules for a specific file"/>
       <separator/>
       <add-to-group group-id="EditorPopupMenu" anchor="first"/>
     </group>
+
   </actions>
 </idea-plugin>
