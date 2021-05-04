@@ -22,11 +22,11 @@ import java.awt.*;
 
 class FollowAndAuthorRulesProcessor {
 
-    private final ChatServer ws;
+    private ChatServer ws;
     private HashMap<String, String> ruleTable; // ruleID, {index: string, ...}
     private HashMap<String, String> tagTable; // tagID, {ID: string, ...}
-    private final Project currentProject;
-    private final String projectPath;
+    private Project currentProject;
+    private String projectPath;
 
     final List<String> wsMessages = Arrays.asList(
             WebSocketConstants.RECEIVE_SNIPPET_XML_MSG,
@@ -52,6 +52,15 @@ class FollowAndAuthorRulesProcessor {
     static FollowAndAuthorRulesProcessor getInstance() {
         if (thisClass == null) new FollowAndAuthorRulesProcessor(null, null);
         return thisClass;
+    }
+
+    public void updateProjectWs (Project project, ChatServer ws) {
+        this.currentProject = project;
+        this.projectPath = currentProject.getBasePath();
+        this.ws = ws;
+
+        this.tagTable = Utilities.getInitialTagTable(currentProject);
+        this.ruleTable = Utilities.getInitialRuleTable(currentProject);
     }
 
     /**

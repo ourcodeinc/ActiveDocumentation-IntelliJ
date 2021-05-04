@@ -6,11 +6,11 @@
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.startup.StartupActivity;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -24,46 +24,65 @@ import core.model.SRCMLHandler;
 import core.model.SRCMLxml;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
-public class FileChangeManager implements ProjectComponent {
+public class FileChangeManager implements StartupActivity {
 
-    private final MessageBusConnection connection;
-    private ChatServer ws;
+    private ChatServer ws = null;
     private SRCMLxml srcml;
-    private Project currentProject;
     String projectPath;
-    private List<VirtualFile> ignoredFiles;
 
     private static FileChangeManager thisClass = null;
-
-    FileChangeManager(Project project) {
-        connection = ApplicationManager.getApplication().getMessageBus().connect();
-        currentProject = project;
-        projectPath = project.getBasePath();
-        srcml = new SRCMLxml(Utilities.getFilePaths(project), project.getBasePath());
-        SRCMLHandler.createXMLForProject(srcml);
-
-        thisClass = this;
-    }
 
     static FileChangeManager getInstance() {
         return thisClass;
     }
 
-    /**
-     * @return srcml object
-     */
     SRCMLxml getSrcml() {
         return srcml;
     }
 
-    public void initComponent() {
-        ignoredFiles = Utilities.createIgnoredFileList(currentProject);
+    @Override
+    public void runActivity(@NotNull Project project) {
+
+        MessageBusConnection connection = ApplicationManager.getApplication().getMessageBus().connect();
+        projectPath = project.getBasePath();
+        srcml = new SRCMLxml(Utilities.getFilePaths(project), project.getBasePath());
+        SRCMLHandler.createXMLForProject(srcml);
+
+        thisClass = this;
+        if (ws == null) {
+            try {
+                ws = new ChatServer(8887);
+                ws.start();
+            } catch (Exception e) {
+                System.out.println("Error in creating a Chat server.");
+                return;
+            }
+        }
+
+        try {
+            FollowAndAuthorRulesProcessor ins = FollowAndAuthorRulesProcessor.getInstance();
+            ins.updateProjectWs(project, ws);
+        } catch (NullPointerException e) {
+            new FollowAndAuthorRulesProcessor(project, ws);
+        }
+        try {
+            MiningRulesProcessor ins = MiningRulesProcessor.getInstance();
+            ins.updateProjectWs(project, ws);
+        } catch (NullPointerException e) {
+            new MiningRulesProcessor(project, ws);
+        }
+        try {
+            DoiProcessing ins = DoiProcessing.getInstance();
+            ins.updateProject(project);
+        } catch (NullPointerException e) {
+            new DoiProcessing(project);
+        }
+
         connection.subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
             @Override
             public void after(@NotNull List<? extends VFileEvent> events) {
@@ -80,7 +99,7 @@ public class FileChangeManager implements ProjectComponent {
                     } else if (event instanceof VFilePropertyChangeEvent) { // Property Change
                         eventType = "PROPERTY_CHANGE";
                     }
-                    handleEvents(event, eventType);
+                    handleEvents(project, event, eventType);
                 }
             }
         });
@@ -105,59 +124,14 @@ public class FileChangeManager implements ProjectComponent {
     }
 
     /**
-     * Overridden method
-     */
-    public void disposeComponent() {
-        currentProject = null;
-
-        Project[] AllProjects = ProjectManager.getInstance().getOpenProjects();
-        if (AllProjects.length == 0) {
-            try {
-                if (ws != null)
-                    ws.stop();
-            } catch (IOException | InterruptedException e) {
-                System.out.println(e);
-            }
-        }
-    }
-
-    @NotNull
-    @Override
-    public String getComponentName() {
-        return "";
-    }
-
-    @Override
-    public void projectOpened() {
-        Project[] AllProjects = ProjectManager.getInstance().getOpenProjects();
-        if (AllProjects.length == 1) {
-            try {
-                ws = new ChatServer(8887);
-                ws.start();
-            } catch (Exception e) {
-                System.out.println("Error in creating a Chat server.");
-                e.printStackTrace();
-            }
-
-            new FollowAndAuthorRulesProcessor(currentProject, ws);
-            new MiningRulesProcessor(currentProject, ws);
-            new DoiProcessing(currentProject);
-        }
-    }
-
-    @Override
-    public void projectClosed() {
-    }
-
-    /**
      * handle events based on event types.
      *
      * @param event     VFileEvent
      * @param eventType one of CREATE, TEXT_CHANGE, PROPERTY_CHANGE, DELETE
      */
-    private void handleEvents(VFileEvent event, String eventType) {
+    private void handleEvents(Project project, VFileEvent event, String eventType) {
         VirtualFile file = event.getFile();
-        if (file == null || currentProject == null) return;
+        if (file == null || project == null) return;
 
         switch (eventType) {
             case "CREATE":
@@ -172,7 +146,7 @@ public class FileChangeManager implements ProjectComponent {
                 }
 
                 // do not handle if the file is not a part of the project
-                if (shouldIgnoreEvent(file))
+                if (shouldIgnoreEvent(project, file))
                     return;
 
                 String newXml = eventType.equals("CREATE") ? SRCMLHandler.addXMLForProject(this.getSrcml(),
@@ -199,7 +173,7 @@ public class FileChangeManager implements ProjectComponent {
                 }
 
                 // do not handle if the file is not a part of the project
-                if (shouldIgnoreEvent(file))
+                if (shouldIgnoreEvent(project, file))
                     return;
 
                 String updatedXml = SRCMLHandler.updateXMLForProject(this.getSrcml(), file.getPath());
@@ -208,7 +182,7 @@ public class FileChangeManager implements ProjectComponent {
 
             case "PROPERTY_CHANGE":
                 // when a file's properties change. for instance, if the file is renamed.
-                List<String> newPaths = Utilities.getFilePaths(currentProject);
+                List<String> newPaths = Utilities.getFilePaths(project);
 
                 for (String path : srcml.getPaths()) {
                     if (!newPaths.contains(path)) {
@@ -245,14 +219,14 @@ public class FileChangeManager implements ProjectComponent {
      * @param file VirtualFile
      * @return boolean
      */
-    private boolean shouldIgnoreEvent(VirtualFile file) {
+    private boolean shouldIgnoreEvent(Project project, VirtualFile file) {
         if (file.isDirectory() || file.getCanonicalPath() == null)
             return true;
         if (!file.getCanonicalPath().endsWith(".java"))
             return true;
 
-        PsiFile psiFile = PsiManager.getInstance(currentProject).findFile(file);
-        return psiFile == null || !PsiManager.getInstance(currentProject).isInProject(psiFile);
+        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+        return psiFile == null || !PsiManager.getInstance(project).isInProject(psiFile);
 
     }
 
@@ -262,7 +236,8 @@ public class FileChangeManager implements ProjectComponent {
      */
     void checkChangedProject() {
         if (!this.srcml.getProjectPath().equals(projectPath)) {
-            SRCMLxml srcml = new SRCMLxml(Utilities.getFilePaths(currentProject), projectPath);
+            Project project = ProjectManager.getInstance().getDefaultProject();
+            SRCMLxml srcml = new SRCMLxml(Utilities.getFilePaths(project), projectPath);
             SRCMLHandler.createXMLForProject(srcml);
             System.out.println("XML data is created.");
             this.srcml = srcml;
@@ -370,21 +345,15 @@ public class FileChangeManager implements ProjectComponent {
      * @return boolean
      */
     private boolean shouldIgnoreFileForProjectHierarchy(VirtualFile s) {
-        if (ignoredFiles == null) {
-            return false;
-        }
-        for (VirtualFile vfile : ignoredFiles) {
-            if (Objects.equals(vfile.getCanonicalPath(), s.getCanonicalPath())) {
-                return true;
-            } else if (Utilities.isFileAChildOf(s, vfile)) {
-                return true;
-            }
-        }
-        return false;
+        String path = s.getCanonicalPath();
+        if (path == null) return true;
+        if (!path.endsWith(".java")) return true;
+        return !path.endsWith(Constants.TEMP_JAVA_FILE);
     }
 
     /**
      * send the message through web socket
+     *
      * @param msg the processed string
      */
     void sendMessage(String msg) {

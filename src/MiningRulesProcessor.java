@@ -23,9 +23,9 @@ import java.util.Arrays;
 import java.util.List;
 
 class MiningRulesProcessor {
-    private final ChatServer ws;
-    private final Project currentProject;
-    private final String projectPath;
+    private ChatServer ws;
+    private Project currentProject;
+    private String projectPath;
     private final String directory = "/NewLearningDR";
 
     // list of messages received through web socket and should be processed in this class
@@ -62,6 +62,12 @@ class MiningRulesProcessor {
     static MiningRulesProcessor getInstance() {
         if (thisClass == null) new MiningRulesProcessor(null, null);
         return thisClass;
+    }
+
+    public void updateProjectWs (Project project, ChatServer ws) {
+        this.currentProject = project;
+        this.projectPath = currentProject.getBasePath();
+        this.ws = ws;
     }
 
     /**

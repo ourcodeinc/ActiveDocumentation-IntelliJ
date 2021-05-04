@@ -1,8 +1,8 @@
 <idea-plugin>
   <id>active_doc_plugin</id>
   <name>ActiveDoc</name>
-  <version>4.0 Beta</version>
-  <vendor email="smehrpou@gmu.edu" url="http://mason.gmu.edu/~smehrpou/">GMU DevUXD</vendor>
+  <version>3.0 Beta</version>
+  <vendor email="smehrpou@gmu.edu" url="http://devx.cs.gmu.edu/">GMU DevUXD</vendor>
 
   <description><![CDATA[
   ActiveDocumentation Tool
@@ -32,7 +32,6 @@
   </project-components>
 
   <actions>
-    <!-- Add your actions here -->
     <group id="actionGroup">
       <action id="FileChangeManager.FeatureSelectionAction" class="FeatureSelectionAction"
               text="ActiveDocumentation Feature Selection"
@@ -42,6 +41,9 @@
       <separator/>
       <add-to-group group-id="EditorPopupMenu" anchor="first"/>
     </group>
-
   </actions>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <postStartupActivity implementation="FileChangeManager"/>
+  </extensions>
 </idea-plugin>

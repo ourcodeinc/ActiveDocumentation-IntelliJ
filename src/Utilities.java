@@ -12,7 +12,6 @@ import org.json.JSONObject;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -25,7 +24,7 @@ class Utilities {
      * @return a list of the initial rules <index, rule text>
      */
     static HashMap<String, String> getInitialRuleTable(Project project) {
-        return getHashMap("ruleTable.json", project, "index");
+        return getHashMap(Constants.RULE_TABLE_JSON, project, "index");
     }
 
     /**
@@ -35,7 +34,7 @@ class Utilities {
      * @return a hashMap of the initial rules <ruleID, rule text>
      */
     static HashMap<String, String> getInitialTagTable(Project project) {
-        return getHashMap("tagTable.json", project, "ID");
+        return getHashMap(Constants.TAG_TABLE_JSON, project, "ID");
     }
 
     /**
@@ -148,57 +147,6 @@ class Utilities {
         } catch (IOException e) {
             System.out.println("error in writing " + filePath);
         }
-    }
-
-    /**
-     * creating ignore list
-     * formerly this method was in utilities
-     *
-     * @param project for a given project
-     * @return list of files
-     */
-    static List<VirtualFile> createIgnoredFileList(Project project) {
-        List<VirtualFile> ignoredFiles = new ArrayList<>();
-        List<String> files = new ArrayList<>(Arrays.asList(".idea", "out", "source_xml.xml", "tempResultXmlFile.xml", "LearningDR", "test",
-                "testProject.iml", ".DS_Store", "bin", "build", "node_modules", ".setting", ".git", "war", "tempExprDeclFile.java"));
-        if (project.getBasePath() == null)
-            return ignoredFiles;
-        VirtualFile rootDirectoryVirtualFile = LocalFileSystem.getInstance().findFileByPath(project.getBasePath());
-        if (rootDirectoryVirtualFile == null)
-            return ignoredFiles;
-        for (String f : files) {
-            VirtualFile vfile = rootDirectoryVirtualFile.findFileByRelativePath(f);
-            if (vfile != null) {
-                ignoredFiles.add(vfile);
-            }
-        }
-        return ignoredFiles;
-    }
-
-    /**
-     * check whether a file is a child of another file
-     * formerly this method was in utilities
-     *
-     * @param maybeChild     first file
-     * @param possibleParent second file
-     * @return boolean
-     */
-    static boolean isFileAChildOf(VirtualFile maybeChild, VirtualFile possibleParent) {
-        final VirtualFile parent = possibleParent.getCanonicalFile();
-        if (parent != null && (!parent.exists() || !parent.isDirectory())) {
-            // this cannot possibly be the parent
-            return false;
-        }
-
-        VirtualFile child = maybeChild.getCanonicalFile();
-        while (child != null) {
-            if (child.equals(parent)) {
-                return true;
-            }
-            child = child.getParent();
-        }
-        // No match found, and we've hit the root directory
-        return false;
     }
 
     /**

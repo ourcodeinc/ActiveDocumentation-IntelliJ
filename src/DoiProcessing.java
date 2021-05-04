@@ -9,7 +9,7 @@ public class DoiProcessing {
     private String currentFilePath = "";
     private String[] searchHistoryRaw = {}; // the raw history
 
-    private final Project currentProject;
+    private Project currentProject;
     String projectPath;
 
     private static DoiProcessing thisClass = null;
@@ -30,6 +30,11 @@ public class DoiProcessing {
     static DoiProcessing getInstance() {
         if (thisClass == null) new MiningRulesProcessor(null, null);
         return thisClass;
+    }
+
+    public void updateProject (Project project) {
+        this.currentProject = project;
+        this.projectPath = currentProject.getBasePath();
     }
 
     /**
@@ -119,6 +124,8 @@ public class DoiProcessing {
      * update the search history upon changing the active file in the editor
      */
     void updateSearchHistory() {
+        System.out.println("Current Project::");
+        System.out.println(currentProject);
         String[] newSearchHistoryRaw = FindInProjectSettings.getInstance(currentProject).getRecentFindStrings();
         // there are old search terms
         if (currentFilePath.equals("")) {
