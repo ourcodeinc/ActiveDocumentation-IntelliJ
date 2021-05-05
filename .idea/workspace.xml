@@ -27,13 +27,8 @@
   <component name="ChangeListManager">
     <list default="true" id="58b556b8-eb92-424a-98ec-0b5a01a6042e" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/META-INF/plugin.xml" beforeDir="false" afterPath="$PROJECT_DIR$/resources/META-INF/plugin.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ChatServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ChatServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" beforeDir="false" afterPath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/DoiProcessing.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/DoiProcessing.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/FileChangeManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FileChangeManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/FollowAndAuthorRulesProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FollowAndAuthorRulesProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MiningRulesProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MiningRulesProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Utilities.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Utilities.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -153,19 +148,6 @@
     </configuration>
     <configuration default="true" type="Application" factoryName="Application">
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
-      <option name="arquillianRunConfiguration">
-        <value>
-          <option name="containerStateName" value="" />
-        </value>
-      </option>
-      <option name="TEST_OBJECT" value="CLASS" />
-      <properties />
-      <listeners />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -442,7 +424,13 @@
       <workItem from="1619744690636" duration="58000" />
       <workItem from="1619745363429" duration="21000" />
       <workItem from="1620080303749" duration="6145000" />
-      <workItem from="1620087014160" duration="7732000" />
+      <workItem from="1620087014160" duration="8223000" />
+      <workItem from="1620103436392" duration="532000" />
+      <workItem from="1620104579766" duration="32000" />
+      <workItem from="1620104841330" duration="18000" />
+      <workItem from="1620104865340" duration="39000" />
+      <workItem from="1620105447787" duration="11000" />
+      <workItem from="1620105486519" duration="153000" />
     </task>
     <servers />
   </component>

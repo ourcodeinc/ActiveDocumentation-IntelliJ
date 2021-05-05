@@ -18,7 +18,7 @@ public class DoiProcessing {
     private final Map<String, ArrayList<ArrayList<Integer>>> visitedElements = new HashMap<>();
     // <filePath, numberOfVisits>
     private final Map<String, Integer> visitedFiles = new HashMap<>();
-    // <filePath, [[searchTerms], [filePath1, filePath2]]>
+    // <filePath, [searchTerms]>
     private final HashMap<String, List<String>> searchHistory = new HashMap<>();
 
     DoiProcessing(Project currentProject) {
@@ -124,8 +124,6 @@ public class DoiProcessing {
      * update the search history upon changing the active file in the editor
      */
     void updateSearchHistory() {
-        System.out.println("Current Project::");
-        System.out.println(currentProject);
         String[] newSearchHistoryRaw = FindInProjectSettings.getInstance(currentProject).getRecentFindStrings();
         // there are old search terms
         if (currentFilePath.equals("")) {
