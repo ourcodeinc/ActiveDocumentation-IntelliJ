@@ -9,7 +9,9 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.util.Collection;
 
 /**
@@ -23,8 +25,10 @@ public class ChatServer extends WebSocketServer {
     /**
      * @param port = 8887
      */
-    ChatServer(int port) {
-        super(new InetSocketAddress(port));
+    ChatServer(int port) throws IOException {
+        ServerSocket ss = new ServerSocket();
+        ss.setReuseAddress(true);
+        ss.bind(new InetSocketAddress(port));
     }
 
     @Override

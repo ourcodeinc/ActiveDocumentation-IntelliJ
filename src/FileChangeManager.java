@@ -24,10 +24,7 @@ import core.model.SRCMLHandler;
 import core.model.SRCMLxml;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class FileChangeManager implements StartupActivity {
 
@@ -60,6 +57,7 @@ public class FileChangeManager implements StartupActivity {
                 ws.start();
             } catch (Exception e) {
                 System.out.println("Error in creating a Chat server.");
+                e.printStackTrace();
                 return;
             }
         }
