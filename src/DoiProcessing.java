@@ -14,12 +14,12 @@ public class DoiProcessing {
 
     private static DoiProcessing thisClass = null;
 
-    // <filePath, [[startOffset1, endOffset1]]]>
-    private final Map<String, ArrayList<ArrayList<Integer>>> visitedElements = new HashMap<>();
-    // <filePath, numberOfVisits>
-    private final Map<String, Integer> visitedFiles = new HashMap<>();
-    // <filePath, [searchTerms]>
-    private final HashMap<String, List<String>> searchHistory = new HashMap<>();
+    // [milliseconds, filePath, startOffset1, endOffset1]
+    private final ArrayList<ArrayList<String>> timedVisitedElements = new ArrayList<>();
+    // [milliseconds, filePath]
+    private final ArrayList<ArrayList<String>> timedVisitedFiles = new ArrayList<>();
+    // [milliseconds, filePath, keyword]
+    private final ArrayList<ArrayList<String>> timedSearchKeywords = new ArrayList<>();
 
     DoiProcessing(Project currentProject) {
         this.currentProject = currentProject;
@@ -42,16 +42,20 @@ public class DoiProcessing {
      *
      * @return String
      */
-    String getVisitedFiles() {
-        StringBuilder result = new StringBuilder();
-        for (String path : visitedFiles.keySet()) {
-            result.append("\"").append(path).append("\":").append(visitedFiles.get(path)).append(",");
+    public String getVisitedFiles() {
+        StringBuilder timeFileString = new StringBuilder();
+        for (ArrayList<String> timedVisitedFile : timedVisitedFiles) {
+            timeFileString.append("{timeStamp:")
+                    .append(timedVisitedFile.get(0))
+                    .append(",filePath:\"")
+                    .append(timedVisitedFile.get(1))
+                    .append("\"},");
         }
-        if (result.length() > 1) {
-            result = new StringBuilder(result.substring(0, result.length() - 1));
+        if (timeFileString.length() > 1) {
+            timeFileString = new StringBuilder(timeFileString.substring(0, timeFileString.length() - 1));
         }
-        result = new StringBuilder("{" + result + "}");
-        return result.toString();
+        timeFileString = new StringBuilder("[" + timeFileString + "]");
+        return timeFileString.toString();
     }
 
     /**
@@ -59,24 +63,22 @@ public class DoiProcessing {
      *
      * @return String
      */
-    String getSearchHistory() {
-        StringBuilder result = new StringBuilder();
-        for (String path : searchHistory.keySet()) {
-            result.append("\"").append(path).append("\":[");
-            List<String> searchKeyWords = searchHistory.get(path);
-            for (Object searchKeyWord : searchKeyWords) {
-                result.append("\"").append(searchKeyWord).append("\",");
-            }
-            if (searchKeyWords.size() > 0) {
-                result = new StringBuilder(result.substring(0, result.length() - 1));
-            }
-            result.append("],");
+    public String getSearchHistory() {
+        StringBuilder timeFileKeywordString = new StringBuilder();
+        for (ArrayList<String> timedFileKeywords : timedSearchKeywords) {
+            timeFileKeywordString.append("{timeStamp:")
+                    .append(timedFileKeywords.get(0))
+                    .append(",filePath:\"")
+                    .append(timedFileKeywords.get(1))
+                    .append("\",keyword:")
+                    .append(timedFileKeywords.get(2))
+                    .append("},");
         }
-        if (result.length() > 1) {
-            result = new StringBuilder(result.substring(0, result.length() - 1));
+        if (timeFileKeywordString.length() > 1) {
+            timeFileKeywordString = new StringBuilder(timeFileKeywordString.substring(0, timeFileKeywordString.length() - 1));
         }
-        result = new StringBuilder("{" + result + "}");
-        return result.toString();
+        timeFileKeywordString = new StringBuilder("[" + timeFileKeywordString + "]");
+        return timeFileKeywordString.toString();
     }
 
     /**
@@ -84,16 +86,24 @@ public class DoiProcessing {
      *
      * @return String
      */
-    String getVisitedElements() {
-        StringBuilder result = new StringBuilder();
-        for (String path : visitedElements.keySet()) {
-            result.append("\"").append(path).append("\":").append(visitedElements.get(path).toString()).append(",");
+    public String getVisitedElements() {
+        StringBuilder timeFileOffsetsString = new StringBuilder();
+        for (ArrayList<String> timedFileKeywords : timedVisitedElements) {
+            timeFileOffsetsString.append("{timeStamp:")
+                    .append(timedFileKeywords.get(0))
+                    .append(",filePath:\"")
+                    .append(timedFileKeywords.get(1))
+                    .append("\",startOffset:")
+                    .append(timedFileKeywords.get(2))
+                    .append(",endOffset:")
+                    .append(timedFileKeywords.get(3))
+                    .append("},");
         }
-        if (result.length() > 1) {
-            result = new StringBuilder(result.substring(0, result.length() - 1));
+        if (timeFileOffsetsString.length() > 1) {
+            timeFileOffsetsString = new StringBuilder(timeFileOffsetsString.substring(0, timeFileOffsetsString.length() - 1));
         }
-        result = new StringBuilder("{" + result + "}");
-        return result.toString();
+        timeFileOffsetsString = new StringBuilder("[" + timeFileOffsetsString + "]");
+        return timeFileOffsetsString.toString();
     }
 
     /**
@@ -113,10 +123,23 @@ public class DoiProcessing {
      * @param newFilePath path of the newly opened file
      */
     void updateVisitedFiles(String newFilePath) {
-        if (visitedFiles.containsKey(newFilePath))
-            visitedFiles.put(newFilePath, visitedFiles.get(newFilePath) + 1);
-        else
-            visitedFiles.put(newFilePath, 1);
+        long time = new Date().getTime();
+        String timeStamp = Long.toString(time);
+        if (timedVisitedFiles.size() > 1) {
+            try {
+                ArrayList<String> previousVisitedElement = timedVisitedFiles.get(timedVisitedFiles.size() - 1);
+                long previousTimeStamp = Long.parseLong(previousVisitedElement.get(0));
+                if (time - previousTimeStamp < 1000) {
+                    timedVisitedFiles.remove(timedVisitedFiles.size() - 1);
+                }
+            } catch (Exception e) {
+                System.out.println("Error happened in getting and removing the previous file visited for less than a second");
+            }
+        }
+        ArrayList<String> timeFilePair = new ArrayList<>();
+        timeFilePair.add(timeStamp);
+        timeFilePair.add(newFilePath);
+        timedVisitedFiles.add(timeFilePair);
     }
 
 
@@ -124,39 +147,65 @@ public class DoiProcessing {
      * update the search history upon changing the active file in the editor
      */
     void updateSearchHistory() {
-        String[] newSearchHistoryRaw = FindInProjectSettings.getInstance(currentProject).getRecentFindStrings();
-        // there are old search terms
+        String[] recentSearchHistoryRaw = FindInProjectSettings.getInstance(currentProject)
+                .getRecentFindStrings();
+        System.out.println("recentSearchHistoryRaw");
+        System.out.println(Arrays.toString(recentSearchHistoryRaw));
+        System.out.println("currentFilePath: " + currentFilePath);
+        System.out.println(recentSearchHistoryRaw.length + " >? "+ searchHistoryRaw.length);
+        long time = new Date().getTime();
+        String timeStamp = Long.toString(time);
         if (currentFilePath.equals("")) {
-            searchHistory.put("none", Arrays.asList(newSearchHistoryRaw));
-            searchHistoryRaw = newSearchHistoryRaw;
+            for (String keyword: recentSearchHistoryRaw) {
+                ArrayList<String> timeFileKeywordTuple = new ArrayList<>();
+                timeFileKeywordTuple.add(timeStamp);
+                timeFileKeywordTuple.add("none");
+                timeFileKeywordTuple.add(keyword);
+                timedSearchKeywords.add(timeFileKeywordTuple);
+            }
+            searchHistoryRaw = recentSearchHistoryRaw;
         } else {
             // there are new items in Search History
-            if (newSearchHistoryRaw.length > searchHistoryRaw.length) {
+            if (recentSearchHistoryRaw.length > searchHistoryRaw.length) {
                 // find the diff of the Search history
-                List<String> diff = Arrays.asList(Arrays.copyOfRange(newSearchHistoryRaw,
-                        searchHistoryRaw.length, newSearchHistoryRaw.length));
-                // add to previous search terms
-                if (searchHistory.containsKey(currentFilePath)) {
-                    List<String> allSearch = searchHistory.get(currentFilePath);
-                    allSearch.addAll(diff);
-                    searchHistory.put(currentFilePath, allSearch);
-                } else {
-                    // create new entry
-                    searchHistory.put(currentFilePath, diff);
+                String[] diff = Arrays.copyOfRange(recentSearchHistoryRaw,
+                        searchHistoryRaw.length, recentSearchHistoryRaw.length);
+
+                System.out.println("diff");
+                System.out.println(Arrays.toString(diff));
+
+                for (String keyword: diff) {
+                    ArrayList<String> timeFileKeywordTuple = new ArrayList<>();
+                    timeFileKeywordTuple.add(timeStamp);
+                    timeFileKeywordTuple.add(currentFilePath);
+                    timeFileKeywordTuple.add(keyword);
+                    timedSearchKeywords.add(timeFileKeywordTuple);
                 }
-                // update the Search history
-                searchHistoryRaw = newSearchHistoryRaw;
+                searchHistoryRaw = recentSearchHistoryRaw;
             }
         }
     }
 
-    void findCaretLocations(int startCaretLocation, int endCaretLocation) {
+    void updateVisitedElements(int startCaretLocation, int endCaretLocation) {
         String path = FileEditorManager.getInstance(currentProject).getSelectedFiles()[0].getCanonicalPath();
-        if (path == null || !path.endsWith(".java")) return;
-        ArrayList<Integer> location = new ArrayList<>(Arrays.asList(startCaretLocation, endCaretLocation));
-        if (visitedElements.containsKey(path))
-            visitedElements.get(path).add(location);
-        else
-            visitedElements.put(path, new ArrayList<>(Collections.singletonList(location)));
+        long time = new Date().getTime();
+        String timeStamp = Long.toString(time);
+        if (timedVisitedElements.size() > 1) {
+            try {
+                ArrayList<String> previousVisitedElement = timedVisitedElements.get(timedVisitedElements.size() - 1);
+                long previousTimeStamp = Long.parseLong(previousVisitedElement.get(0));
+                if (time - previousTimeStamp < 1000) {
+                    timedVisitedElements.remove(timedVisitedElements.size() - 1);
+                }
+            } catch (Exception e) {
+                System.out.println("Error happened in getting and removing the previous element visited for less than a second");
+            }
+        }
+        ArrayList<String> timeFileOffsetsTuple = new ArrayList<>();
+        timeFileOffsetsTuple.add(timeStamp);
+        timeFileOffsetsTuple.add(path);
+        timeFileOffsetsTuple.add(Integer.toString(startCaretLocation));
+        timeFileOffsetsTuple.add(Integer.toString(endCaretLocation));
+        timedVisitedElements.add(timeFileOffsetsTuple);
     }
 }

@@ -54,7 +54,7 @@ class MiningRulesProcessor {
                         assert caret != null;
                         int selectionStart = caret.getSelectionStart();
                         int selectionEnd = caret.getSelectionEnd();
-                        DoiProcessing.getInstance().findCaretLocations(selectionStart, selectionEnd);
+                        DoiProcessing.getInstance().updateVisitedElements(selectionStart, selectionEnd);
                     }
                 }, ApplicationManager.getApplication());
     }
