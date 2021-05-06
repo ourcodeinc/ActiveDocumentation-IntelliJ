@@ -37,6 +37,10 @@ public class ChatServer extends WebSocketServer {
         manager.checkChangedProject();
         this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_ENTER_CHAT_MSG,
                 (conn + " connected to ActiveDocumentation")}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_PROJECT_PATH_MSG,
+                manager.projectPath}).toString());
+        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_PROJECT_HIERARCHY_MSG,
+                manager.generateProjectHierarchyAsJSON()}).toString());
         for (int i = 0; i < manager.getSrcml().fileNumber; i++) {
             this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_XML_FILES_MSG,
                     MessageProcessor.encodeXMLData(new Object[]{
@@ -49,10 +53,6 @@ public class ChatServer extends WebSocketServer {
                 FollowAndAuthorRulesProcessor.getInstance().getTagTable()}).toString());
         this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_VERIFY_RULES_MSG,
                 ""}).toString());
-        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_PROJECT_HIERARCHY_MSG,
-                manager.generateProjectHierarchyAsJSON()}).toString());
-        this.sendAMessage(conn, MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_PROJECT_PATH_MSG,
-                manager.projectPath}).toString());
     }
 
     @Override
