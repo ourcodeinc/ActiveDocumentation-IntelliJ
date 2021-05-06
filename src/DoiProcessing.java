@@ -45,9 +45,9 @@ public class DoiProcessing {
     public String getVisitedFiles() {
         StringBuilder timeFileString = new StringBuilder();
         for (ArrayList<String> timedVisitedFile : timedVisitedFiles) {
-            timeFileString.append("{timeStamp:")
+            timeFileString.append("{\"timeStamp\":\"")
                     .append(timedVisitedFile.get(0))
-                    .append(",filePath:\"")
+                    .append("\",\"filePath\":\"")
                     .append(timedVisitedFile.get(1))
                     .append("\"},");
         }
@@ -66,13 +66,13 @@ public class DoiProcessing {
     public String getSearchHistory() {
         StringBuilder timeFileKeywordString = new StringBuilder();
         for (ArrayList<String> timedFileKeywords : timedSearchKeywords) {
-            timeFileKeywordString.append("{timeStamp:")
+            timeFileKeywordString.append("{\"timeStamp\":\"")
                     .append(timedFileKeywords.get(0))
-                    .append(",filePath:\"")
+                    .append("\",\"filePath\":\"")
                     .append(timedFileKeywords.get(1))
-                    .append("\",keyword:")
+                    .append("\",\"keyword\":\"")
                     .append(timedFileKeywords.get(2))
-                    .append("},");
+                    .append("\"},");
         }
         if (timeFileKeywordString.length() > 1) {
             timeFileKeywordString = new StringBuilder(timeFileKeywordString.substring(0, timeFileKeywordString.length() - 1));
@@ -89,15 +89,15 @@ public class DoiProcessing {
     public String getVisitedElements() {
         StringBuilder timeFileOffsetsString = new StringBuilder();
         for (ArrayList<String> timedFileKeywords : timedVisitedElements) {
-            timeFileOffsetsString.append("{timeStamp:")
+            timeFileOffsetsString.append("{\"timeStamp\":\"")
                     .append(timedFileKeywords.get(0))
-                    .append(",filePath:\"")
+                    .append("\",\"filePath\":\"")
                     .append(timedFileKeywords.get(1))
-                    .append("\",startOffset:")
+                    .append("\",\"startOffset\":\"")
                     .append(timedFileKeywords.get(2))
-                    .append(",endOffset:")
+                    .append("\",\"endOffset\":\"")
                     .append(timedFileKeywords.get(3))
-                    .append("},");
+                    .append("\"},");
         }
         if (timeFileOffsetsString.length() > 1) {
             timeFileOffsetsString = new StringBuilder(timeFileOffsetsString.substring(0, timeFileOffsetsString.length() - 1));
