@@ -115,13 +115,17 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path" value="/usr/local/bin/node" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="project.structure.last.edited" value="Libraries" />
+    <property name="project.structure.last.edited" value="Project" />
     <property name="project.structure.proportion" value="0.1524288" />
     <property name="project.structure.side.proportion" value="0.24292845" />
     <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/resources/icons" />
+      <recent name="$PROJECT_DIR$/resources/META-INF" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/lib" />
       <recent name="$PROJECT_DIR$/resources" />
@@ -133,10 +137,6 @@
       <recent name="" />
       <recent name="icons" />
     </key>
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/resources/icons" />
-      <recent name="$PROJECT_DIR$/resources/META-INF" />
-    </key>
   </component>
   <component name="RunManager" selected="Plugin.ActiveDocumentation">
     <configuration default="true" type="Applet">
@@ -147,6 +147,19 @@
     </configuration>
     <configuration default="true" type="Application" factoryName="Application">
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
+      <option name="arquillianRunConfiguration">
+        <value>
+          <option name="containerStateName" value="" />
+        </value>
+      </option>
+      <option name="TEST_OBJECT" value="CLASS" />
+      <properties />
+      <listeners />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -217,6 +230,10 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue="Gradle./Users/saharmehrpour/Documents/Workspace/ActiveDocumentation" />
+      <item itemvalue="Plugin.ActiveDocumentation" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Gradle./Users/saharmehrpour/Documents/Workspace/ActiveDocumentation" />
@@ -434,6 +451,13 @@
       <workItem from="1620255218149" duration="58000" />
       <workItem from="1620255282850" duration="92000" />
       <workItem from="1620255393053" duration="3991000" />
+      <workItem from="1621131954408" duration="999000" />
+      <workItem from="1621133907010" duration="312000" />
+      <workItem from="1621134238880" duration="60000" />
+      <workItem from="1621134865186" duration="271000" />
+      <workItem from="1621135156257" duration="875000" />
+      <workItem from="1621140395104" duration="283000" />
+      <workItem from="1621140697993" duration="844000" />
     </task>
     <servers />
   </component>

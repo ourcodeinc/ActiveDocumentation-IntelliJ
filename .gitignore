@@ -1,9 +1,3 @@
 #misc
 .DS_Store
-# .idea
 out
-ActiveDocumentation.iml
-
-#plugin file
-ActiveDocumentationPlugin V2.zip
-ActiveDocumentationPlugin V1.zip
