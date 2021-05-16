@@ -26,12 +26,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="58b556b8-eb92-424a-98ec-0b5a01a6042e" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Java_WebSocket_1_4_0.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ChatServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ChatServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/DoiProcessing.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/DoiProcessing.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/FileChangeManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FileChangeManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MiningRulesProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MiningRulesProcessor.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -152,17 +147,6 @@
     </configuration>
     <configuration default="true" type="Application" factoryName="Application">
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
-      <option name="arquillianRunConfiguration">
-        <value>
-          <option name="containerStateName" value="" />
-        </value>
-      </option>
-      <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
