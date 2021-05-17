@@ -296,10 +296,7 @@ public class FileChangeManager implements StartupActivity {
             java.util.List<VirtualFile> new_q = new ArrayList<>();
             for (VirtualFile item : q) {
 
-                if (shouldIgnoreFileForProjectHierarchy(item)) continue;
-
                 for (VirtualFile childOfItem : item.getChildren()) {
-                    if (shouldIgnoreFileForProjectHierarchy(childOfItem)) continue;
 
                     new_q.add(childOfItem);
                     JsonObject jsonChildOfItem = new JsonObject();
@@ -312,6 +309,8 @@ public class FileChangeManager implements StartupActivity {
                         jsonChildOfItem.add("children", new JsonArray());
                         jsonChildOfItem.add("properties", propertiesOfChild);
                     } else {
+                        if (shouldIgnoreFileForProjectHierarchy(childOfItem)) continue;
+
                         propertiesOfChild.addProperty("canonicalPath", childOfItem.getCanonicalPath());
                         propertiesOfChild.addProperty("parent", item.getCanonicalPath());
                         propertiesOfChild.addProperty("name", childOfItem.getNameWithoutExtension());
@@ -346,7 +345,7 @@ public class FileChangeManager implements StartupActivity {
         String path = s.getCanonicalPath();
         if (path == null) return true;
         if (!path.endsWith(".java")) return true;
-        return !path.endsWith(Constants.TEMP_JAVA_FILE);
+        return path.endsWith(Constants.TEMP_JAVA_FILE);
     }
 
     /**
