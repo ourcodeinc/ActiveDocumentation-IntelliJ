@@ -26,11 +26,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bf04ca36-e1fb-40f3-8bc5-8714b508ab43" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" beforeDir="false" afterPath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ChatServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ChatServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/FileChangeManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FileChangeManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/LearnDesignRules.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/LearnDesignRules.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/META-INF/plugin.xml" beforeDir="false" afterPath="$PROJECT_DIR$/resources/META-INF/plugin.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -461,6 +457,7 @@
       <workItem from="1682460319053" duration="10000" />
       <workItem from="1682460333160" duration="173000" />
       <workItem from="1682460525300" duration="60000" />
+      <workItem from="1682536535446" duration="29000" />
     </task>
     <servers />
   </component>

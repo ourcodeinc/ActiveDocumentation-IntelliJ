@@ -32,9 +32,6 @@
 
   <actions>
     <group id="actionGroup">
-      <action id="FileChangeManager.FeatureSelectionAction" class="FeatureSelectionAction"
-              text="ActiveDocumentation Feature Selection"
-              description="ActiveDocumentation feature selection"/>
       <action id="MineRulesForFileAction" class="MineRulesForFileAction" text="Mine Rules"
               description="Mine design rules for a specific file"/>
       <separator/>
