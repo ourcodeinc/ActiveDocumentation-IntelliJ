@@ -27,6 +27,10 @@
   <component name="ChangeListManager">
     <list default="true" id="bf04ca36-e1fb-40f3-8bc5-8714b508ab43" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" beforeDir="false" afterPath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ChatServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ChatServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/FileChangeManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/FileChangeManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/LearnDesignRules.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/LearnDesignRules.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -115,7 +119,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path" value="/usr/local/bin/node" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="project.structure.last.edited" value="Project" />
+    <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.1524288" />
     <property name="project.structure.side.proportion" value="0.24292845" />
     <property name="restartRequiresConfirmation" value="false" />
@@ -236,7 +240,7 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="58b556b8-eb92-424a-98ec-0b5a01a6042e" name="Default" comment="" />
+      <changelist id="bf04ca36-e1fb-40f3-8bc5-8714b508ab43" name="Default Changelist" comment="" />
       <created>1538584958608</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
@@ -445,6 +449,18 @@
       <workItem from="1621135156257" duration="875000" />
       <workItem from="1621140395104" duration="283000" />
       <workItem from="1621140697993" duration="844000" />
+      <workItem from="1624377778654" duration="18000" />
+      <workItem from="1633819340078" duration="71000" />
+      <workItem from="1680569463225" duration="4902000" />
+      <workItem from="1681151023227" duration="51000" />
+      <workItem from="1681151089800" duration="91000" />
+      <workItem from="1681151201167" duration="51000" />
+      <workItem from="1681242930446" duration="190000" />
+      <workItem from="1681243138472" duration="22000" />
+      <workItem from="1681668859565" duration="110000" />
+      <workItem from="1682460319053" duration="10000" />
+      <workItem from="1682460333160" duration="173000" />
+      <workItem from="1682460525300" duration="60000" />
     </task>
     <servers />
   </component>

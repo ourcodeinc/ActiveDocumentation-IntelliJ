@@ -275,7 +275,7 @@ public class FileChangeManager implements StartupActivity {
         }
         properties.addProperty("parent", "");
         if (rootDirectoryVirtualFile != null) {
-            properties.addProperty("name", rootDirectoryVirtualFile.getNameWithoutExtension());
+            properties.addProperty("name", rootDirectoryVirtualFile.getName());
         }
         properties.addProperty("isDirectory", true);
         jsonRootDirectory.add("children", new JsonArray());
@@ -304,7 +304,7 @@ public class FileChangeManager implements StartupActivity {
                     if (childOfItem.isDirectory()) {
                         propertiesOfChild.addProperty("canonicalPath", childOfItem.getCanonicalPath());
                         propertiesOfChild.addProperty("parent", item.getCanonicalPath());
-                        propertiesOfChild.addProperty("name", childOfItem.getNameWithoutExtension());
+                        propertiesOfChild.addProperty("name", childOfItem.getName());
                         propertiesOfChild.addProperty("isDirectory", true);
                         jsonChildOfItem.add("children", new JsonArray());
                         jsonChildOfItem.add("properties", propertiesOfChild);

@@ -5,9 +5,13 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.util.ExecUtil;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LearnDesignRules {
     public static JsonObject analyzeDatabases(String projectPath, String utility, String directory, String alg) {
@@ -32,8 +36,8 @@ public class LearnDesignRules {
             }
         }
         String selectedAlg = alg;
-        // alg = ""CHUI-MinerMax"" or ""CHUI-Miner"
-        if (!alg.equals("CHUI-MinerMax") && !alg.equals("CHUI-Miner"))
+        // alg = "CHUI-MinerMax" or "CHUI-Miner" or "FPMax"
+        if (!alg.equals("CHUI-MinerMax") && !alg.equals("CHUI-Miner") && !alg.equals("FPMax"))
             selectedAlg = "CHUI-Miner";
         for (String s : fileList) {
             String[] command = new String[]{"java", "-jar",
@@ -52,13 +56,13 @@ public class LearnDesignRules {
 
         JsonObject jsonObject = new JsonObject();
         for (String s : fileList) {
-            StringBuilder CHUI_Output = new StringBuilder();
+            StringBuilder output = new StringBuilder();
             try {
                 BufferedReader br = new BufferedReader(new FileReader(path + "/output_" + s));
                 while (br.ready()) {
-                    CHUI_Output.append(br.readLine()).append("\n");
+                    output.append(br.readLine()).append("\n");
                 }
-                jsonObject.addProperty(s, CHUI_Output.toString());
+                jsonObject.addProperty(s, output.toString());
             } catch (IOException e) {
                 e.printStackTrace();
             }

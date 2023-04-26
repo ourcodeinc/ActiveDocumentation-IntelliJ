@@ -80,7 +80,7 @@ public class ChatServer extends WebSocketServer {
 
     @Override
     public void onError(WebSocket conn, Exception ex) {
-        System.out.println("(onError) ");
+        System.out.println("(onError) " + ex.toString());
     }
 
     @Override
@@ -97,8 +97,13 @@ public class ChatServer extends WebSocketServer {
             System.out.println("(sendToAll) " + "There's no connection.");
         } else {
             for (WebSocket c : conn) {
-                c.send(text);
-                System.out.println("(sendMessage) ");
+                try {
+                    c.send(text);
+                    System.out.println("(sendMessage) ");
+                }
+                catch (Exception e) {
+                    System.out.println("Failed to send the message. " + e.toString());
+                }
             }
         }
     }
