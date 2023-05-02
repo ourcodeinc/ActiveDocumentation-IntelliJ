@@ -35,6 +35,8 @@ class MiningRulesProcessor {
             WebSocketConstants.RECEIVE_LEARN_DESIGN_RULES_DATABASES_APPEND_MSG,
             WebSocketConstants.RECEIVE_LEARN_DESIGN_RULES_FEATURES_MSG,
             WebSocketConstants.RECEIVE_LEARN_DESIGN_RULES_FEATURES_APPEND_MSG,
+            WebSocketConstants.LEARN_DESIGN_RULES_HELPER_FILES_MSG,
+            WebSocketConstants.LEARN_DESIGN_RULES_HELPER_FILES_APPEND_MSG,
             WebSocketConstants.RECEIVE_MINE_DESIGN_RULES_MSG
     );
     private static MiningRulesProcessor thisClass = null;
@@ -88,6 +90,7 @@ class MiningRulesProcessor {
 
             case WebSocketConstants.RECEIVE_LEARN_DESIGN_RULES_DATABASES_MSG:
             case WebSocketConstants.RECEIVE_LEARN_DESIGN_RULES_FEATURES_MSG:
+            case WebSocketConstants.LEARN_DESIGN_RULES_HELPER_FILES_MSG:
                 JsonArray filePathData = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA).getAsJsonArray();
                 for (int i = 0; i < filePathData.size(); i++) {
                     writeDataToFileLearningDR(filePathData.get(i).getAsJsonArray().get(0).getAsString(),
@@ -97,6 +100,7 @@ class MiningRulesProcessor {
 
             case WebSocketConstants.RECEIVE_LEARN_DESIGN_RULES_DATABASES_APPEND_MSG:
             case WebSocketConstants.RECEIVE_LEARN_DESIGN_RULES_FEATURES_APPEND_MSG:
+            case WebSocketConstants.LEARN_DESIGN_RULES_HELPER_FILES_APPEND_MSG:
                 JsonArray filePathDataAppend = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA).getAsJsonArray();
                 for (int i = 0; i < filePathDataAppend.size(); i++) {
                     writeDataToFileLearningDR(filePathDataAppend.get(i).getAsJsonArray().get(0).getAsString(),
