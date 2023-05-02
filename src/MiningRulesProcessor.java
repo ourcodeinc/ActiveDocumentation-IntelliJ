@@ -109,11 +109,11 @@ class MiningRulesProcessor {
                 break;
 
             case WebSocketConstants.RECEIVE_MINE_DESIGN_RULES_MSG:
-                String utility = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA).getAsJsonObject()
-                        .get("utility").getAsString();
+                JsonArray params = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA).getAsJsonObject()
+                        .get("parameters").getAsJsonArray();
                 String alg = messageAsJson.get(WebSocketConstants.MESSAGE_KEY_DATA).getAsJsonObject()
                         .get("algorithm").getAsString();
-                JsonObject outputContent = LearnDesignRules.analyzeDatabases(projectPath, utility, this.directory, alg);
+                JsonObject outputContent = LearnDesignRules.analyzeDatabases(projectPath, params, this.directory, alg);
                 // send message
                 sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_MINED_DESIGN_RULES,
                         MessageProcessor.encodeMinedRules(new Object[]{outputContent})

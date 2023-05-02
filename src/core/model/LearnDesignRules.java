@@ -1,5 +1,6 @@
 package core.model;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LearnDesignRules {
-    public static JsonObject analyzeDatabases(String projectPath, String utility, String directory, String alg) {
+    public static JsonObject analyzeDatabases(String projectPath, JsonArray params, String directory, String algorithm) {
 
         String path = projectPath.concat(directory);
         // create the directory if not exist, but never happens.
@@ -35,16 +36,16 @@ public class LearnDesignRules {
                 }
             }
         }
-        String selectedAlg = alg;
-        // alg = "CHUI-MinerMax" or "CHUI-Miner" or "FPMax"
-        if (!alg.equals("CHUI-MinerMax") && !alg.equals("CHUI-Miner") && !alg.equals("FPMax"))
-            selectedAlg = "CHUI-Miner";
+        StringBuilder paramString = new StringBuilder();
+        for (int i=0; i < params.size(); i++) {
+            paramString.append(params.get(i)).append(" ");
+        }
         for (String s : fileList) {
             String[] command = new String[]{"java", "-jar",
-                    projectPath + "/spmf.jar", "run", selectedAlg,
+                    projectPath + "/spmf.jar", "run", algorithm,
                     path + "/" + s,
                     path + "/output_" + s,
-                    utility};
+                    paramString.toString()};
             GeneralCommandLine generalCommandLine = new GeneralCommandLine(command);
             generalCommandLine.setCharset(StandardCharsets.UTF_8);
             try {
