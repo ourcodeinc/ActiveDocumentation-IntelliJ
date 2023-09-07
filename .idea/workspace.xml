@@ -26,7 +26,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bf04ca36-e1fb-40f3-8bc5-8714b508ab43" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/resources/META-INF/plugin.xml" beforeDir="false" afterPath="$PROJECT_DIR$/resources/META-INF/plugin.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MiningRulesProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MiningRulesProcessor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/model/LearnDesignRules.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/LearnDesignRules.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -457,7 +459,22 @@
       <workItem from="1682460319053" duration="10000" />
       <workItem from="1682460333160" duration="173000" />
       <workItem from="1682460525300" duration="60000" />
-      <workItem from="1682536535446" duration="29000" />
+      <workItem from="1682536535446" duration="101000" />
+      <workItem from="1683050311323" duration="8000" />
+      <workItem from="1683050323809" duration="185000" />
+      <workItem from="1683052725072" duration="327000" />
+      <workItem from="1683053069827" duration="397000" />
+      <workItem from="1683053509543" duration="27000" />
+      <workItem from="1683053889239" duration="142000" />
+      <workItem from="1683063251343" duration="1218000" />
+      <workItem from="1693598340237" duration="226000" />
+      <workItem from="1693934222357" duration="75000" />
+      <workItem from="1693934884192" duration="125000" />
+      <workItem from="1693938254464" duration="51000" />
+      <workItem from="1693938587257" duration="5000" />
+      <workItem from="1693938670527" duration="71000" />
+      <workItem from="1694104677652" duration="317000" />
+      <workItem from="1694105038542" duration="4430000" />
     </task>
     <servers />
   </component>

@@ -26,7 +26,7 @@ class MiningRulesProcessor {
     private ChatServer ws;
     private Project currentProject;
     private String projectPath;
-    private final String directory = "/NewLearningDR";
+    private final String directory = "/LearningDR";
 
     // list of messages received through web socket and should be processed in this class
     final List<String> wsMessages = Arrays.asList(

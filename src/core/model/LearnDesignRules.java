@@ -36,16 +36,16 @@ public class LearnDesignRules {
                 }
             }
         }
-        StringBuilder paramString = new StringBuilder();
+        List<String> paramString = new ArrayList<>();
         for (int i=0; i < params.size(); i++) {
-            paramString.append(params.get(i)).append(" ");
+            paramString.add(params.get(i).toString());
         }
         for (String s : fileList) {
             String[] command = new String[]{"java", "-jar",
                     projectPath + "/spmf.jar", "run", algorithm,
                     path + "/" + s,
                     path + "/output_" + s,
-                    paramString.toString()};
+                    String.join(" ", paramString)};
             GeneralCommandLine generalCommandLine = new GeneralCommandLine(command);
             generalCommandLine.setCharset(StandardCharsets.UTF_8);
             try {
