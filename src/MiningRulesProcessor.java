@@ -116,7 +116,7 @@ class MiningRulesProcessor {
                 JsonObject outputContent = LearnDesignRules.analyzeDatabases(projectPath, params, this.directory, alg);
                 // send message
                 sendMessage(MessageProcessor.encodeData(new Object[]{WebSocketConstants.SEND_MINED_DESIGN_RULES,
-                        MessageProcessor.encodeMinedRules(new Object[]{outputContent})
+                        MessageProcessor.encodeMinedRules(new Object[]{outputContent, alg})
                 }).toString());
                 break;
         }

@@ -27,6 +27,8 @@
   <component name="ChangeListManager">
     <list default="true" id="bf04ca36-e1fb-40f3-8bc5-8714b508ab43" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" beforeDir="false" afterPath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MessageProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MessageProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/MiningRulesProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MiningRulesProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/model/LearnDesignRules.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/LearnDesignRules.java" afterDir="false" />
     </list>
@@ -117,7 +119,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path" value="/usr/local/bin/node" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.last.edited" value="Project" />
     <property name="project.structure.proportion" value="0.1524288" />
     <property name="project.structure.side.proportion" value="0.24292845" />
     <property name="restartRequiresConfirmation" value="false" />
@@ -474,7 +476,12 @@
       <workItem from="1693938587257" duration="5000" />
       <workItem from="1693938670527" duration="71000" />
       <workItem from="1694104677652" duration="317000" />
-      <workItem from="1694105038542" duration="4430000" />
+      <workItem from="1694105038542" duration="4568000" />
+      <workItem from="1695138363100" duration="8000" />
+      <workItem from="1695138375717" duration="747000" />
+      <workItem from="1695140156412" duration="1351000" />
+      <workItem from="1695152759451" duration="31000" />
+      <workItem from="1695152823081" duration="2476000" />
     </task>
     <servers />
   </component>

@@ -12,7 +12,7 @@ class MessageProcessor {
     private static final String[] selectedFragmentKeys = {"filePath", "startOffset", "endOffset", "startLineOffset",
             "lineNumber", "lineText", "text"};
     private static final String[] doiInformationKeys = {"recentVisitedFiles", "recentSearches", "recentVisitedElements"};
-    private static final String[] minedRulesKey = {"minedFrequentItemSets"};
+    private static final String[] minedRulesKey = {"minedFrequentItemSets", "algorithm"};
     private static final String[] elementInfoForForMineRules = {"filePath", "startOffset", "startLineOffset",
             "lineNumber", "text"};
 
