@@ -2,19 +2,16 @@ package core.model;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.intellij.execution.ExecutionException;
-import com.intellij.execution.configurations.GeneralCommandLine;
-import com.intellij.execution.util.ExecUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class LearnDesignRules {
 
@@ -24,6 +21,7 @@ public class LearnDesignRules {
         put("CHUI-Miner", "Weighted_AttributeEncoding");
         put("CHUI-MinerMax", "Weighted_AttributeEncoding");
     }};
+    public static int timeoutInSeconds = 5;
 
     public static JsonObject analyzeDatabases(String projectPath, JsonArray params, String directory, String algorithm) {
 
@@ -65,11 +63,26 @@ public class LearnDesignRules {
                     path + "/" + s,
                     path + "/output_" + s,
                     String.join(" ", paramString)};
-            GeneralCommandLine generalCommandLine = new GeneralCommandLine(command);
-            generalCommandLine.setCharset(StandardCharsets.UTF_8);
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            Process process;
             try {
-                ExecUtil.execAndGetOutput(generalCommandLine);
-            } catch (ExecutionException e) {
+                process = processBuilder.start();
+                // Create a thread to monitor and terminate the process if it runs too long
+                Thread monitorThread = new Thread(() -> {
+                    try {
+                        if (!process.waitFor(timeoutInSeconds, TimeUnit.SECONDS)) {
+                            // Process exceeded the timeout
+                            process.destroy();
+                        }
+                    } catch (InterruptedException e) {
+                        System.out.println("Interrupted");
+                        e.printStackTrace();
+                    }
+                });
+                monitorThread.start();
+                int exitCode = process.waitFor();
+                monitorThread.interrupt(); // Stop the monitor thread
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
         }

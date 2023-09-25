@@ -27,9 +27,6 @@
   <component name="ChangeListManager">
     <list default="true" id="bf04ca36-e1fb-40f3-8bc5-8714b508ab43" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" beforeDir="false" afterPath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MessageProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MessageProcessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MiningRulesProcessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MiningRulesProcessor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/model/LearnDesignRules.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/LearnDesignRules.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -481,7 +478,9 @@
       <workItem from="1695138375717" duration="747000" />
       <workItem from="1695140156412" duration="1351000" />
       <workItem from="1695152759451" duration="31000" />
-      <workItem from="1695152823081" duration="2476000" />
+      <workItem from="1695152823081" duration="2776000" />
+      <workItem from="1695653623187" duration="1340000" />
+      <workItem from="1695655220308" duration="337000" />
     </task>
     <servers />
   </component>
