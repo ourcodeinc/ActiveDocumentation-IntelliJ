@@ -147,12 +147,11 @@ public class DoiProcessing {
      * update the search history upon changing the active file in the editor
      */
     void updateSearchHistory() {
-        String[] recentSearchHistoryRaw = FindInProjectSettings.getInstance(currentProject)
+        String[] recentFindStringsRaw = FindInProjectSettings.getInstance(currentProject)
                 .getRecentFindStrings();
-        System.out.println("recentSearchHistoryRaw");
-        System.out.println(Arrays.toString(recentSearchHistoryRaw));
-        System.out.println("currentFilePath: " + currentFilePath);
-        System.out.println(recentSearchHistoryRaw.length + " >? "+ searchHistoryRaw.length);
+        String[] recentSearchHistoryRaw = Arrays.stream(recentFindStringsRaw)
+                .map(s -> s.replaceAll("\"", ""))
+                .toArray(String[]::new);
         long time = new Date().getTime();
         String timeStamp = Long.toString(time);
         if (currentFilePath.equals("")) {
@@ -170,9 +169,6 @@ public class DoiProcessing {
                 // find the diff of the Search history
                 String[] diff = Arrays.copyOfRange(recentSearchHistoryRaw,
                         searchHistoryRaw.length, recentSearchHistoryRaw.length);
-
-                System.out.println("diff");
-                System.out.println(Arrays.toString(diff));
 
                 for (String keyword: diff) {
                     ArrayList<String> timeFileKeywordTuple = new ArrayList<>();
