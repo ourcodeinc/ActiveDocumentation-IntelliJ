@@ -17,6 +17,7 @@ public class SRCMLHandler {
 
     final private static String srcmlPathMac = "/usr/local/bin/srcml";
     final private static String srcmlPathWindows = "C:\\Program Files\\srcML 0.9.5\\bin\\srcml";
+    final private static String srcmlPathLinux = "/usr/bin/srcml";
 
     /**
      * Create a srcML xml file initially
@@ -97,6 +98,8 @@ public class SRCMLHandler {
             return runShellCommand(new String[]{srcmlPathMac, path});
         else if(System.getProperty("os.name").startsWith("Windows"))
             return runShellCommand(new String[]{srcmlPathWindows, path});
+        else if(System.getProperty("os.name").startsWith("Linux"))
+            return runShellCommand(new String[]{srcmlPathLinux, path});
         System.out.println(System.getProperty("os.name") + " not supported");
         return "";
     }
@@ -137,6 +140,8 @@ public class SRCMLHandler {
             src = runShellCommand(new String[]{srcmlPathMac, "--unit", "1", fullPath});
         else if (System.getProperty("os.name").startsWith("Windows"))
             src = runShellCommand(new String[]{srcmlPathWindows, "--unit", "1", fullPath});
+        else if (System.getProperty("os.name").startsWith("Linux"))
+            src = runShellCommand(new String[]{srcmlPathLinux, "--unit", "1", fullPath});
         else
             System.out.println(System.getProperty("os.name") + " not supported");
         //File filePath = new File(fullPath);
