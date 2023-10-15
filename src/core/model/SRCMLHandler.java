@@ -17,7 +17,7 @@ public class SRCMLHandler {
 
     final private static String srcmlPathMac = "/usr/local/bin/srcml";
     final private static String srcmlPathWindows = "C:\\Program Files\\srcML 0.9.5\\bin\\srcml";
-    final private static String srcmlPathLinux = "/usr/local/bin/srcml";
+    final private static String srcmlPathLinux = "/usr/bin/srcml";
 
     /**
      * Create a srcML xml file initially
