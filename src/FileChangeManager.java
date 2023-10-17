@@ -205,10 +205,12 @@ public class FileChangeManager implements StartupActivity {
      * @return true/false
      */
     private boolean shouldIgnoreFile(VirtualFile s) {
+        if (s.getName().endsWith(Constants.TEMP_JAVA_FILE)) {
+            return true;
+        }
         return !(s.getName().endsWith(".java")
                 || s.getName().endsWith(Constants.RULE_TABLE_JSON)
-                || s.getName().endsWith(Constants.TAG_TABLE_JSON)
-                || s.getName().equals(Constants.TEMP_JAVA_FILE));
+                || s.getName().endsWith(Constants.TAG_TABLE_JSON));
     }
 
     /**
