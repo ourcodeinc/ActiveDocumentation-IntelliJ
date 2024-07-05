@@ -1,13 +1,14 @@
 <idea-plugin>
   <id>active_doc_plugin</id>
-  <name>ActiveDoc</name>
-  <version>3.0 Beta</version>
-  <vendor email="smehrpou@gmu.edu" url="http://devx.cs.gmu.edu/">GMU DevUXD</vendor>
+  <name>ActiveDocumentation</name>
+  <version>v0.0.1</version>
+  <vendor email="sahar@ourcode.io" url="http://ourcode.io/">ourcode inc</vendor>
 
   <description><![CDATA[
   ActiveDocumentation Tool
   <br>
-  This tool helps in validating code against design rules.
+  This tool helps in working with design decisions.
+  To learn more, refer to <a href='http://ourcode.io/'>http://ourcode.io/</a>
     ]]></description>
 
   <change-notes><![CDATA[

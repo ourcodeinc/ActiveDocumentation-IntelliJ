@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/ActiveDocumentationPlugin.iml" filepath="$PROJECT_DIR$/ActiveDocumentationPlugin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ActiveDocumentation-IntelliJ.iml" filepath="$PROJECT_DIR$/ActiveDocumentation-IntelliJ.iml" />
     </modules>
   </component>
 </project>

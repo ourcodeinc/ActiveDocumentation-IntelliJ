@@ -26,8 +26,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bf04ca36-e1fb-40f3-8bc5-8714b508ab43" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/model/LearnDesignRules.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/model/LearnDesignRules.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ActiveDocumentationPlugin.iml" beforeDir="false" afterPath="$PROJECT_DIR$/ActiveDocumentation-IntelliJ.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" beforeDir="false" afterPath="$PROJECT_DIR$/ActiveDocumentationPlugin.zip" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/META-INF/plugin.xml" beforeDir="false" afterPath="$PROJECT_DIR$/resources/META-INF/plugin.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -201,7 +203,7 @@
       </method>
     </configuration>
     <configuration name="ActiveDocumentation" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType">
-      <module name="ActiveDocumentationPlugin" />
+      <module name="ActiveDocumentation-IntelliJ" />
       <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
       <option name="PROGRAM_PARAMETERS" value="" />
       <predefined_log_file enabled="true" id="idea.log" />
@@ -210,7 +212,7 @@
       </method>
     </configuration>
     <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType">
-      <module name="ActiveDocumentationPlugin" />
+      <module name="ActiveDocumentation-IntelliJ" />
       <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
       <option name="PROGRAM_PARAMETERS" value="" />
       <predefined_log_file enabled="true" id="idea.log" />
@@ -481,6 +483,8 @@
       <workItem from="1695152823081" duration="2776000" />
       <workItem from="1695653623187" duration="1340000" />
       <workItem from="1695655220308" duration="337000" />
+      <workItem from="1720210750394" duration="221000" />
+      <workItem from="1720211149440" duration="66000" />
     </task>
     <servers />
   </component>
